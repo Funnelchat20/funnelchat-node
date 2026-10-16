@@ -64,7 +64,7 @@ Cada pedido manda `Authorization: Bearer <clave>`, `Accept: application/json` y 
 |---|---|
 | `funnelchat.contacts` | `list`, `create`, `upsert`, `retrieve`, `update`, `delete`, etiquetas y campos de un contacto, `metaWindow` (la ventana de 24 horas), notas. |
 | `funnelchat.conversations` | `list`, `update`, contadores, marcar todo como leído o no leído. |
-| `funnelchat.messages` | `send`, `list` (el historial de un contacto), `sendContactCard`, `forward`, `react`, `removeReaction`. |
+| `funnelchat.messages` | `send`, `get` (un mensaje por id), `list` (el historial de un contacto), `sendContactCard`, `forward`, `react`, `removeReaction`. |
 | `funnelchat.templates` | `list`, `create`, `retrieve`, `update`, `quickReplyButtons`, `send`, `delete`. |
 | `funnelchat.tags` | `list`, `create`, `retrieve`, `update`, `delete`, `listContacts`. |
 | `funnelchat.customFields` | `list`, `create`, `retrieve`, `update`, `delete`. |
@@ -84,16 +84,19 @@ Los parámetros, los cuerpos y las respuestas están tipados con la especificaci
 const window = await funnelchat.contacts.metaWindow(2001, { device_id: 3 });
 
 if (window.is_open) {
-  await funnelchat.messages.send(2001, {
+  const result = await funnelchat.messages.send(2001, {
     device_id: 3,
     phone: '5491100000000',            // el teléfono del mismo contacto, sin +
     text: '¡Hola! Te paso la info…',
     client_reference: 'pedido-8841',   // opcional: tu referencia para seguirlo
   });
+  console.log(result?.message?.id ?? 'sin id todavía'); // 1002, status: 'queued'
 }
 ```
 
-- `send` responde `204`, sin cuerpo (devuelve `undefined`): hoy no trae el id del mensaje. Para relacionar el envío con sus estados, mandá `client_reference`; vuelve en el historial del contacto y en el evento `message.status_changed`.
+- `send` devuelve el cuerpo de la respuesta: `{ message }`, el mensaje registrado con su `id`, `status: 'queued'` y tu `client_reference` (el mismo `id` es el `message_id` de `message.status_changed`). Es **pendiente de la especificación**: sale de una rama de conversations que todavía no tiene PR y puede cambiar. Mientras la API responda `204`, devuelve `null`. Las tarjetas (`sendContactCard`) devuelven `{ messages }`, el reenvío (`forward`) un ítem por destino con su `message` y la plantilla (`templates.send`) `{ message }`.
+- Con ese `id`, `funnelchat.messages.get(2001, 1002)` te dice cómo va el mensaje: aceptado no es entregado, y `status` pasa de `queued` a `sent`, `delivered`, `read` o `failed`. También es pendiente de la especificación: hasta que se despliegue esa rama, la ruta no existe.
+- Para relacionar el envío con sus estados, mandá `client_reference`: vuelve en el historial del contacto y en el evento `message.status_changed`.
 - `contact_id` va en el cuerpo, pero `send` lo completa con el contacto de la ruta si no lo pasás.
 - Mandá `phone` (o `whatsapp_id`) del mismo contacto: la API lo valida, y si no corresponde al contacto de la ruta responde `422 recipient_mismatch`.
 - Con `file` (la URL de un archivo) mandás una imagen, un video, un documento o un audio; con `options`, botones o una lista.
@@ -101,12 +104,15 @@ if (window.is_open) {
 **Ventana cerrada: una plantilla aprobada.** En la ruta van el número (`3`) y el id de la plantilla (`45`), que sale de `funnelchat.templates.list()`:
 
 ```ts
-await funnelchat.templates.send(3, '45', {
+const { message } = await funnelchat.templates.send(3, '45', {
   phone: '5491100000000',
   contact_id: 2001,
   template_variables: { body: ['Lucía'] }, // las variables del cuerpo, en orden
 });
+console.log(message?.id);
 ```
+
+Si Meta rechaza la plantilla, la respuesta es un `502` (`InternalServerError`) y su cuerpo (`error`, `error_code`, `placeholders`, `message`) está en `error.body`. Como todo envío, no se reintenta solo.
 
 **Si te frenamos.** Si un envío rompe una regla de WhatsApp no sale ni se guarda: te llega un error.
 
@@ -302,7 +308,7 @@ No hace falta tocar código a mano para regenerar. Si una ruta que usa un recurs
 
 Esto ya está en la API, o en una rama sin mergear, pero la instantánea todavía no lo trae. Está en una capa aparte, marcada así en el código, que la próxima regeneración reemplaza sola cuando la instantánea lo traiga:
 
-- `spec/pending.json`: rutas, campos y eventos, en formato OpenAPI.
+- `spec/pending.json`: rutas, campos, respuestas y eventos, en formato OpenAPI. Es la misma capa que la del SDK de PHP (`funnelchat-php`), con `responsePatches` (lo que responden los envíos); acá `device_id` de `message.received` vive en `src/pending/`.
 - `src/pending/`: lo que no es OpenAPI (los códigos de error de las reglas de envío y `device_id` en `message.received`).
 
 | Qué | De dónde sale | Estado |
@@ -312,6 +318,7 @@ Esto ya está en la API, o en una rama sin mergear, pero la instantánea todaví
 | `client_reference` en los cuerpos de envío | conversations `feat/armar-funnelchat-f1` @ `eadef46c` (PR #2284) | **Sin mergear.** |
 | Los errores de las reglas de envío (`window_closed`, `antiblock_*`, `recipient_*`, `rate_limited`) | conversations `feat/armar-funnelchat-f1` @ `eadef46c` (PR #2284), contrato 1014 C2 | **Sin mergear.** Hasta que se despliegue, las rutas de envío responden `403 route_not_available`. |
 | La forma de `data` de `message.status_changed` | conversations `feat/armar-funnelchat-f1` @ `eadef46c` (PR #2284), contrato 1014 C1 | **Sin mergear.** Figura como `planned`: todavía no se emite. |
+| Lo que responden los envíos (`send`, `sendContactCard`, `forward`, `templates.send` y `send-message`): el mensaje registrado, con `status: queued`; y `messages.get` (`GET /api/v1/contacts/{contact}/messages/{message}`) | conversations `feat/envio-devuelve-id` @ `d3ac33994` | **Rama local, sin PR.** La forma puede cambiar. Mientras tanto, el texto y las tarjetas pueden responder `204` (`null`). |
 | `device_id` en `message.received` | conversations `feat/armar-funnelchat-f1` @ `eadef46c` (PR #2284) | **Sin mergear.** Opcional en el tipo hasta que llegue. |
 
 ## Desarrollo

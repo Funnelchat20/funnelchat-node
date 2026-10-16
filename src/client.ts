@@ -265,8 +265,9 @@ function encodeBody(body: unknown): { body: BodyInit | undefined; contentType: s
   return { body: JSON.stringify(body), contentType: 'application/json' };
 }
 
+/** The decoded body: JSON when it parses, the text otherwise, `null` when there is none (a `204`). */
 function parseBody(response: Response, text: string): unknown {
-  if (text === '') return undefined;
+  if (text === '') return null;
   const type = response.headers.get('content-type') ?? '';
   if (type.includes('json') || /^\s*[[{]/.test(text)) {
     try {

@@ -38,6 +38,10 @@ export class Templates extends Resource {
    * `POST /api/v1/devices/{device}/templates/{template}/send-template`: sends an approved template
    * (the way to write to a contact outside the 24-hour window). `phone` and `contact_id` are
    * required; `template_variables.body` fills the body variables in order.
+   *
+   * Resolves to `{ message }`, the registered message. A template Meta rejected is a `502` whose
+   * body (`error`, `error_code`, `placeholders`, `message`) is in `APIError.body`. Pending of the
+   * spec (conversations `feat/envio-devuelve-id` @ d3ac33994, a local branch): it may change.
    */
   send(device: DeviceId, template: SendTemplateId, body: Body<SendPath, 'POST'>, options?: RequestOptions) {
     return this.client.request('POST', '/api/v1/devices/{device}/templates/{template}/send-template', {

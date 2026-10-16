@@ -4411,6 +4411,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/contacts/{contact}/messages/{message}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver un mensaje por id
+         * @description Un mensaje de tu cuenta por el id que te dio el envío o un webhook (`message_id` de `message.status_changed`). Aceptado no es entregado: `status` es `queued`, `sent`, `delivered`, `read` o `failed` en los que enviaste, y `null` en los recibidos, las notas y los de resultado desconocido. Responde 404 si el mensaje no existe o no es de ese contacto.
+         *
+         *     **Pendiente de la especificación** (conversations feat/envio-devuelve-id @ d3ac33994, rama local sin PR): la forma puede cambiar.
+         */
+        get: operations["pendingMessage.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/webhooks": {
         parameters: {
             query?: never;
@@ -8733,6 +8755,58 @@ export interface components {
             duration_ms: number | null;
             delivery_id: number;
         };
+        /** @description Un mensaje como lo ve una clave: siempre estas diez claves. Pendiente de la especificación (conversations feat/envio-devuelve-id @ d3ac33994, sin PR): la forma puede cambiar. */
+        PendingPublicMessage: {
+            /** @description El id del mensaje en el historial del contacto: el mismo `message_id` de `message.status_changed`. */
+            id: number;
+            contact_id: number | null;
+            device_id: number | null;
+            /** @enum {string} */
+            direction: "outbound" | "inbound";
+            /** @description El tipo público del mensaje (`text`, `image`, `contact`…), el mismo de `message.received`. */
+            type: string;
+            /**
+             * @description Un envío recién aceptado está `queued`. `null` cuando el mensaje no tiene estado de entrega (recibido, nota) o no se sabe.
+             * @enum {string|null}
+             */
+            status: "queued" | "sent" | "delivered" | "read" | "failed" | null;
+            /** @description Solo cuando `status` es `failed`. */
+            error: {
+                code: number | null;
+                title: string | null;
+            } | null;
+            client_reference: string | null;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        /** @description Una tarjeta de contacto después de la primera: las mismas claves del mensaje, sin id. Pendiente de la especificación (conversations feat/envio-devuelve-id @ d3ac33994, sin PR). */
+        PendingQueuedContactCard: {
+            id: null;
+            contact_id: number | null;
+            device_id: number | null;
+            /** @enum {string} */
+            direction: "outbound";
+            /** @enum {string} */
+            type: "contact";
+            /** @enum {string} */
+            status: "queued" | "failed";
+            error: string | null;
+            client_reference: string | null;
+            created_at: string | null;
+            updated_at: string | null;
+        };
+        /** @description El resultado de un reenvío para un destino, con su mensaje. Pendiente de la especificación (conversations feat/envio-devuelve-id @ d3ac33994, sin PR). */
+        PendingForwardResult: {
+            contact_id: number;
+            /** @enum {string} */
+            mode: "internal" | "native";
+            /** @enum {string} */
+            status: "queued" | "blocked";
+            reason: string | null;
+            message: components["schemas"]["PendingPublicMessage"] | null;
+        };
         PendingMessage: {
             message: string;
         };
@@ -10222,7 +10296,18 @@ export interface operations {
             };
         };
         responses: {
-            /** @description No Content */
+            /** @description Una entrada por tarjeta, en orden: la primera es el mensaje (o `null` si no se pudo leer), las demás una marca `queued` o `failed` sin id. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        messages: (components["schemas"]["PendingPublicMessage"] | components["schemas"]["PendingQueuedContactCard"] | null)[];
+                    };
+                };
+            };
+            /** @description Hasta que se despliegue conversations feat/envio-devuelve-id: sin cuerpo. */
             204: {
                 headers: {
                     [name: string]: unknown;
@@ -10702,7 +10787,18 @@ export interface operations {
             };
         };
         responses: {
-            /** @description No Content */
+            /** @description El mensaje quedó registrado (`status: queued`) y sale desde la cola. `message` es `null` si no se pudo leer de vuelta. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        message: components["schemas"]["PendingPublicMessage"] | null;
+                    };
+                };
+            };
+            /** @description Hasta que se despliegue conversations feat/envio-devuelve-id: sin cuerpo. */
             204: {
                 headers: {
                     [name: string]: unknown;
@@ -11493,13 +11589,13 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
+            /** @description Un ítem por destino, en el orden pedido, cada uno con su `message` (o `null`: en cola sin registrar todavía, bloqueado, o no se pudo leer). */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ForwardResultResource"][];
+                    "application/json": components["schemas"]["PendingForwardResult"][];
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
@@ -12376,13 +12472,16 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
+            /** @description El mensaje registrado, y `error` si el envío directo falló. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, unknown> | unknown[] | null;
+                    "application/json": {
+                        message: components["schemas"]["PendingPublicMessage"] | null;
+                        error: string | null;
+                    };
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
@@ -12656,13 +12755,15 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
+            /** @description La plantilla quedó registrada como mensaje. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/json": {
+                        message: components["schemas"]["PendingPublicMessage"] | null;
+                    };
                 };
             };
             /** @description Bad Request */
@@ -12693,18 +12794,17 @@ export interface operations {
                     };
                 };
             };
-            /** @description Bad Gateway */
+            /** @description Meta rechazó la plantilla. El cuerpo llega en `APIError.body`. */
             502: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        /** @constant */
-                        error: "Failed to send template";
+                        error: string;
                         error_code: string | null;
-                        placeholders: string | string[];
-                        details: string;
+                        placeholders: string[];
+                        message: components["schemas"]["PendingPublicMessage"] | null;
                     };
                 };
             };
@@ -18031,6 +18131,38 @@ export interface operations {
             };
             401: components["responses"]["AccountsAuthenticationException"];
             403: components["responses"]["AccountsAuthorizationException"];
+        };
+    };
+    "pendingMessage.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact: number;
+                message: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingPublicMessage"];
+                };
+            };
+            /** @description El mensaje no existe o no es de ese contacto. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingMessage"];
+                };
+            };
         };
     };
     "pendingWebhookSubscription.index": {

@@ -2,7 +2,9 @@
  * Compile-time checks of the typed API (run by `npm run typecheck`; at runtime they are no-ops).
  */
 import { describe, expect, expectTypeOf, it } from 'vitest';
-import type { Funnelchat, Page, WebhookEvent, WebhookEventOf, WebhookEventType } from '../src/index.js';
+import type { Funnelchat, Page, WebhookEvent, WebhookEventOf, WebhookEventType, components } from '../src/index.js';
+
+type PublicMessage = components['schemas']['PendingPublicMessage'];
 
 describe('types', () => {
   it('compile (the checks below run in `npm run typecheck`)', () => {
@@ -32,7 +34,18 @@ function typeChecks(client: Funnelchat) {
     expectTypeOf(client.webhooks.create).parameter(0).toHaveProperty('events');
     expectTypeOf<Awaited<ReturnType<typeof client.webhooks.create>>>().toHaveProperty('secret');
     expectTypeOf<Awaited<ReturnType<typeof client.tags.list>>>().toMatchTypeOf<Page<unknown>>();
-    expectTypeOf<Awaited<ReturnType<typeof client.messages.send>>>().toEqualTypeOf<undefined>();
+    // Sends resolve to the registered message (pending of the spec), or null while the API answers 204.
+    expectTypeOf<NonNullable<Awaited<ReturnType<typeof client.messages.send>>>>().toEqualTypeOf<{ message: PublicMessage | null }>();
+    // While the API answers 204 (documented in the pending layer), the type admits null.
+    expectTypeOf<null>().toMatchTypeOf<Awaited<ReturnType<typeof client.messages.send>>>();
+    expectTypeOf<null>().toMatchTypeOf<Awaited<ReturnType<typeof client.messages.sendContactCard>>>();
+    expectTypeOf<NonNullable<Awaited<ReturnType<typeof client.messages.sendContactCard>>>>().toHaveProperty('messages');
+    expectTypeOf<Awaited<ReturnType<typeof client.messages.forward>>>().toMatchTypeOf<{ contact_id: number; message: PublicMessage | null }[]>();
+    expectTypeOf<Awaited<ReturnType<typeof client.templates.send>>>().toEqualTypeOf<{ message: PublicMessage | null }>();
+    expectTypeOf<Awaited<ReturnType<typeof client.messages.get>>>().toEqualTypeOf<PublicMessage>();
+    expectTypeOf<PublicMessage['status']>().toEqualTypeOf<'queued' | 'sent' | 'delivered' | 'read' | 'failed' | null>();
+    // A route whose spec documents no body still returns whatever the API answers.
+    expectTypeOf<Awaited<ReturnType<typeof client.webhooks.delete>>>().toBeUnknown();
   }
 
   {

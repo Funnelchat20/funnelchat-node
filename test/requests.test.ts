@@ -84,9 +84,14 @@ describe('request building', () => {
     expect(calls).toHaveLength(0);
   });
 
-  it('returns undefined for a 204', async () => {
+  it('returns null for a 204', async () => {
     const { fetch } = mockFetch({ status: 204 });
-    await expect(client(fetch).webhooks.delete('00000000-0000-4000-8000-000000000001')).resolves.toBeUndefined();
+    await expect(client(fetch).webhooks.delete('00000000-0000-4000-8000-000000000001')).resolves.toBeNull();
+  });
+
+  it('returns the body even when the spec documents no body', async () => {
+    const { fetch } = mockFetch({ status: 200, body: { deleted: true } });
+    await expect(client(fetch).webhooks.delete('00000000-0000-4000-8000-000000000001')).resolves.toEqual({ deleted: true });
   });
 
   it('calls a route outside the spec with the untyped request()', async () => {

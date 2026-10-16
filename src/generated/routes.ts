@@ -15,7 +15,7 @@ export interface RouteInfo {
   readonly pending: boolean;
 }
 
-/** Every operation of the spec (238), sorted by path. */
+/** Every operation of the spec (239), sorted by path. */
 export const routes: readonly RouteInfo[] = [
   {"method":"GET","path":"/api/v1/agents","operationId":"user.index","domain":"conversations","permission":"conversations:read","tag":"User","summary":"Listar agentes","pending":false},
   {"method":"GET","path":"/api/v1/agents/{user}","operationId":"user.show","domain":"conversations","permission":"conversations:read","tag":"User","summary":"Ver un agente","pending":false},
@@ -81,6 +81,7 @@ export const routes: readonly RouteInfo[] = [
   {"method":"POST","path":"/api/v1/contacts/{contact}/message/contact-card","operationId":"contactCard.store","domain":"conversations","permission":"conversations:send","tag":"ContactCard","summary":"Enviar una tarjeta de contacto","pending":true},
   {"method":"POST","path":"/api/v1/contacts/{contact}/message/event","operationId":"interactiveMessage.storeEvent","domain":"conversations","permission":"conversations:send","tag":"InteractiveMessage","summary":"Enviar una invitación a un evento","pending":false},
   {"method":"POST","path":"/api/v1/contacts/{contact}/message/poll","operationId":"interactiveMessage.storePoll","domain":"conversations","permission":"conversations:send","tag":"InteractiveMessage","summary":"Enviar una encuesta","pending":false},
+  {"method":"GET","path":"/api/v1/contacts/{contact}/messages/{message}","operationId":"pendingMessage.show","domain":"conversations","permission":"conversations:read","tag":"Message","summary":"Ver un mensaje por id","pending":true},
   {"method":"POST","path":"/api/v1/contacts/{contact}/messages/{message}/forward","operationId":"forwardMessage.store","domain":"conversations","permission":"conversations:send","tag":"ForwardMessage","summary":"Reenviar un mensaje","pending":true},
   {"method":"DELETE","path":"/api/v1/contacts/{contact}/messages/{message}/reaction","operationId":"messageReaction.destroy","domain":"conversations","permission":"conversations:send","tag":"MessageReaction","summary":"Quitar una reacción","pending":false},
   {"method":"PUT","path":"/api/v1/contacts/{contact}/messages/{message}/reaction","operationId":"messageReaction.update","domain":"conversations","permission":"conversations:send","tag":"MessageReaction","summary":"Reaccionar a un mensaje","pending":false},

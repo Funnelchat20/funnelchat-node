@@ -2,43 +2,60 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { routes, webhookEvents } from '../src/index.js';
 
-type PathItems = Record<string, Record<string, unknown>>;
-const readJson = (file: string) => JSON.parse(readFileSync(new URL(`../spec/${file}`, import.meta.url), 'utf8')) as { paths?: PathItems };
-const methods = ['get', 'put', 'post', 'delete', 'patch'];
-const countOps = (paths: PathItems = {}) => Object.values(paths).reduce((n, item) => n + methods.filter((m) => m in item).length, 0);
+type Operation = Record<string, unknown>;
+type PathItems = Record<string, Record<string, Operation>>;
+interface Patch {
+  method: string;
+  path: string;
+  while?: Record<string, unknown>;
+}
+interface SpecFile {
+  paths?: PathItems;
+  webhooks?: Record<string, unknown>;
+  operationPatches?: Patch[];
+  responsePatches?: Patch[];
+}
+
+// Everything is derived from the spec files, so a regeneration does not need to touch this test.
+const readJson = (file: string) => JSON.parse(readFileSync(new URL(`../spec/${file}`, import.meta.url), 'utf8')) as SpecFile;
+const snapshot = readJson('funnelchat.json');
+const pending = readJson('pending.json');
+const METHODS = ['get', 'put', 'post', 'delete', 'patch'];
+const operationsOf = (paths: PathItems = {}) =>
+  Object.entries(paths).flatMap(([path, item]) => METHODS.filter((m) => m in item).map((m) => ({ method: m, path, op: item[m] as Operation })));
+const key = (method: string, path: string) => `${method.toUpperCase()} ${path}`;
+const routeKeys = new Map(routes.map((r) => [key(r.method, r.path), r]));
+const snapshotOp = (method: string, path: string) => snapshot.paths?.[path]?.[method];
+const matches = (op: Operation | undefined, condition: Record<string, unknown> = {}) =>
+  op !== undefined && Object.entries(condition).every(([k, v]) => JSON.stringify(op[k]) === JSON.stringify(v));
+const eventType = (k: string) => k.replace(/\s*\(.*\)\s*$/, '');
 
 describe('generated layer and the pending-of-the-spec layer', () => {
-  it('has every operation of the snapshot plus the pending ones, flagged', () => {
-    // Counted from the spec files, so a regeneration does not need to touch this test.
-    const snapshotOps = countOps(readJson('funnelchat.json').paths);
-    const pendingOps = routes.filter((r) => r.pending && r.path.startsWith('/api/v1/webhooks')).length;
-    expect(snapshotOps).toBeGreaterThan(0);
-    expect(routes.length).toBe(snapshotOps + pendingOps);
-    expect(pendingOps).toBeLessThanOrEqual(countOps(readJson('pending.json').paths));
-    const pending = routes.filter((r) => r.pending).map((r) => `${r.method} ${r.path}`);
-    expect(pending).toEqual(
-      expect.arrayContaining([
-        'GET /api/v1/webhooks',
-        'POST /api/v1/webhooks',
-        'GET /api/v1/webhooks/{id}',
-        'PUT /api/v1/webhooks/{id}',
-        'DELETE /api/v1/webhooks/{id}',
-        'POST /api/v1/webhooks/{id}/rotate-secret',
-        'POST /api/v1/webhooks/{id}/test',
-        'GET /api/v1/webhooks/{id}/deliveries',
-        // Patched with client_reference while the snapshot says send_pending.
-        'POST /api/v1/contacts/{contact}/message',
-      ]),
-    );
+  it('has every operation of the snapshot, unflagged unless a pending patch applies', () => {
+    const snapshotOps = operationsOf(snapshot.paths);
+    expect(snapshotOps.length).toBeGreaterThan(0);
+    for (const { method, path } of snapshotOps) expect(routeKeys.has(key(method, path))).toBe(true);
   });
 
-  it('knows every event of the snapshot and the pending ones', () => {
+  it('adds the pending operations the snapshot lacks, flagged, and nothing else', () => {
+    const missing = operationsOf(pending.paths).filter(({ method, path }) => !snapshotOp(method, path));
+    for (const { method, path } of missing) expect(routeKeys.get(key(method, path))?.pending).toBe(true);
+    const added = routes.filter((r) => !snapshotOp(r.method.toLowerCase(), r.path));
+    expect(added.map((r) => key(r.method, r.path)).sort()).toEqual(missing.map((m) => key(m.method, m.path)).sort());
+  });
+
+  it('flags the snapshot operations a pending patch still applies to', () => {
+    for (const patch of [...(pending.operationPatches ?? []), ...(pending.responsePatches ?? [])]) {
+      if (matches(snapshotOp(patch.method, patch.path), patch.while)) {
+        expect(routeKeys.get(key(patch.method, patch.path))?.pending).toBe(true);
+      }
+    }
+  });
+
+  it('knows every event of the snapshot and of the pending layer, once', () => {
     const types = webhookEvents.map((e) => e.type);
     expect(new Set(types).size).toBe(types.length);
-    for (const type of ['message.received', 'group.created', 'webhook.test', 'message.status_changed', 'device.connected', 'device.disconnected']) {
-      expect(types).toContain(type);
-    }
-    const statusChanged = webhookEvents.find((e) => e.type === 'message.status_changed');
-    expect(statusChanged).toMatchObject({ status: 'planned', pending: true });
+    const expected = new Set([...Object.keys(snapshot.webhooks ?? {}), ...Object.keys(pending.webhooks ?? {})].map(eventType));
+    expect(new Set(types)).toEqual(expected);
   });
 });

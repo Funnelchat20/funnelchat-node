@@ -90,7 +90,7 @@ describe('typed errors', () => {
   it('has a fallback message for an empty body', async () => {
     const error = await errorFor({ status: 500 });
     expect(error.message).toBe('La API respondió 500.');
-    expect(error.body).toBeUndefined();
+    expect(error.body).toBeNull();
   });
 
   it('records method and URL without the query string, and never the key', async () => {

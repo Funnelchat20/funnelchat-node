@@ -175,6 +175,27 @@ function mergePending(spec, pending) {
     report.applied.push(label);
   }
 
+  // Response patches replace every 2xx response of the operation (and any other code they bring)
+  // while the operation matches `while`.
+  for (const patch of pending.responsePatches ?? []) {
+    const label = `${patch.method.toUpperCase()} ${patch.path} (respuesta: ${Object.keys(patch.responses ?? {}).join(', ')})`;
+    const op = merged.paths[patch.path]?.[patch.method];
+    if (!op) {
+      report.missing.push(label);
+      continue;
+    }
+    if (!matches(op, patch.while)) {
+      report.superseded.push(label);
+      continue;
+    }
+    op.responses ??= {};
+    for (const code of Object.keys(op.responses)) if (/^2/.test(code)) delete op.responses[code];
+    Object.assign(op.responses, patch.responses);
+    op['x-fc-pending'] ??= patch['x-fc-pending'];
+    op['x-fc-pending-response'] = patch['x-fc-pending'];
+    report.applied.push(label);
+  }
+
   const snapshotTypes = new Map(Object.keys(merged.webhooks).map((key) => [eventTypeOfKey(key), key]));
   for (const [type, item] of Object.entries(pending.webhooks ?? {})) {
     const currentKey = snapshotTypes.get(type);

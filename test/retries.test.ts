@@ -163,7 +163,7 @@ describe('sends are not retried unless asked', () => {
     const { fetch, calls } = mockFetch(rateLimited('1'), { status: 204 });
     const promise = send(client(fetch), true);
     await vi.advanceTimersByTimeAsync(1000);
-    await expect(promise).resolves.toBeUndefined();
+    await expect(promise).resolves.toBeNull();
     expect(calls).toHaveLength(2);
   });
 

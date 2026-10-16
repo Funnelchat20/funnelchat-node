@@ -40,14 +40,21 @@ export type RequestBody<P extends ApiPath, M extends HttpMethod> =
       : undefined;
 
 type SuccessStatus = 200 | 201 | 202 | 203 | 204 | 206;
-type ResponseContent<R> = R extends { content: infer C } ? ([C] extends [never] ? undefined : JsonContent<C>) : undefined;
+type ResponseContent<R> = R extends { content: infer C } ? ([C] extends [never] ? null : JsonContent<C>) : null;
+type SuccessBodies<R> = ResponseContent<R[Extract<keyof R, SuccessStatus>]>;
 
-/** The parsed body of a 2xx response (`undefined` for a `204`). */
+/**
+ * The parsed body of a 2xx response. A success response without a body (`204`) adds `null`. When
+ * the spec documents no body at all, it is `unknown`: whatever the API answers is returned, so a
+ * body the spec does not describe yet is never dropped.
+ */
 export type ResponseBody<P extends ApiPath, M extends HttpMethod> =
   Operation<P, M> extends { responses: infer R }
     ? [Extract<keyof R, SuccessStatus>] extends [never]
       ? unknown
-      : ResponseContent<R[Extract<keyof R, SuccessStatus>]>
+      : [SuccessBodies<R>] extends [null]
+        ? unknown
+        : SuccessBodies<R>
     : unknown;
 
 type ItemOf<R> = R extends { data: readonly (infer I)[] } ? I : R extends readonly (infer I)[] ? I : never;
