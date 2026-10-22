@@ -3,14 +3,18 @@
   "version": "0.1.0",
   "description": "SDK oficial de Node.js y TypeScript para la API pública de Funnelchat: WhatsApp, contactos, mensajes, plantillas, formularios, grupos y webhooks",
   "license": "MIT",
-  "author": "Funnelchat",
+  "author": {
+    "name": "Funnelchat",
+    "email": "soporte@funnelchat.com"
+  },
   "homepage": "https://developers-portal.funnelchat.app/docs/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Funnelchat20/funnelchat-node.git"
   },
   "bugs": {
-    "url": "https://github.com/Funnelchat20/funnelchat-node/issues"
+    "url": "https://github.com/Funnelchat20/funnelchat-node/issues",
+    "email": "soporte@funnelchat.com"
   },
   "keywords": [
     "funnelchat",
