@@ -1,0 +1,39 @@
+name: Publish to npm
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The SDK runs on Node 18 or later, but prepublishOnly runs vitest 4 and eslint 9, which need Node 20 or later.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org/
+
+      - run: npm ci
+
+      - name: Check that the tag matches the package version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "$TAG" != "v$version" ]; then
+            echo "::error::Tag $TAG does not match package.json version $version (expected v$version)"
+            exit 1
+          fi
+
+      # prepublishOnly runs generate:check, typecheck, lint, test and build before publishing.
+      - run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
