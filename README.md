@@ -55,7 +55,7 @@ Every request sends `Authorization: Bearer <key>`, `Accept: application/json` an
 | `funnelchat.templates` | `list`, `create`, `retrieve`, `update`, `quickReplyButtons`, `send`, `delete`. |
 | `funnelchat.tags` | `list`, `create`, `retrieve`, `update`, `delete`, `listContacts`. |
 | `funnelchat.customFields` | `list`, `create`, `retrieve`, `update`, `delete`. |
-| `funnelchat.groups` | Read groups, participants, events and messages; the [group actions](#groups) and the join requests. |
+| `funnelchat.groups` | Read groups, participants, events and messages. |
 | `funnelchat.devices` | `list`, `retrieve` (with `capabilities`), `update`, `status`, `health`, `me`, `checkPhone`, connection history. |
 | `funnelchat.webhooks` | Subscriptions (`list`, `create`, `retrieve`, `update`, `delete`, `test`, `listDeliveries`), the catalog (`events`), `verify` and `constructEvent`. |
 
@@ -144,29 +144,6 @@ const { message } = await funnelchat.messages.sendForm(2001, {
 ```
 
 The answers arrive by the `whatsapp_form.completed` webhook (`answers`: `key`, `label` and `value`) and are read with `forms.listResponses(familyId)`. `forms.templates()` lists the templates to start from; `forms.update(id, { definition, expected_updated_at })` saves a draft and answers `409 STALE` when someone saved it first.
-
-## Groups
-
-Besides reading groups, the API can **act on them through one of your numbers**: create them, add and remove participants, change admins, name, description, photo and settings, renew the invite link, send messages and decide the join requests.
-
-> Group actions are **off by default**. Until they are enabled, they answer `403 route_not_available`.
-
-Each action answers `202` with its `action_id` and runs in the background:
-
-```ts
-const { action_id } = await funnelchat.groups.addParticipants('120363000000000001@g.us', {
-  device_id: 4,                       // your number, admin of the group
-  phones: ['5491100000001'],          // up to 20
-});
-
-const { data: action } = await funnelchat.groups.action(action_id);
-console.log(action.status, action.result); // 'completed', { participants: [{ identity, status: 'added', … }] }
-```
-
-- The group goes by its WhatsApp uid (`…@g.us`).
-- What each number can do is in `capabilities.groups` of `funnelchat.devices.retrieve(id)`: a QR number can do everything except deciding join requests; an official one creates, invites (instead of adding), removes, changes name and description and handles the invite link. Anything else answers `422 provider_unsupported`.
-- The end arrives by `group_action.completed` (or `group_action.failed`) with the same `action_id` in `action.uuid`.
-- Permissions: `communities:operate` for the actions, `communities:send` for `sendMessage` and `communities:read` to read. Their own errors are in `GROUP_ACTION_ERROR_CODES`.
 
 ## Receive webhooks with Express
 
@@ -308,7 +285,7 @@ const { data, requestId, response } = await funnelchat.contacts.retrieve(2001).w
 
 - Reads and writes that give the same result when repeated (`GET`, `PUT`, `DELETE`) are retried on a `429`, a `5xx` or a network error (also when `timeoutMs` ran out), up to `maxRetries` times (2 by default).
 - Other writes (`POST`, `PATCH`) are retried **only when the API guarantees they were not applied**: `429` and `503`. A `500`, `502` or `504`, a timeout or a dropped connection can come after the write was applied, so the error is thrown right away: read the state before repeating it.
-- **A send is never retried automatically**: the `POST`s with the `conversations:send` or `communities:send` permission (messages, forms, cards, forwards, templates, group messages). If a `429 rate_limited` sent nothing and you want the SDK to retry for you, ask for it in that call with `{ retrySend: true }`: it then follows the rule of writes. `mac_lockout_24h` and `mac_limit_reached` are never retried.
+- **A send is never retried automatically**: the `POST`s with the `conversations:send` permission (messages, forms, cards, forwards, templates). If a `429 rate_limited` sent nothing and you want the SDK to retry for you, ask for it in that call with `{ retrySend: true }`: it then follows the rule of writes. `mac_lockout_24h` and `mac_limit_reached` are never retried.
 - With `Retry-After`, the wait is exactly what it asks for. If it asks for more than 60 seconds, there is no wait: the error is thrown right away with its `retryAfter` and you decide. Without `Retry-After`, the wait is exponential: 0.5 s, 1 s, 2 s… up to 8 s, with some jitter.
 - Per call you can change `maxRetries`, `timeoutMs` and `signal`:
 
@@ -352,7 +329,6 @@ The published spec does not describe everything the API in production already ha
 
 - what sends answer (the queued message), `messages.get`, `client_reference`, `file_type` and `file_name`;
 - forms and `messages.sendForm`;
-- group actions and join requests;
 - the `capabilities` of numbers;
 - webhook subscriptions and the events the spec does not bring (`message.status_changed` with its shape, `whatsapp_form.completed`, the group ones and the account ones).
 

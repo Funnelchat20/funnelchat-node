@@ -52,10 +52,7 @@ function typeChecks(client: Funnelchat) {
     expectTypeOf(client.contacts.retrieve(1)).toMatchTypeOf<APIPromise<unknown>>();
     expectTypeOf<Awaited<ReturnType<ReturnType<typeof client.messages.get>['withResponse']>>['requestId']>().toEqualTypeOf<string | undefined>();
     // The capabilities of a number.
-    expectTypeOf<Awaited<ReturnType<typeof client.devices.retrieve>>['capabilities']['groups']['add_participants']>().toEqualTypeOf<'direct' | 'invite' | false>();
-    // Group actions answer 202 with the action id.
-    expectTypeOf<Awaited<ReturnType<typeof client.groups.addParticipants>>>().toEqualTypeOf<{ action_id: string; status: 'queued' }>();
-    expectTypeOf<Awaited<ReturnType<typeof client.groups.action>>['data']['status']>().toEqualTypeOf<'queued' | 'running' | 'completed' | 'failed'>();
+    expectTypeOf<Awaited<ReturnType<typeof client.devices.retrieve>>['capabilities']['statuses']>().toEqualTypeOf<('sent' | 'delivered' | 'read' | 'failed')[]>();
     expectTypeOf(client.forms.create).parameter(0).toHaveProperty('template_key');
     // A route whose spec documents no body still returns whatever the API answers.
     expectTypeOf<Awaited<ReturnType<typeof client.webhooks.delete>>>().toBeUnknown();
@@ -79,8 +76,8 @@ function typeChecks(client: Funnelchat) {
         expectTypeOf(event.data.form.id).toEqualTypeOf<number>();
         expectTypeOf(event.data.answers[0]!.value).toEqualTypeOf<boolean | number | string | string[] | null>();
       }
-      if (event.type === 'group_action.completed') {
-        expectTypeOf(event.data.action.uuid).toEqualTypeOf<string>();
+      if (event.type === 'group_action.failed') {
+        expectTypeOf(event.data.action.uuid).toEqualTypeOf<string | null>();
       }
       if (event.type === 'group.message_received') {
         expectTypeOf(event.data.participant.identity_type).toEqualTypeOf<'phone' | 'whatsapp_user'>();

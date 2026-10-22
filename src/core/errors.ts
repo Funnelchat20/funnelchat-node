@@ -45,9 +45,8 @@ export interface APIErrorInit {
  *
  * - `status`: the HTTP status.
  * - `code`: the stable `error` code of the body (`window_closed`, `rate_limited`,
- *   `route_not_available`…; see `SEND_ERROR_CODES`, `ACCESS_ERROR_CODES` and
- *   `GROUP_ACTION_ERROR_CODES`), or `undefined` when the body has none (for example a Laravel
- *   validation `422`, which carries `errors` instead).
+ *   `route_not_available`…; see `SEND_ERROR_CODES` and `ACCESS_ERROR_CODES`), or `undefined` when
+ *   the body has none (for example a Laravel validation `422`, which carries `errors` instead).
  * - `message`: the `message` of the body, meant for people. Decide by `status` and `code`.
  * - `retryAfter`: seconds from the `Retry-After` header, when present.
  * - `requestId`: the `X-Request-Id` of the response. Quote it when you report a problem.

@@ -244,8 +244,7 @@ describe('retry policy helpers', () => {
     expect(isSendRequest('POST', '/api/v1/contacts/delete')).toBe(false);
     expect(isSendRequest('POST', '/api/v1/contacts')).toBe(false);
     expect(isSendRequest('POST', '/api/v1/contacts/2001/message/form')).toBe(true);
-    expect(isSendRequest('POST', '/api/v1/groups/120363000000000001@g.us/messages')).toBe(true);
-    expect(isSendRequest('POST', '/api/v1/groups/120363000000000001@g.us/participants')).toBe(false);
+    expect(isSendRequest('POST', '/api/v1/groups/120363000000000001@g.us/messages')).toBe(false);
     expect(isSendRequest('PUT', '/api/v1/contacts/2001/messages/9/reaction')).toBe(false);
   });
 

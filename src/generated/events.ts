@@ -14,7 +14,7 @@ export interface WebhookEventInfo {
   readonly description: string | null;
 }
 
-/** Every webhook event type known to the spec (54). */
+/** Every webhook event type known to the spec (53). */
 export const webhookEvents = [
   {"type":"account.blocked","domains":["accounts"],"status":"live","pending":true,"description":"The account was blocked by usage: the 24-hour grace period after using up the monthly active contacts ended."},
   {"type":"ai_quota.low_balance","domains":["accounts"],"status":"planned","pending":true,"description":"The AI message quota is about to run out. Planned: not emitted yet."},
@@ -38,8 +38,7 @@ export const webhookEvents = [
   {"type":"device.disconnected","domains":["accounts"],"status":"live","pending":true,"description":"One of the numbers of the account disconnected and can no longer send or receive."},
   {"type":"flow.completed","domains":["conversations"],"status":"live","pending":false,"description":"Un contacto terminó un flujo de automatización.\n\nSe envía una sola vez por cada ejecución de un flujo, cuando termina con éxito. No se envía si la ejecución se cortó, se canceló, quedó bloqueada o falló. `contact` es `null` si la ejecución no tiene un contacto asociado. Un flujo muy usado puede generar muchos eventos seguidos."},
   {"type":"flow.failed","domains":["conversations"],"status":"live","pending":false,"description":"La ejecución de un flujo para un contacto terminó por un error.\n\nSe envía una sola vez por cada ejecución de un flujo que termina por un error, no porque llegó al final. `reason` indica el motivo y toma uno de estos valores: `node_missing` (el paso a ejecutar ya no existe), `unknown_node_type` (el paso es de un tipo no reconocido), `missing_subflow` (el flujo que debía ejecutarse dentro de otro ya no existe), `malformed_node` (el paso tiene una configuración dañada), `loop_detected` (la ejecución dio vueltas sin esperar nada) y `execution_error` (un error inesperado detuvo la ejecución). No se envía si la ejecución se canceló, quedó bloqueada o se cortó porque se editó el flujo o se unieron contactos. `contact` es `null` si la ejecución no tiene un contacto asociado."},
-  {"type":"group_action.completed","domains":["communities"],"status":"live","pending":true,"description":"A group action asked through the API finished. `action.uuid` is the `action_id` it returned."},
-  {"type":"group_action.failed","domains":["communities"],"status":"live","pending":true,"description":"An action on a group failed: one of a campaign (`action.uuid` is `null`) or one asked through the API (`action.uuid` is the `action_id`). Actions on phones do not emit it: they end with `group_action.completed` and the result of each phone."},
+  {"type":"group_action.failed","domains":["communities"],"status":"live","pending":true,"description":"An action on a group of a campaign failed."},
   {"type":"group_join_request.created","domains":["communities"],"status":"live","pending":true,"description":"Someone asked to join a group that requires approval."},
   {"type":"group_join_request.revoked","domains":["communities"],"status":"live","pending":true,"description":"Someone withdrew their request to join a group."},
   {"type":"group_participant.joined","domains":["communities"],"status":"live","pending":false,"description":"Una persona entró a un grupo de una campaña."},
@@ -280,30 +279,7 @@ export interface WebhookEventDataMap {
     };
     reason: string;
   };
-  /** `group_action.completed` (live, pending of the spec; typed from: schema). A group action asked through the API finished. `action.uuid` is the `action_id` it returned. */
-  "group_action.completed": {
-    action: {
-      uuid: string;
-      type: string;
-    };
-    group: ({
-      uid: string;
-      name: string | null;
-    }) | null;
-    campaign: {
-      uuid?: string;
-      name?: string;
-    } | null;
-    /** With phones: `participants`; creating or renewing the link: `invite_link`; sending: `message.uid`; the rest, empty. */
-    result: {
-      participants?: components["schemas"]["PendingGroupParticipantResult"][];
-      invite_link?: string;
-      message?: {
-        uid?: string;
-      };
-    };
-  };
-  /** `group_action.failed` (live, pending of the spec; typed from: schema). An action on a group failed: one of a campaign (`action.uuid` is `null`) or one asked through the API (`action.uuid` is the `action_id`). Actions on phones do not emit it: they end with `group_action.completed` and the result of each phone. */
+  /** `group_action.failed` (live, pending of the spec; typed from: schema). An action on a group of a campaign failed. */
   "group_action.failed": {
     campaign: ({
       uuid: string;
@@ -318,7 +294,7 @@ export interface WebhookEventDataMap {
       name: string | null;
     }) | null;
     action: {
-      /** The `action_id` of an action asked through the API; `null` for the ones of a campaign. */
+      /** `null` for the actions of a campaign. */
       uuid: string | null;
       type: string;
     };

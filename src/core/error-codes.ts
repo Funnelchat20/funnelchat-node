@@ -4,9 +4,8 @@
  *
  * Sources (production, 22-10): platform-gate v0.8.0 as pinned by accounts v1.4.24; api-edge v0.3.0
  * (src/index.ts); conversations v1.18.10 (Message/Services/ApiSendGuard.php,
- * Message/Support/ApiKeySendResponse.php, WhatsappForm/Support/FormSendPreflight.php); communities
- * v2.34.52 (GroupManagement/Exceptions/ApiGroupActionRejected.php). The spec does not document most
- * of them yet; when it does, this list can be generated.
+ * Message/Support/ApiKeySendResponse.php, WhatsappForm/Support/FormSendPreflight.php). The spec
+ * does not document most of them yet; when it does, this list can be generated.
  */
 
 /** Errors of the API entry and of the key gate, on any route. */
@@ -15,7 +14,7 @@ export const ACCESS_ERROR_CODES = {
   unauthenticated: 401,
   /** 403: the key lacks the permission the route needs (`message` names it). */
   permission_denied: 403,
-  /** 403: the route is not open to API keys (or is turned off, like the group actions by default). */
+  /** 403: the route is not open to API keys (or is turned off). */
   route_not_available: 403,
   /** 404: the path does not exist in the public API. Answered by the entry, before any area. */
   route_not_found: 404,
@@ -72,42 +71,11 @@ export const SEND_ERROR_CODES = {
   number_not_eligible: 422,
 } as const;
 
-/** Rejections of a group action (communities). The action was not queued. */
-export const GROUP_ACTION_ERROR_CODES = {
-  device_not_found: 404,
-  group_not_found: 404,
-  action_not_found: 404,
-  unsupported_group_type: 422,
-  device_not_connected: 422,
-  /** 422: the number is not admin of the group. */
-  device_not_group_admin: 422,
-  device_not_group_number: 422,
-  /** 422: the number does not support it; `provider` (`qr` or `official`) and maybe `requires` in the body. */
-  provider_unsupported: 422,
-  cannot_target_executing_device: 422,
-  cannot_target_account_device: 422,
-  not_a_participant: 422,
-  /** 422: more than 20 phones after normalizing (`max` in the body). */
-  max_phones: 422,
-  invite_template_not_configured: 422,
-  capacity_full: 422,
-  invite_capacity_full: 422,
-  duplicate_invite: 422,
-  number_restricted: 422,
-  window_closed: 422,
-  unsupported_type: 422,
-  /** 429: 50 open actions on the number. Wait for some to finish. */
-  too_many_pending_actions: 429,
-  /** 502: WhatsApp failed on a live read (invite link, join requests). */
-  provider_error: 502,
-} as const;
-
 export type AccessErrorCode = keyof typeof ACCESS_ERROR_CODES;
 /** An error code of a send rejected by the WhatsApp rules (`APIError.code`). */
 export type SendErrorCode = keyof typeof SEND_ERROR_CODES;
-export type GroupActionErrorCode = keyof typeof GROUP_ACTION_ERROR_CODES;
 /** Every `error` code the SDK knows. The API can send others: treat `code` as a `string`. */
-export type KnownErrorCode = AccessErrorCode | SendErrorCode | GroupActionErrorCode;
+export type KnownErrorCode = AccessErrorCode | SendErrorCode;
 
 const has = (table: object, code: string | undefined): boolean => code !== undefined && Object.prototype.hasOwnProperty.call(table, code);
 
@@ -120,4 +88,4 @@ export function isSendRuleError(code: string | undefined): code is SendErrorCode
  * Codes that a retry would only repeat: a `429` for the monthly active contacts is not a pace,
  * so it is never retried automatically.
  */
-export const NOT_RETRYABLE_CODES: ReadonlySet<string> = new Set(['mac_lockout_24h', 'mac_limit_reached', 'too_many_pending_actions']);
+export const NOT_RETRYABLE_CODES: ReadonlySet<string> = new Set(['mac_lockout_24h', 'mac_limit_reached']);

@@ -1,12 +1,12 @@
 /**
  * End to end against funnelchat-sandbox: a form from a template, published, sent and completed
  * (the signed `whatsapp_form.completed` verifies with the SDK); a file extension the API does not
- * take; the `capabilities` of a number; and the group actions, off as in production.
+ * take; and the `capabilities` of a number.
  *
  *   FUNNELCHAT_SANDBOX_URL=http://127.0.0.1:4010 npm run test:e2e
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { type APIError, PermissionDeniedError, UnsupportedMediaTypeError, type WebhookEventOf } from '../../src/index.js';
+import { type APIError, UnsupportedMediaTypeError, type WebhookEventOf } from '../../src/index.js';
 import { type Receiver, SANDBOX_URL, SEED, control, sandboxClient, startReceiver } from './sandbox.js';
 
 describe.skipIf(!SANDBOX_URL)('against the sandbox', () => {
@@ -62,15 +62,5 @@ describe.skipIf(!SANDBOX_URL)('against the sandbox', () => {
     const qr = await funnelchat.devices.retrieve(SEED.qrDevice);
     expect(official.capabilities.messages.templates).toBe(true);
     expect(qr.capabilities.messages.templates).toBe(false);
-    expect(qr.capabilities.groups.add_participants).toBe('direct');
-  });
-
-  it('the group actions are off, as in production: 403 route_not_available', async () => {
-    const error = (await funnelchat.groups
-      .addParticipants('120363000000000001@g.us', { device_id: SEED.qrDevice, phones: ['5491100000001'] })
-      .catch((e: unknown) => e)) as APIError;
-    expect(error).toBeInstanceOf(PermissionDeniedError);
-    expect(error.code).toBe('route_not_available');
-    expect(error.requestId).toMatch(/^[0-9a-f-]{36}$/i);
   });
 });

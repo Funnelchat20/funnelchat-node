@@ -15,7 +15,7 @@ export interface RouteInfo {
   readonly pending: boolean;
 }
 
-/** Every operation of the spec (274), sorted by path. */
+/** Every operation of the spec (258), sorted by path. */
 export const routes: readonly RouteInfo[] = [
   {"method":"GET","path":"/api/v1/agents","operationId":"user.index","domain":"conversations","permission":"conversations:read","tag":"User","summary":"Listar agentes","pending":false},
   {"method":"GET","path":"/api/v1/agents/{user}","operationId":"user.show","domain":"conversations","permission":"conversations:read","tag":"User","summary":"Ver un agente","pending":false},
@@ -183,28 +183,12 @@ export const routes: readonly RouteInfo[] = [
   {"method":"GET","path":"/api/v1/forms/families/{familyId}/versions","operationId":"pendingForms.versions","domain":"conversations","permission":"conversations:read","tag":"WhatsappForm","summary":"The versions of a form","pending":true},
   {"method":"GET","path":"/api/v1/forms/templates","operationId":"pendingForms.templates","domain":"conversations","permission":"conversations:read","tag":"WhatsappForm","summary":"Templates to start a form","pending":true},
   {"method":"GET","path":"/api/v1/groups","operationId":"group.index","domain":"communities","permission":"communities:read","tag":"Grupos","summary":"Listar grupos","pending":false},
-  {"method":"POST","path":"/api/v1/groups","operationId":"pendingGroups.create","domain":"communities","permission":"communities:operate","tag":"GroupAction","summary":"Create a group","pending":true},
   {"method":"GET","path":"/api/v1/groups/{group}","operationId":"group.show","domain":"communities","permission":"communities:read","tag":"Grupos","summary":"Ver un grupo","pending":false},
   {"method":"GET","path":"/api/v1/groups/{group}/actions","operationId":"group.actions","domain":"communities","permission":"communities:read","tag":"Grupos","summary":"Listar las acciones de sesión sobre un grupo","pending":false},
-  {"method":"POST","path":"/api/v1/groups/{group}/admins","operationId":"pendingGroups.promoteAdmins","domain":"communities","permission":"communities:operate","tag":"GroupAction","summary":"Make admins","pending":true},
-  {"method":"POST","path":"/api/v1/groups/{group}/admins/remove","operationId":"pendingGroups.demoteAdmins","domain":"communities","permission":"communities:operate","tag":"GroupAction","summary":"Remove admins","pending":true},
-  {"method":"PUT","path":"/api/v1/groups/{group}/description","operationId":"pendingGroups.updateDescription","domain":"communities","permission":"communities:operate","tag":"GroupAction","summary":"Change the description","pending":true},
-  {"method":"GET","path":"/api/v1/groups/{group}/invite-link/live","operationId":"pendingGroups.inviteLink","domain":"communities","permission":"communities:read","tag":"GroupAction","summary":"The invite link, read live","pending":true},
-  {"method":"POST","path":"/api/v1/groups/{group}/invite-link/renew","operationId":"pendingGroups.renewInviteLink","domain":"communities","permission":"communities:operate","tag":"GroupAction","summary":"Renew the invite link","pending":true},
-  {"method":"GET","path":"/api/v1/groups/{group}/join-requests","operationId":"pendingGroups.joinRequests","domain":"communities","permission":"communities:read","tag":"GroupAction","summary":"The join requests","pending":true},
-  {"method":"POST","path":"/api/v1/groups/{group}/join-requests/approve","operationId":"pendingGroups.approveJoinRequests","domain":"communities","permission":"communities:operate","tag":"GroupAction","summary":"Approve join requests","pending":true},
-  {"method":"POST","path":"/api/v1/groups/{group}/join-requests/reject","operationId":"pendingGroups.rejectJoinRequests","domain":"communities","permission":"communities:operate","tag":"GroupAction","summary":"Reject join requests","pending":true},
   {"method":"GET","path":"/api/v1/groups/{group}/messages","operationId":"group.messages","domain":"communities","permission":"communities:read","tag":"Grupos","summary":"Listar los mensajes enviados a un grupo","pending":false},
-  {"method":"POST","path":"/api/v1/groups/{group}/messages","operationId":"pendingGroups.sendMessage","domain":"communities","permission":"communities:send","tag":"GroupAction","summary":"Send a message to a group","pending":true},
-  {"method":"PUT","path":"/api/v1/groups/{group}/name","operationId":"pendingGroups.updateName","domain":"communities","permission":"communities:operate","tag":"GroupAction","summary":"Change the name","pending":true},
   {"method":"GET","path":"/api/v1/groups/{group}/participant-events","operationId":"group.participantEvents","domain":"communities","permission":"communities:read","tag":"Participantes","summary":"Listar entradas y salidas de un grupo","pending":false},
-  {"method":"POST","path":"/api/v1/groups/{group}/participants","operationId":"pendingGroups.addParticipants","domain":"communities","permission":"communities:operate","tag":"GroupAction","summary":"Add participants","pending":true},
-  {"method":"POST","path":"/api/v1/groups/{group}/participants/remove","operationId":"pendingGroups.removeParticipants","domain":"communities","permission":"communities:operate","tag":"GroupAction","summary":"Remove participants","pending":true},
-  {"method":"PUT","path":"/api/v1/groups/{group}/photo","operationId":"pendingGroups.updatePhoto","domain":"communities","permission":"communities:operate","tag":"GroupAction","summary":"Change the photo","pending":true},
   {"method":"GET","path":"/api/v1/groups/{group}/scheduled-messages","operationId":"group.scheduledMessages","domain":"communities","permission":"communities:read","tag":"Grupos","summary":"Listar los envíos programados que incluyen un grupo","pending":false},
-  {"method":"PUT","path":"/api/v1/groups/{group}/settings","operationId":"pendingGroups.updateSettings","domain":"communities","permission":"communities:operate","tag":"GroupAction","summary":"Change who can write","pending":true},
   {"method":"GET","path":"/api/v1/groups/{groupUid}/metadata","operationId":"groupMetadata.show","domain":"communities","permission":"communities:read","tag":"Grupos","summary":"Ver los datos actuales de un grupo en WhatsApp","pending":false},
-  {"method":"GET","path":"/api/v1/groups/actions/{action}","operationId":"pendingGroups.action","domain":"communities","permission":"communities:read","tag":"GroupAction","summary":"A group action","pending":true},
   {"method":"GET","path":"/api/v1/groups/participants","operationId":"group.participants","domain":"communities","permission":"communities:read","tag":"Participantes","summary":"Listar los participantes de un grupo","pending":false},
   {"method":"GET","path":"/api/v1/kanban-settings","operationId":"kanbanSetting.index","domain":"conversations","permission":"conversations:read","tag":"KanbanSetting","summary":"Listar tableros","pending":false},
   {"method":"POST","path":"/api/v1/kanban-settings","operationId":"kanbanSetting.store","domain":"conversations","permission":"conversations:write","tag":"KanbanSetting","summary":"Crear un tablero","pending":false},

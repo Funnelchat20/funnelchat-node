@@ -49,8 +49,8 @@ const placeholder = /\{[^}]+\}/g;
 const escape = (text: string) => text.replace(/[.*+?^$()|[\]\\]/g, '\\$&');
 
 /**
- * The send operations of the spec (a `POST` with a `*:send` permission: `conversations:send` or
- * `communities:send`): they deliver a WhatsApp message and are not idempotent, so they are never
+ * The send operations of the spec (a `POST` with a `*:send` permission, such as
+ * `conversations:send`): they deliver a WhatsApp message and are not idempotent, so they are never
  * retried automatically. Built from the generated route table, so a regeneration keeps the list
  * current.
  */

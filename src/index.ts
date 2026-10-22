@@ -50,8 +50,8 @@ export { routes } from './generated/routes.js';
 export type { RouteInfo } from './generated/routes.js';
 export type { components, operations, paths, webhooks as WebhookSchemas } from './generated/openapi.js';
 
-export { ACCESS_ERROR_CODES, GROUP_ACTION_ERROR_CODES, SEND_ERROR_CODES, isSendRuleError } from './core/error-codes.js';
-export type { AccessErrorCode, GroupActionErrorCode, KnownErrorCode, SendErrorCode } from './core/error-codes.js';
+export { ACCESS_ERROR_CODES, SEND_ERROR_CODES, isSendRuleError } from './core/error-codes.js';
+export type { AccessErrorCode, KnownErrorCode, SendErrorCode } from './core/error-codes.js';
 export type { SendMessageParams } from './resources/messages.js';
 
 export { VERSION } from './version.js';
