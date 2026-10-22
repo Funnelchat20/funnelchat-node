@@ -43,7 +43,10 @@
           "id": { "type": "string", "format": "uuid", "description": "Identificador de la suscripción. Guardalo al crearla: es lo que identifica la tuya." },
           "url": { "type": "string" },
           "description": { "type": ["string", "null"] },
-          "events": { "type": "array", "items": { "type": "string" } },
+          "events": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
           "filters": { "$ref": "#/components/schemas/PendingWebhookSubscriptionFilters" },
           "status": { "type": "string", "enum": ["active", "paused", "disabled"] },
           "disabled_reason": { "type": ["string", "null"], "enum": ["too_many_failures", "key_revoked", null] },
@@ -84,9 +87,18 @@
         "properties": {
           "url": { "type": "string", "maxLength": 2048, "description": "`https`, pública y sin usuario ni contraseña." },
           "description": { "type": ["string", "null"], "maxLength": 160 },
-          "events": { "type": "array", "minItems": 1, "maxItems": 50, "items": { "type": "string" }, "description": "Tipos del catálogo (`GET /api/v1/webhooks/events`). La clave necesita el permiso `{área}:read` del área de cada tipo." },
+          "events": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 50,
+            "items": { "type": "string" },
+            "description": "Tipos del catálogo (`GET /api/v1/webhooks/events`). La clave necesita el permiso `{área}:read` del área de cada tipo."
+          },
           "filters": {
-            "anyOf": [{ "$ref": "#/components/schemas/PendingWebhookSubscriptionFilters" }, { "type": "null" }]
+            "anyOf": [
+              { "$ref": "#/components/schemas/PendingWebhookSubscriptionFilters" },
+              { "type": "null" }
+            ]
           }
         },
         "required": ["url", "events"]
@@ -135,46 +147,14 @@
         "type": "object",
         "description": "Un mensaje como lo ve una clave: siempre estas diez claves. Pendiente de la especificación (conversations feat/envio-devuelve-id @ d3ac33994, sin PR): la forma puede cambiar.",
         "properties": {
-          "id": {
-            "type": "integer",
-            "description": "El id del mensaje en el historial del contacto: el mismo `message_id` de `message.status_changed`."
-          },
-          "contact_id": {
-            "type": [
-              "integer",
-              "null"
-            ]
-          },
-          "device_id": {
-            "type": [
-              "integer",
-              "null"
-            ]
-          },
-          "direction": {
-            "type": "string",
-            "enum": [
-              "outbound",
-              "inbound"
-            ]
-          },
-          "type": {
-            "type": "string",
-            "description": "El tipo público del mensaje (`text`, `image`, `contact`…), el mismo de `message.received`."
-          },
+          "id": { "type": "integer", "description": "El id del mensaje en el historial del contacto: el mismo `message_id` de `message.status_changed`." },
+          "contact_id": { "type": ["integer", "null"] },
+          "device_id": { "type": ["integer", "null"] },
+          "direction": { "type": "string", "enum": ["outbound", "inbound"] },
+          "type": { "type": "string", "description": "El tipo público del mensaje (`text`, `image`, `contact`…), el mismo de `message.received`." },
           "status": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "queued",
-              "sent",
-              "delivered",
-              "read",
-              "failed",
-              null
-            ],
+            "type": ["string", "null"],
+            "enum": ["queued", "sent", "delivered", "read", "failed", null],
             "description": "Un envío recién aceptado está `queued`. `null` cuando el mensaje no tiene estado de entrega (recibido, nota) o no se sabe."
           },
           "error": {
@@ -182,189 +162,60 @@
               {
                 "type": "object",
                 "properties": {
-                  "code": {
-                    "type": [
-                      "integer",
-                      "null"
-                    ]
-                  },
-                  "title": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  }
+                  "code": { "type": ["integer", "null"] },
+                  "title": { "type": ["string", "null"] }
                 },
-                "required": [
-                  "code",
-                  "title"
-                ]
+                "required": ["code", "title"]
               },
-              {
-                "type": "null"
-              }
+              { "type": "null" }
             ],
             "description": "Solo cuando `status` es `failed`."
           },
-          "client_reference": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "created_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
-          "updated_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          }
+          "client_reference": { "type": ["string", "null"] },
+          "created_at": { "type": ["string", "null"], "format": "date-time" },
+          "updated_at": { "type": ["string", "null"], "format": "date-time" }
         },
-        "required": [
-          "id",
-          "contact_id",
-          "device_id",
-          "direction",
-          "type",
-          "status",
-          "error",
-          "client_reference",
-          "created_at",
-          "updated_at"
-        ]
+        "required": ["id", "contact_id", "device_id", "direction", "type", "status", "error", "client_reference", "created_at", "updated_at"]
       },
       "PendingQueuedContactCard": {
         "type": "object",
         "description": "Una tarjeta de contacto después de la primera: las mismas claves del mensaje, sin id. Pendiente de la especificación (conversations feat/envio-devuelve-id @ d3ac33994, sin PR).",
         "properties": {
-          "id": {
-            "type": "null"
-          },
-          "contact_id": {
-            "type": [
-              "integer",
-              "null"
-            ]
-          },
-          "device_id": {
-            "type": [
-              "integer",
-              "null"
-            ]
-          },
-          "direction": {
-            "type": "string",
-            "enum": [
-              "outbound"
-            ]
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "contact"
-            ]
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "queued",
-              "failed"
-            ]
-          },
-          "error": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "client_reference": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "created_at": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "updated_at": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
+          "id": { "type": "null" },
+          "contact_id": { "type": ["integer", "null"] },
+          "device_id": { "type": ["integer", "null"] },
+          "direction": { "type": "string", "enum": ["outbound"] },
+          "type": { "type": "string", "enum": ["contact"] },
+          "status": { "type": "string", "enum": ["queued", "failed"] },
+          "error": { "type": ["string", "null"] },
+          "client_reference": { "type": ["string", "null"] },
+          "created_at": { "type": ["string", "null"] },
+          "updated_at": { "type": ["string", "null"] }
         },
-        "required": [
-          "id",
-          "contact_id",
-          "device_id",
-          "direction",
-          "type",
-          "status",
-          "error",
-          "client_reference",
-          "created_at",
-          "updated_at"
-        ]
+        "required": ["id", "contact_id", "device_id", "direction", "type", "status", "error", "client_reference", "created_at", "updated_at"]
       },
       "PendingForwardResult": {
         "type": "object",
         "description": "El resultado de un reenvío para un destino, con su mensaje. Pendiente de la especificación (conversations feat/envio-devuelve-id @ d3ac33994, sin PR).",
         "properties": {
-          "contact_id": {
-            "type": "integer"
-          },
-          "mode": {
-            "type": "string",
-            "enum": [
-              "internal",
-              "native"
-            ]
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "queued",
-              "blocked"
-            ]
-          },
-          "reason": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
+          "contact_id": { "type": "integer" },
+          "mode": { "type": "string", "enum": ["internal", "native"] },
+          "status": { "type": "string", "enum": ["queued", "blocked"] },
+          "reason": { "type": ["string", "null"] },
           "message": {
             "anyOf": [
-              {
-                "$ref": "#/components/schemas/PendingPublicMessage"
-              },
-              {
-                "type": "null"
-              }
+              { "$ref": "#/components/schemas/PendingPublicMessage" },
+              { "type": "null" }
             ]
           }
         },
-        "required": [
-          "contact_id",
-          "mode",
-          "status",
-          "reason",
-          "message"
-        ]
+        "required": ["contact_id", "mode", "status", "reason", "message"]
       },
       "PendingMessage": {
         "type": "object",
-        "properties": { "message": { "type": "string" } },
+        "properties": {
+          "message": { "type": "string" }
+        },
         "required": ["message"]
       }
     }
@@ -375,9 +226,7 @@
         "operationId": "pendingMessage.show",
         "summary": "Ver un mensaje por id",
         "description": "Un mensaje de tu cuenta por el id que te dio el envío o un webhook (`message_id` de `message.status_changed`). Aceptado no es entregado: `status` es `queued`, `sent`, `delivered`, `read` o `failed` en los que enviaste, y `null` en los recibidos, las notas y los de resultado desconocido. Responde 404 si el mensaje no existe o no es de ese contacto.\n\n**Pendiente de la especificación** (conversations feat/envio-devuelve-id @ d3ac33994, rama local sin PR): la forma puede cambiar.",
-        "tags": [
-          "Message"
-        ],
+        "tags": ["Message"],
         "x-fc-domain": "conversations",
         "x-fc-permission": "conversations:read",
         "x-fc-pending": "conversations-send-result",
@@ -386,17 +235,13 @@
             "name": "contact",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "integer"
-            }
+            "schema": { "type": "integer" }
           },
           {
             "name": "message",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "integer"
-            }
+            "schema": { "type": "integer" }
           }
         ],
         "responses": {
@@ -404,9 +249,7 @@
             "description": "OK",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PendingPublicMessage"
-                }
+                "schema": { "$ref": "#/components/schemas/PendingPublicMessage" }
               }
             }
           },
@@ -414,9 +257,7 @@
             "description": "El mensaje no existe o no es de ese contacto.",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PendingMessage"
-                }
+                "schema": { "$ref": "#/components/schemas/PendingMessage" }
               }
             }
           }
@@ -435,7 +276,14 @@
         "responses": {
           "200": {
             "description": "OK",
-            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/PendingWebhookSubscription" } } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PendingWebhookSubscription" }
+                }
+              }
+            }
           }
         }
       },
@@ -449,16 +297,28 @@
         "x-fc-pending": "accounts-webhooks",
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PendingWebhookSubscriptionCreate" } } }
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PendingWebhookSubscriptionCreate" }
+            }
+          }
         },
         "responses": {
           "201": {
             "description": "Created",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PendingWebhookSubscriptionWithSecret" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingWebhookSubscriptionWithSecret" }
+              }
+            }
           },
           "422": {
             "description": "URL rechazada, tipos de evento inválidos o tope alcanzado",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PendingMessage" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingMessage" }
+              }
+            }
           }
         }
       }
@@ -472,11 +332,22 @@
         "x-fc-domain": "accounts",
         "x-fc-permission": "accounts:read",
         "x-fc-pending": "accounts-webhooks",
-        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PendingWebhookSubscription" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingWebhookSubscription" }
+              }
+            }
           }
         }
       },
@@ -488,15 +359,30 @@
         "x-fc-domain": "accounts",
         "x-fc-permission": "accounts:write",
         "x-fc-pending": "accounts-webhooks",
-        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PendingWebhookSubscriptionUpdate" } } }
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PendingWebhookSubscriptionUpdate" }
+            }
+          }
         },
         "responses": {
           "200": {
             "description": "OK",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PendingWebhookSubscription" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingWebhookSubscription" }
+              }
+            }
           }
         }
       },
@@ -508,8 +394,17 @@
         "x-fc-domain": "accounts",
         "x-fc-permission": "accounts:write",
         "x-fc-pending": "accounts-webhooks",
-        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
-        "responses": { "204": { "description": "No Content" } }
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "No Content" }
+        }
       }
     },
     "/api/v1/webhooks/{id}/rotate-secret": {
@@ -521,11 +416,22 @@
         "x-fc-domain": "accounts",
         "x-fc-permission": "accounts:write",
         "x-fc-pending": "accounts-webhooks",
-        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PendingWebhookSubscriptionWithSecret" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingWebhookSubscriptionWithSecret" }
+              }
+            }
           }
         }
       }
@@ -539,11 +445,22 @@
         "x-fc-domain": "accounts",
         "x-fc-permission": "accounts:write",
         "x-fc-pending": "accounts-webhooks",
-        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PendingWebhookSubscriptionTestResult" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingWebhookSubscriptionTestResult" }
+              }
+            }
           }
         }
       }
@@ -558,11 +475,32 @@
         "x-fc-permission": "accounts:read",
         "x-fc-pending": "accounts-webhooks",
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
-          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1 } },
-          { "name": "per_page", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 25 } },
-          { "name": "event_type", "in": "query", "schema": { "type": "string" } },
-          { "name": "event_id", "in": "query", "schema": { "type": "string" } }
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1 }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 25 }
+          },
+          {
+            "name": "event_type",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "event_id",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
         ],
         "responses": {
           "200": {
@@ -572,7 +510,10 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/PendingWebhookSubscriptionDelivery" } },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PendingWebhookSubscriptionDelivery" }
+                    },
                     "links": {
                       "type": "object",
                       "properties": {
@@ -608,49 +549,54 @@
       "path": "/api/v1/contacts/{contact}/message",
       "while": { "x-portal-v0": "send_pending" },
       "x-fc-pending": "conversations-c2",
-      "requestBodyProperties": { "client_reference": { "$ref": "#/components/schemas/PendingClientReference" } }
+      "requestBodyProperties": {
+        "client_reference": { "$ref": "#/components/schemas/PendingClientReference" }
+      }
     },
     {
       "method": "post",
       "path": "/api/v1/message/send-message",
       "while": { "x-portal-v0": "send_pending" },
       "x-fc-pending": "conversations-c2",
-      "requestBodyProperties": { "client_reference": { "$ref": "#/components/schemas/PendingClientReference" } }
+      "requestBodyProperties": {
+        "client_reference": { "$ref": "#/components/schemas/PendingClientReference" }
+      }
     },
     {
       "method": "post",
       "path": "/api/v1/devices/{device}/templates/{template}/send-template",
       "while": { "x-portal-v0": "send_pending" },
       "x-fc-pending": "conversations-c2",
-      "requestBodyProperties": { "client_reference": { "$ref": "#/components/schemas/PendingClientReference" } }
+      "requestBodyProperties": {
+        "client_reference": { "$ref": "#/components/schemas/PendingClientReference" }
+      }
     },
     {
       "method": "post",
       "path": "/api/v1/contacts/{contact}/message/contact-card",
       "while": { "x-portal-v0": "send_pending" },
       "x-fc-pending": "conversations-c2",
-      "requestBodyProperties": { "client_reference": { "$ref": "#/components/schemas/PendingClientReference" } }
+      "requestBodyProperties": {
+        "client_reference": { "$ref": "#/components/schemas/PendingClientReference" }
+      }
     },
     {
       "method": "post",
       "path": "/api/v1/contacts/{contact}/messages/{message}/forward",
       "while": { "x-portal-v0": "send_pending" },
       "x-fc-pending": "conversations-c2",
-      "requestBodyProperties": { "client_reference": { "$ref": "#/components/schemas/PendingClientReference" } }
+      "requestBodyProperties": {
+        "client_reference": { "$ref": "#/components/schemas/PendingClientReference" }
+      }
     }
   ],
   "responsePatches": [
     {
       "method": "post",
       "path": "/api/v1/contacts/{contact}/message",
-      "while": {
-        "x-portal-v0": "send_pending"
-      },
+      "while": { "x-portal-v0": "send_pending" },
       "x-fc-pending": "conversations-send-result",
       "responses": {
-        "204": {
-          "description": "Hasta que se despliegue conversations feat/envio-devuelve-id: sin cuerpo."
-        },
         "200": {
           "description": "El mensaje quedó registrado (`status: queued`) y sale desde la cola. `message` es `null` si no se pudo leer de vuelta.",
           "content": {
@@ -660,35 +606,25 @@
                 "properties": {
                   "message": {
                     "anyOf": [
-                      {
-                        "$ref": "#/components/schemas/PendingPublicMessage"
-                      },
-                      {
-                        "type": "null"
-                      }
+                      { "$ref": "#/components/schemas/PendingPublicMessage" },
+                      { "type": "null" }
                     ]
                   }
                 },
-                "required": [
-                  "message"
-                ]
+                "required": ["message"]
               }
             }
           }
-        }
+        },
+        "204": { "description": "Hasta que se despliegue conversations feat/envio-devuelve-id: sin cuerpo." }
       }
     },
     {
       "method": "post",
       "path": "/api/v1/contacts/{contact}/message/contact-card",
-      "while": {
-        "x-portal-v0": "send_pending"
-      },
+      "while": { "x-portal-v0": "send_pending" },
       "x-fc-pending": "conversations-send-result",
       "responses": {
-        "204": {
-          "description": "Hasta que se despliegue conversations feat/envio-devuelve-id: sin cuerpo."
-        },
         "200": {
           "description": "Una entrada por tarjeta, en orden: la primera es el mensaje (o `null` si no se pudo leer), las demás una marca `queued` o `failed` sin id.",
           "content": {
@@ -700,34 +636,25 @@
                     "type": "array",
                     "items": {
                       "anyOf": [
-                        {
-                          "$ref": "#/components/schemas/PendingPublicMessage"
-                        },
-                        {
-                          "$ref": "#/components/schemas/PendingQueuedContactCard"
-                        },
-                        {
-                          "type": "null"
-                        }
+                        { "$ref": "#/components/schemas/PendingPublicMessage" },
+                        { "$ref": "#/components/schemas/PendingQueuedContactCard" },
+                        { "type": "null" }
                       ]
                     }
                   }
                 },
-                "required": [
-                  "messages"
-                ]
+                "required": ["messages"]
               }
             }
           }
-        }
+        },
+        "204": { "description": "Hasta que se despliegue conversations feat/envio-devuelve-id: sin cuerpo." }
       }
     },
     {
       "method": "post",
       "path": "/api/v1/contacts/{contact}/messages/{message}/forward",
-      "while": {
-        "x-portal-v0": "send_pending"
-      },
+      "while": { "x-portal-v0": "send_pending" },
       "x-fc-pending": "conversations-send-result",
       "responses": {
         "200": {
@@ -736,9 +663,7 @@
             "application/json": {
               "schema": {
                 "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/PendingForwardResult"
-                }
+                "items": { "$ref": "#/components/schemas/PendingForwardResult" }
               }
             }
           }
@@ -748,9 +673,7 @@
     {
       "method": "post",
       "path": "/api/v1/message/send-message",
-      "while": {
-        "x-portal-v0": "send_pending"
-      },
+      "while": { "x-portal-v0": "send_pending" },
       "x-fc-pending": "conversations-send-result",
       "responses": {
         "200": {
@@ -762,25 +685,13 @@
                 "properties": {
                   "message": {
                     "anyOf": [
-                      {
-                        "$ref": "#/components/schemas/PendingPublicMessage"
-                      },
-                      {
-                        "type": "null"
-                      }
+                      { "$ref": "#/components/schemas/PendingPublicMessage" },
+                      { "type": "null" }
                     ]
                   },
-                  "error": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  }
+                  "error": { "type": ["string", "null"] }
                 },
-                "required": [
-                  "message",
-                  "error"
-                ]
+                "required": ["message", "error"]
               }
             }
           }
@@ -790,9 +701,7 @@
     {
       "method": "post",
       "path": "/api/v1/devices/{device}/templates/{template}/send-template",
-      "while": {
-        "x-portal-v0": "send_pending"
-      },
+      "while": { "x-portal-v0": "send_pending" },
       "x-fc-pending": "conversations-send-result",
       "responses": {
         "200": {
@@ -804,18 +713,12 @@
                 "properties": {
                   "message": {
                     "anyOf": [
-                      {
-                        "$ref": "#/components/schemas/PendingPublicMessage"
-                      },
-                      {
-                        "type": "null"
-                      }
+                      { "$ref": "#/components/schemas/PendingPublicMessage" },
+                      { "type": "null" }
                     ]
                   }
                 },
-                "required": [
-                  "message"
-                ]
+                "required": ["message"]
               }
             }
           }
@@ -827,38 +730,20 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "error": {
-                    "type": "string"
-                  },
-                  "error_code": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
+                  "error": { "type": "string" },
+                  "error_code": { "type": ["string", "null"] },
                   "placeholders": {
                     "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
+                    "items": { "type": "string" }
                   },
                   "message": {
                     "anyOf": [
-                      {
-                        "$ref": "#/components/schemas/PendingPublicMessage"
-                      },
-                      {
-                        "type": "null"
-                      }
+                      { "$ref": "#/components/schemas/PendingPublicMessage" },
+                      { "type": "null" }
                     ]
                   }
                 },
-                "required": [
-                  "error",
-                  "error_code",
-                  "placeholders",
-                  "message"
-                ]
+                "required": ["error", "error_code", "placeholders", "message"]
               }
             }
           }
@@ -989,7 +874,16 @@
         "x-fc-status": "live",
         "x-fc-domain": "accounts",
         "x-fc-pending": "accounts-webhooks",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object" }, "example": { "data": { "amount_cents": 2990, "currency": "USD" } } } } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" },
+              "example": {
+                "data": { "amount_cents": 2990, "currency": "USD" }
+              }
+            }
+          }
+        }
       }
     },
     "billing.plan_blocked": {
@@ -999,7 +893,13 @@
         "x-fc-status": "planned",
         "x-fc-domain": "accounts",
         "x-fc-pending": "accounts-webhooks",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object" } } } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        }
       }
     },
     "billing.upcoming_charge": {
@@ -1009,7 +909,16 @@
         "x-fc-status": "live",
         "x-fc-domain": "accounts",
         "x-fc-pending": "accounts-webhooks",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object" }, "example": { "data": { "charge_date": "2026-11-05T00:00:00Z", "amount_cents": 2990, "currency": "USD" } } } } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" },
+              "example": {
+                "data": { "charge_date": "2026-11-05T00:00:00Z", "amount_cents": 2990, "currency": "USD" }
+              }
+            }
+          }
+        }
       }
     },
     "subscription.expiring": {
@@ -1019,7 +928,13 @@
         "x-fc-status": "planned",
         "x-fc-domain": "accounts",
         "x-fc-pending": "accounts-webhooks",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object" } } } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        }
       }
     },
     "subscription.trial_ending": {
@@ -1029,7 +944,16 @@
         "x-fc-status": "live",
         "x-fc-domain": "accounts",
         "x-fc-pending": "accounts-webhooks",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object" }, "example": { "data": { "trial_ends_at": "2026-10-04T00:00:00Z" } } } } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" },
+              "example": {
+                "data": { "trial_ends_at": "2026-10-04T00:00:00Z" }
+              }
+            }
+          }
+        }
       }
     },
     "subscription.reactivated": {
@@ -1039,7 +963,16 @@
         "x-fc-status": "live",
         "x-fc-domain": "accounts",
         "x-fc-pending": "accounts-webhooks",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object" }, "example": { "data": { "renews_at": "2026-11-05T00:00:00Z" } } } } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" },
+              "example": {
+                "data": { "renews_at": "2026-11-05T00:00:00Z" }
+              }
+            }
+          }
+        }
       }
     },
     "subscription.cancellation_confirmed": {
@@ -1049,7 +982,16 @@
         "x-fc-status": "live",
         "x-fc-domain": "accounts",
         "x-fc-pending": "accounts-webhooks",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object" }, "example": { "data": { "access_until": "2026-11-05T00:00:00Z" } } } } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" },
+              "example": {
+                "data": { "access_until": "2026-11-05T00:00:00Z" }
+              }
+            }
+          }
+        }
       }
     },
     "subscription.dormant_ending": {
@@ -1059,7 +1001,16 @@
         "x-fc-status": "live",
         "x-fc-domain": "accounts",
         "x-fc-pending": "accounts-webhooks",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object" }, "example": { "data": { "charge_date": "2026-10-08T00:00:00Z", "amount_cents": 1990, "currency": "USD" } } } } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" },
+              "example": {
+                "data": { "charge_date": "2026-10-08T00:00:00Z", "amount_cents": 1990, "currency": "USD" }
+              }
+            }
+          }
+        }
       }
     },
     "ai_quota.low_balance": {
@@ -1069,7 +1020,13 @@
         "x-fc-status": "planned",
         "x-fc-domain": "accounts",
         "x-fc-pending": "accounts-webhooks",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object" } } } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        }
       }
     },
     "ai_quota.topup_succeeded": {
@@ -1079,7 +1036,13 @@
         "x-fc-status": "planned",
         "x-fc-domain": "accounts",
         "x-fc-pending": "accounts-webhooks",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object" } } } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        }
       }
     },
     "ai_quota.topup_failed": {
@@ -1089,7 +1052,13 @@
         "x-fc-status": "planned",
         "x-fc-domain": "accounts",
         "x-fc-pending": "accounts-webhooks",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object" } } } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        }
       }
     },
     "mac.usage_80": {
@@ -1099,7 +1068,16 @@
         "x-fc-status": "live",
         "x-fc-domain": "accounts",
         "x-fc-pending": "accounts-webhooks",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object" }, "example": { "data": { "used": 8000, "limit": 10000, "percentage": 80, "cycle_started_at": "2026-10-01T00:00:00Z" } } } } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" },
+              "example": {
+                "data": { "used": 8000, "limit": 10000, "percentage": 80, "cycle_started_at": "2026-10-01T00:00:00Z" }
+              }
+            }
+          }
+        }
       }
     },
     "mac.usage_100": {
@@ -1109,7 +1087,16 @@
         "x-fc-status": "live",
         "x-fc-domain": "accounts",
         "x-fc-pending": "accounts-webhooks",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object" }, "example": { "data": { "used": 10000, "limit": 10000, "percentage": 100, "cycle_started_at": "2026-10-01T00:00:00Z", "grace_expires_at": "2026-10-02T12:00:00Z" } } } } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" },
+              "example": {
+                "data": { "used": 10000, "limit": 10000, "percentage": 100, "cycle_started_at": "2026-10-01T00:00:00Z", "grace_expires_at": "2026-10-02T12:00:00Z" }
+              }
+            }
+          }
+        }
       }
     },
     "mac.expiring": {
@@ -1119,7 +1106,16 @@
         "x-fc-status": "live",
         "x-fc-domain": "accounts",
         "x-fc-pending": "accounts-webhooks",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object" }, "example": { "data": { "contacts_expiring": 1200, "expires_at": "2026-10-08T03:00:00Z" } } } } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" },
+              "example": {
+                "data": { "contacts_expiring": 1200, "expires_at": "2026-10-08T03:00:00Z" }
+              }
+            }
+          }
+        }
       }
     },
     "account.blocked": {
@@ -1129,7 +1125,16 @@
         "x-fc-status": "live",
         "x-fc-domain": "accounts",
         "x-fc-pending": "accounts-webhooks",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object" }, "example": { "data": { "reason": "mac_grace_expired", "grace_started_at": "2026-10-01T12:00:00Z", "grace_expired_at": "2026-10-02T12:00:00Z" } } } } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" },
+              "example": {
+                "data": { "reason": "mac_grace_expired", "grace_started_at": "2026-10-01T12:00:00Z", "grace_expired_at": "2026-10-02T12:00:00Z" }
+              }
+            }
+          }
+        }
       }
     },
     "group_action.failed": {
@@ -1139,7 +1144,22 @@
         "x-fc-status": "live",
         "x-fc-domain": "communities",
         "x-fc-pending": "accounts-webhooks",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object" }, "example": { "data": { "campaign": { "uuid": "xK9mQz", "name": "Campaña de ejemplo" }, "pipeline": { "uuid": "bN7vLs", "name": "Pipeline de ejemplo" }, "group": { "uid": "120363000000000000@g.us", "name": "Grupo de ejemplo" }, "action": { "type": "tipo_de_ejemplo" }, "reason": "motivo_de_ejemplo" } } } } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" },
+              "example": {
+                "data": {
+                  "campaign": { "uuid": "xK9mQz", "name": "Campaña de ejemplo" },
+                  "pipeline": { "uuid": "bN7vLs", "name": "Pipeline de ejemplo" },
+                  "group": { "uid": "120363000000000000@g.us", "name": "Grupo de ejemplo" },
+                  "action": { "type": "tipo_de_ejemplo" },
+                  "reason": "motivo_de_ejemplo"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "daily_report.generated": {
@@ -1149,7 +1169,22 @@
         "x-fc-status": "live",
         "x-fc-domain": "communities",
         "x-fc-pending": "accounts-webhooks",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object" }, "example": { "data": { "period": { "date": "2026-10-01", "timezone": "America/Argentina/Buenos_Aires" }, "clicks": 120, "joins": 80, "leaves": 10, "conversion_rate": 0.67 } } } } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" },
+              "example": {
+                "data": {
+                  "period": { "date": "2026-10-01", "timezone": "America/Argentina/Buenos_Aires" },
+                  "clicks": 120,
+                  "joins": 80,
+                  "leaves": 10,
+                  "conversion_rate": 0.67
+                }
+              }
+            }
+          }
+        }
       }
     },
     "campaign.no_groups_available": {
@@ -1159,7 +1194,19 @@
         "x-fc-status": "live",
         "x-fc-domain": "communities",
         "x-fc-pending": "accounts-webhooks",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object" }, "example": { "data": { "campaign": { "uuid": "xK9mQz", "name": "Campaña de ejemplo" }, "reason": "none_selectable" } } } } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" },
+              "example": {
+                "data": {
+                  "campaign": { "uuid": "xK9mQz", "name": "Campaña de ejemplo" },
+                  "reason": "none_selectable"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "group.full": {
@@ -1169,7 +1216,21 @@
         "x-fc-status": "live",
         "x-fc-domain": "communities",
         "x-fc-pending": "accounts-webhooks",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object" }, "example": { "data": { "group": { "uid": "120363000000000000@g.us", "name": "Grupo de ejemplo", "type": "tipo_de_ejemplo" }, "campaign": { "uuid": "xK9mQz", "name": "Campaña de ejemplo" }, "trigger": "participants_limit", "participants": 1024 } } } } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" },
+              "example": {
+                "data": {
+                  "group": { "uid": "120363000000000000@g.us", "name": "Grupo de ejemplo", "type": "tipo_de_ejemplo" },
+                  "campaign": { "uuid": "xK9mQz", "name": "Campaña de ejemplo" },
+                  "trigger": "participants_limit",
+                  "participants": 1024
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
