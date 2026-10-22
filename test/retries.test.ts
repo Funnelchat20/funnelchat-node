@@ -7,7 +7,7 @@ import {
   InternalServerError,
   RateLimitError,
 } from '../src/index.js';
-import { MAX_RETRY_DELAY_MS, isSendRequest, retryDelayMs } from '../src/core/retry.js';
+import { MAX_RETRY_DELAY_MS, isRetryable, isSendRequest, retryDelayMs } from '../src/core/retry.js';
 import { routes } from '../src/generated/routes.js';
 import { type MockReply, TEST_API_KEY, hangUntilAborted, mockFetch, networkError } from './helpers.js';
 
@@ -187,12 +187,40 @@ describe('sends are not retried unless asked', () => {
     expect(calls).toHaveLength(2);
   });
 
-  it('retries a non-send POST', async () => {
-    const { fetch, calls } = mockFetch(serverError, { status: 200, body: { id: 1 } });
+  it('retries a non-send POST on 503 and 429: the write was not applied', async () => {
+    const { fetch, calls } = mockFetch(serverError, rateLimited('0'), { status: 200, body: { id: 1 } });
     const promise = client(fetch).tags.create({ name: 'VIP' });
     await vi.runAllTimersAsync();
     await expect(promise).resolves.toEqual({ id: 1 });
-    expect(calls).toHaveLength(2);
+    expect(calls).toHaveLength(3);
+  });
+
+  it.each([500, 502, 504])('does not retry a write on %i: it may have been applied', async (status) => {
+    const { fetch, calls } = mockFetch({ status, body: { error: 'origin_unreachable', message: 'La API no está disponible en este momento.' } });
+    const promise = client(fetch).tags.create({ name: 'VIP' });
+    await expect(promise).rejects.toBeInstanceOf(InternalServerError);
+    await vi.runAllTimersAsync();
+    expect(calls).toHaveLength(1);
+  });
+
+  it('does not retry a write after a network error or a timeout', async () => {
+    const { fetch, calls } = mockFetch(networkError());
+    await expect(client(fetch).request('PATCH', '/api/v1/algo', { body: {} })).rejects.toBeInstanceOf(APIConnectionError);
+    const second = mockFetch(hangUntilAborted);
+    const promise = client(second.fetch, { timeoutMs: 100 }).tags.create({ name: 'VIP' });
+    const assertion = expect(promise).rejects.toBeInstanceOf(APIConnectionTimeoutError);
+    await vi.advanceTimersByTimeAsync(100);
+    await assertion;
+    await vi.runAllTimersAsync();
+    expect(calls).toHaveLength(1);
+    expect(second.calls).toHaveLength(1);
+  });
+
+  it('retrySend makes a send follow the rule of every write: 429 yes, 502 no', async () => {
+    const { fetch, calls } = mockFetch({ status: 502, body: { error: 'origin_unreachable' } });
+    await expect(send(client(fetch), true)).rejects.toBeInstanceOf(InternalServerError);
+    await vi.runAllTimersAsync();
+    expect(calls).toHaveLength(1);
   });
 });
 
@@ -209,6 +237,18 @@ describe('retry policy helpers', () => {
     expect(isSendRequest('POST', '/api/v1/contacts/delete')).toBe(false);
     expect(isSendRequest('POST', '/api/v1/contacts')).toBe(false);
     expect(isSendRequest('PUT', '/api/v1/contacts/2001/messages/9/reaction')).toBe(false);
+  });
+
+  it('repeats reads and idempotent writes on any transient failure, other writes only when not applied', () => {
+    for (const method of ['GET', 'PUT', 'DELETE']) {
+      for (const failure of [429, 500, 502, 503, 504, 'network'] as const) expect(isRetryable(method, failure)).toBe(true);
+    }
+    for (const method of ['POST', 'PATCH']) {
+      expect(isRetryable(method, 429)).toBe(true);
+      expect(isRetryable(method, 503)).toBe(true);
+      for (const failure of [500, 502, 504, 'network'] as const) expect(isRetryable(method, failure)).toBe(false);
+    }
+    expect(isRetryable('GET', 404)).toBe(false);
   });
 
   it('caps the exponential backoff', () => {

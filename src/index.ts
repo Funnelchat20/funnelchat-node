@@ -20,6 +20,8 @@ export {
 } from './core/errors.js';
 export type { FieldErrors, WebhookVerificationFailure } from './core/errors.js';
 
+export { APIPromise, REQUEST_ID_HEADER } from './core/api-promise.js';
+export type { APIResponse } from './core/api-promise.js';
 export { Page, PagePromise } from './core/pagination.js';
 export type {
   ApiPath,

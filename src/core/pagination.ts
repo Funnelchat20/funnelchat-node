@@ -9,22 +9,30 @@
  * `for await` to walk every item of every page.
  */
 
-/** Fetches one page body given the query of that page. */
-export type PageFetcher = (query: Record<string, unknown>) => Promise<unknown>;
+import type { APIResponse } from './api-promise.js';
+
+/** Fetches one page given the query of that page. */
+export type PageFetcher = (query: Record<string, unknown>) => Promise<APIResponse<unknown>>;
 
 export class Page<T> implements AsyncIterable<T> {
   /** Items of this page. */
   readonly data: T[];
   /** The full response body of this page (with `meta` and `links` when the route sends them). */
   readonly body: unknown;
+  /** `X-Request-Id` of the response of this page. */
+  readonly requestId: string | undefined;
+  /** The HTTP response of this page. Its body was already read: use `body`. */
+  readonly response: Response;
   readonly #fetchPage: PageFetcher;
   readonly #query: Record<string, unknown>;
 
-  constructor(fetchPage: PageFetcher, query: Record<string, unknown>, body: unknown) {
+  constructor(fetchPage: PageFetcher, query: Record<string, unknown>, result: APIResponse<unknown>) {
     this.#fetchPage = fetchPage;
     this.#query = query;
-    this.body = body;
-    this.data = extractItems<T>(body);
+    this.body = result.data;
+    this.requestId = result.requestId;
+    this.response = result.response;
+    this.data = extractItems<T>(result.data);
   }
 
   /**

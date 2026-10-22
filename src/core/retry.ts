@@ -10,9 +10,24 @@ export const MAX_RETRY_DELAY_MS = 8_000;
  */
 export const MAX_RETRY_AFTER_SECONDS = 60;
 
-/** Statuses worth retrying: rate limits and server errors. */
-export function isRetryableStatus(status: number): boolean {
-  return status === 429 || status >= 500;
+/** Methods that give the same result when repeated: they are retried on any transient failure. */
+const IDEMPOTENT_METHODS = new Set(['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE']);
+
+/** A failed attempt: the HTTP status of the error, or `'network'` when no response arrived. */
+export type FailedAttempt = number | 'network';
+
+/**
+ * Whether a failed attempt may be repeated automatically.
+ *
+ * - `GET`, `PUT` and `DELETE`: on `429`, `5xx` and network errors (timeouts included).
+ * - `POST` and `PATCH` (writes): only when the call was certainly not applied, `429` and `503`. A
+ *   `500`, `502` or `504`, a timeout or a dropped connection can come after the write was applied
+ *   (a `502 origin_unreachable` does not guarantee the area did not get it), so the error is thrown:
+ *   read the state before repeating the write.
+ */
+export function isRetryable(method: string, failure: FailedAttempt): boolean {
+  if (IDEMPOTENT_METHODS.has(method.toUpperCase())) return failure === 'network' || failure === 429 || failure >= 500;
+  return failure === 429 || failure === 503;
 }
 
 /**

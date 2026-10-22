@@ -17,6 +17,8 @@
  *   └── WebhookVerificationError    a webhook delivery failed signature verification
  */
 
+import { requestIdOf } from './api-promise.js';
+
 /** Base class of every error thrown by the SDK. */
 export class FunnelchatError extends Error {
   constructor(message: string, options?: { cause?: unknown }) {
@@ -45,11 +47,14 @@ export interface APIErrorInit {
  *   validation `422`, which carries `errors` instead).
  * - `message`: the `message` of the body, meant for people. Decide by `status` and `code`.
  * - `retryAfter`: seconds from the `Retry-After` header, when present.
+ * - `requestId`: the `X-Request-Id` of the response. Quote it when you report a problem.
  */
 export class APIError extends FunnelchatError {
   readonly status: number;
   readonly code: string | undefined;
   readonly retryAfter: number | undefined;
+  /** `X-Request-Id` of the response: the API sets it on every response, errors included. */
+  readonly requestId: string | undefined;
   /** Per-field validation messages of a `422`, when the API sends them. */
   readonly errors: FieldErrors | undefined;
   /** The parsed body (or the raw text when it is not JSON). */
@@ -69,6 +74,7 @@ export class APIError extends FunnelchatError {
     this.status = init.status;
     this.code = code;
     this.retryAfter = parseRetryAfter(init.headers.get('retry-after'));
+    this.requestId = requestIdOf(init.headers);
     this.errors = isRecord(record?.errors) ? (record.errors as FieldErrors) : undefined;
     this.body = body;
     this.headers = init.headers;

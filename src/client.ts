@@ -6,7 +6,8 @@ import {
   FunnelchatError,
 } from './core/errors.js';
 import { PagePromise } from './core/pagination.js';
-import { isRetryableStatus, isSendRequest, retryDelayMs } from './core/retry.js';
+import { APIPromise, type APIResponse, requestIdOf } from './core/api-promise.js';
+import { isRetryable, isSendRequest, retryDelayMs } from './core/retry.js';
 import type {
   ApiPath,
   HttpMethod,
@@ -141,10 +142,10 @@ export class Funnelchat {
    * const contact = await funnelchat.request('GET', '/api/v1/contacts/{contact}', { path: { contact: 2001 } });
    * ```
    */
-  request<P extends ApiPath, M extends MethodsOf<P>>(method: M, path: P, ...options: OptionsArg<TypedRequestOptions<P, M>>): Promise<ResponseBody<P, M>>;
-  request<T = unknown, P extends string = string>(method: HttpMethod, path: P extends ApiPath ? never : P, options?: UntypedRequestOptions): Promise<T>;
-  request(method: HttpMethod, path: string, options?: object): Promise<unknown> {
-    return this.#send(method, path, (options ?? {}) as UntypedRequestOptions);
+  request<P extends ApiPath, M extends MethodsOf<P>>(method: M, path: P, ...options: OptionsArg<TypedRequestOptions<P, M>>): APIPromise<ResponseBody<P, M>>;
+  request<T = unknown, P extends string = string>(method: HttpMethod, path: P extends ApiPath ? never : P, options?: UntypedRequestOptions): APIPromise<T>;
+  request(method: HttpMethod, path: string, options?: object): APIPromise<unknown> {
+    return new APIPromise(this.#send(method, path, (options ?? {}) as UntypedRequestOptions));
   }
 
   /**
@@ -161,12 +162,13 @@ export class Funnelchat {
     return new PagePromise<unknown>((pageQuery) => this.#send('GET', path, { ...rest, query: pageQuery }), { ...query });
   }
 
-  async #send(method: HttpMethod, template: string, options: UntypedRequestOptions): Promise<unknown> {
+  async #send(method: HttpMethod, template: string, options: UntypedRequestOptions): Promise<APIResponse<unknown>> {
     const verb = method.toUpperCase() as HttpMethod;
     const pathname = interpolatePath(template, options.path);
     const url = joinUrl(this.baseUrl, pathname, serializeQuery(options.query));
     const errorUrl = joinUrl(this.baseUrl, pathname.split('?')[0] ?? pathname, '');
     const maxRetries = Math.max(0, options.maxRetries ?? this.maxRetries);
+    // A send is never repeated unless the caller asks; then it follows the rule of every write.
     const retriesAllowed = options.retrySend === true || !isSendRequest(verb, pathname.split('?')[0] ?? pathname);
     const timeoutMs = options.timeoutMs ?? this.timeoutMs;
     const { body, contentType } = encodeBody(options.body);
@@ -185,7 +187,7 @@ export class Funnelchat {
       try {
         result = await this.#attempt(verb, url, headers, body, timeoutMs, options.signal);
       } catch (error) {
-        if (error instanceof APIConnectionError && canRetry) {
+        if (error instanceof APIConnectionError && canRetry && isRetryable(verb, 'network')) {
           await sleep(retryDelayMs(attempt, undefined) ?? 0, options.signal);
           continue;
         }
@@ -194,10 +196,10 @@ export class Funnelchat {
 
       const { response, text } = result;
       const parsed = parseBody(response, text);
-      if (response.ok) return parsed;
+      if (response.ok) return { data: parsed, response, requestId: requestIdOf(response.headers) };
 
       const error = APIError.from({ status: response.status, body: parsed, headers: response.headers, method: verb, url: errorUrl });
-      if (canRetry && isRetryableStatus(response.status)) {
+      if (canRetry && isRetryable(verb, response.status)) {
         const delay = retryDelayMs(attempt, error.retryAfter);
         if (delay !== null) {
           await sleep(delay, options.signal);
