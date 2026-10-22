@@ -13,11 +13,11 @@ describe('client configuration', () => {
     const { fetch, calls } = mockFetch({ body: [] }, { body: [] }, { body: [] });
     await client(fetch).request('GET', '/api/v1/devices');
     await client(fetch, { environment: 'staging' }).request('GET', '/api/v1/devices');
-    await client(fetch, { environment: 'staging', baseUrl: 'http://localhost:8011/' }).request('GET', '/api/v1/devices');
+    await client(fetch, { environment: 'staging', baseUrl: 'http://localhost:4010/' }).request('GET', '/api/v1/devices');
     expect(calls.map((c) => c.url)).toEqual([
       'https://api.funnelchat.com/api/v1/devices',
       'https://api-staging.funnelchat.com/api/v1/devices',
-      'http://localhost:8011/api/v1/devices',
+      'http://localhost:4010/api/v1/devices',
     ]);
     expect(BASE_URLS).toEqual({ production: 'https://api.funnelchat.com', staging: 'https://api-staging.funnelchat.com' });
   });

@@ -1,20 +1,25 @@
 {
   "name": "@funnelchat/sdk",
   "version": "0.1.0",
-  "description": "SDK oficial de Node.js/TypeScript para la API pública de Funnelchat",
-  "private": true,
-  "license": "UNLICENSED",
+  "description": "SDK oficial de Node.js y TypeScript para la API pública de Funnelchat: WhatsApp, contactos, mensajes, plantillas, formularios, grupos y webhooks",
+  "license": "MIT",
   "author": "Funnelchat",
+  "homepage": "https://developers-portal.funnelchat.app/docs/",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/Funnelchat20/funnelchat-node.git"
+    "url": "git+https://github.com/Funnelchat20/funnelchat-node.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Funnelchat20/funnelchat-node/issues"
   },
   "keywords": [
     "funnelchat",
     "whatsapp",
+    "whatsapp-api",
     "api",
     "sdk",
-    "webhooks"
+    "webhooks",
+    "typescript"
   ],
   "type": "module",
   "engines": {
@@ -38,18 +43,22 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "sideEffects": false,
   "scripts": {
     "generate": "node scripts/generate.mjs",
-    "generate:check": "node scripts/generate.mjs --check",
+    "format:pending": "node scripts/format-pending.mjs",
+    "generate:check": "node scripts/format-pending.mjs --check && node scripts/generate.mjs --check",
     "build": "tsup",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "smoke": "node scripts/smoke.mjs"
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "smoke": "node scripts/smoke.mjs",
+    "prepublishOnly": "npm run generate:check && npm run typecheck && npm run lint && npm test && npm run build"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
@@ -60,5 +69,8 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.71.2",
     "vitest": "^4.1.12"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
