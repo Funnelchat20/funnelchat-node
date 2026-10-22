@@ -45,7 +45,7 @@ describe('client configuration', () => {
     const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string; name: string };
     expect(VERSION).toBe(pkg.version);
     expect(Funnelchat.VERSION).toBe(pkg.version);
-    expect(pkg.name).toBe('@funnelchat/sdk');
+    expect(pkg.name).toBe('@funnelchat-hq/sdk');
   });
 });
 

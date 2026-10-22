@@ -11,7 +11,7 @@ Official Node.js and TypeScript SDK for the [Funnelchat public API](https://deve
 ## Install
 
 ```bash
-npm install @funnelchat/sdk
+npm install @funnelchat-hq/sdk
 ```
 
 ## First call
@@ -19,8 +19,8 @@ npm install @funnelchat/sdk
 You need an API key (`<id>|fc_live_...`) created in the "Developers" section of the panel, with the permissions of what you are going to use. Keep it in an environment variable: the client reads `FUNNELCHAT_API_KEY` when you do not pass it.
 
 ```ts
-import { Funnelchat } from '@funnelchat/sdk';
-// CommonJS: const { Funnelchat } = require('@funnelchat/sdk');
+import { Funnelchat } from '@funnelchat-hq/sdk';
+// CommonJS: const { Funnelchat } = require('@funnelchat-hq/sdk');
 
 const funnelchat = new Funnelchat({ apiKey: process.env.FUNNELCHAT_API_KEY });
 
@@ -174,7 +174,7 @@ Verify the signature over the **raw body**, exactly as it arrived. If you parse 
 
 ```ts
 import express from 'express';
-import { Funnelchat, WebhookVerificationError } from '@funnelchat/sdk';
+import { Funnelchat, WebhookVerificationError } from '@funnelchat-hq/sdk';
 
 const app = express();
 
@@ -270,7 +270,7 @@ Everything the SDK throws extends `FunnelchatError`. When the API answers with a
 Each HTTP status has its class: `BadRequestError` (400), `AuthenticationError` (401), `PermissionDeniedError` (403), `NotFoundError` (404), `ConflictError` (409), `UnsupportedMediaTypeError` (415), `UnprocessableEntityError` (422), `RateLimitError` (429) and `InternalServerError` (5xx). No response: `APIConnectionError`, and `APIConnectionTimeoutError` when it went over `timeoutMs`. Aborted with your own `AbortSignal`: `APIUserAbortError`.
 
 ```ts
-import { APIError, RateLimitError } from '@funnelchat/sdk';
+import { APIError, RateLimitError } from '@funnelchat-hq/sdk';
 
 try {
   await funnelchat.contacts.retrieve(2001);

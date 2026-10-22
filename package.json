@@ -1,5 +1,5 @@
 {
-  "name": "@funnelchat/sdk",
+  "name": "@funnelchat-hq/sdk",
   "version": "0.1.0",
   "description": "Official Node.js and TypeScript SDK for the Funnelchat public API: WhatsApp, contacts, messages, templates, forms, groups and webhooks",
   "license": "MIT",
