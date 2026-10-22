@@ -31,7 +31,7 @@ describe.skipIf(!SANDBOX_URL)('against the sandbox', () => {
 
     const reference = `e2e-${Date.now()}`;
     const { data, requestId } = await funnelchat.messages
-      .send(SEED.contact, { device_id: SEED.qrDevice, phone: SEED.phone, text: 'Hola desde el e2e', client_reference: reference })
+      .send(SEED.contact, { device_id: SEED.qrDevice, phone: SEED.phone, text: 'Hello from the e2e', client_reference: reference })
       .withResponse();
     expect(data.message.status).toBe('queued');
     expect(data.message.client_reference).toBe(reference);

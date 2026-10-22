@@ -2376,10 +2376,10 @@ export interface paths {
         get: operations["group.index"];
         put?: never;
         /**
-         * Crear un grupo
-         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         * Create a group
+         * @description Group actions are **off by default**: until they are enabled, the route answers `403 route_not_available`. What each number allows is in `capabilities.groups` of `GET /api/v1/devices/{device}`; anything else answers `422 provider_unsupported`.
          *
-         *     Con un número QR, `participants` es obligatorio; con uno oficial no se acepta (los invitas después).
+         *     With a QR number, `participants` is required; with an official one it is not accepted (invite them afterwards).
          */
         post: operations["pendingGroups.create"];
         delete?: never;
@@ -2532,10 +2532,10 @@ export interface paths {
         get: operations["group.messages"];
         put?: never;
         /**
-         * Enviar un mensaje a un grupo
-         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         * Send a message to a group
+         * @description Group actions are **off by default**: until they are enabled, the route answers `403 route_not_available`. What each number allows is in `capabilities.groups` of `GET /api/v1/devices/{device}`; anything else answers `422 provider_unsupported`.
          *
-         *     El id de WhatsApp del mensaje llega en `result.message.uid` de la acción.
+         *     The WhatsApp id of the message arrives in `result.message.uid` of the action.
          */
         post: operations["pendingGroups.sendMessage"];
         delete?: never;
@@ -4431,8 +4431,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver un mensaje por id
-         * @description Un mensaje por el `id` que te dio un envío o un webhook (`message_id` de `message.status_changed`). Aceptado no es entregado: `status` pasa de `queued` a `sent`, `delivered`, `read` o `failed`.
+         * Read a message by id
+         * @description A message by the `id` a send or a webhook gave you (`message_id` of `message.status_changed`). Accepted is not delivered: `status` moves from `queued` to `sent`, `delivered`, `read` or `failed`.
          */
         get: operations["pendingMessage.show"];
         put?: never;
@@ -4451,14 +4451,14 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar las suscripciones de webhook
-         * @description Todas las suscripciones de la cuenta (como máximo 50), también las que crearon otras integraciones. Solo el titular de la cuenta.
+         * List the webhook subscriptions
+         * @description Every subscription of the account (50 at most), also the ones other integrations created. Account owner only.
          */
         get: operations["pendingWebhookSubscription.index"];
         put?: never;
         /**
-         * Crear una suscripción de webhook
-         * @description Devuelve el `secret` una sola vez. Tope: 50 suscripciones por cuenta (la siguiente responde 422).
+         * Create a webhook subscription
+         * @description Returns the `secret` only once. Cap: 50 subscriptions per account (the next one answers 422).
          */
         post: operations["pendingWebhookSubscription.store"];
         delete?: never;
@@ -4475,19 +4475,19 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver una suscripción de webhook
-         * @description No trae el secreto. Si lo perdiste, rótalo.
+         * Read a webhook subscription
+         * @description It does not carry the secret. If you lost it, rotate it.
          */
         get: operations["pendingWebhookSubscription.show"];
         /**
-         * Cambiar una suscripción de webhook
-         * @description Reemplaza `url`, `events`, `description` y `filters`; `status` es opcional (`active` o `paused`). El secreto no cambia.
+         * Update a webhook subscription
+         * @description Replaces `url`, `events`, `description` and `filters`; `status` is optional (`active` or `paused`). The secret stays.
          */
         put: operations["pendingWebhookSubscription.update"];
         post?: never;
         /**
-         * Eliminar una suscripción de webhook
-         * @description Borra la suscripción con su historial de entregas.
+         * Delete a webhook subscription
+         * @description Deletes the subscription with its delivery history.
          */
         delete: operations["pendingWebhookSubscription.destroy"];
         options?: never;
@@ -4505,10 +4505,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Generar un secreto nuevo
-         * @description Un secreto nuevo, que se muestra una sola vez; el anterior deja de valer.
+         * Generate a new secret
+         * @description A new secret, shown only once; the previous one stops working.
          *
-         *     **No está abierta a claves de API:** con una clave responde `403 route_not_available`. Rota el secreto desde el panel.
+         *     **Not open to API keys:** with a key it answers `403 route_not_available`. Rotate the secret from the panel.
          */
         post: operations["pendingWebhookSubscription.rotateSecret"];
         delete?: never;
@@ -4527,8 +4527,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Enviar ahora un evento de prueba
-         * @description Una entrega firmada de `webhook.test`, sin reintentos. Queda en el historial.
+         * Send a test event now
+         * @description One signed delivery of `webhook.test`, without retries. It stays in the history.
          */
         post: operations["pendingWebhookSubscription.test"];
         delete?: never;
@@ -4545,8 +4545,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver el historial de entregas
-         * @description Un registro por intento, lo más reciente primero. Pagina con `page` y `per_page` (25 por defecto, 100 como máximo).
+         * Read the delivery history
+         * @description One row per attempt, newest first. Paginate with `page` and `per_page` (25 by default, 100 at most).
          */
         get: operations["pendingWebhookSubscription.deliveries"];
         put?: never;
@@ -4564,10 +4564,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Listar formularios */
+        /** List forms */
         get: operations["pendingForms.list"];
         put?: never;
-        /** Crear un formulario desde una plantilla */
+        /** Create a form from a template */
         post: operations["pendingForms.create"];
         delete?: never;
         options?: never;
@@ -4582,7 +4582,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Plantillas para empezar un formulario */
+        /** Templates to start a form */
         get: operations["pendingForms.templates"];
         put?: never;
         post?: never;
@@ -4599,12 +4599,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Una versión de un formulario */
+        /** One version of a form */
         get: operations["pendingForms.retrieve"];
-        /** Guardar la definición de un borrador */
+        /** Save the definition of a draft */
         put: operations["pendingForms.update"];
         post?: never;
-        /** Borrar un borrador */
+        /** Delete a draft */
         delete: operations["pendingForms.delete"];
         options?: never;
         head?: never;
@@ -4620,7 +4620,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Abrir una versión nueva (borrador) de un formulario publicado */
+        /** Open a new version (draft) of a published form */
         post: operations["pendingForms.createVersion"];
         delete?: never;
         options?: never;
@@ -4637,7 +4637,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Subir el borrador a Meta sin publicarlo */
+        /** Upload the draft to Meta without publishing it */
         post: operations["pendingForms.sync"];
         delete?: never;
         options?: never;
@@ -4654,7 +4654,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Publicar en Meta */
+        /** Publish on Meta */
         post: operations["pendingForms.publish"];
         delete?: never;
         options?: never;
@@ -4669,10 +4669,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Los números del formulario */
+        /** The numbers of the form */
         get: operations["pendingForms.numbers"];
         put?: never;
-        /** Publicarlo también en otro número */
+        /** Publish it on another number too */
         post: operations["pendingForms.addNumber"];
         delete?: never;
         options?: never;
@@ -4690,7 +4690,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Sacarlo de un número */
+        /** Take it off a number */
         delete: operations["pendingForms.removeNumber"];
         options?: never;
         head?: never;
@@ -4706,7 +4706,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Reintentar los números que fallaron */
+        /** Retry the numbers that failed */
         post: operations["pendingForms.retryNumbers"];
         delete?: never;
         options?: never;
@@ -4721,7 +4721,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** La definición vigente de un formulario */
+        /** The current definition of a form */
         get: operations["pendingForms.definition"];
         put?: never;
         post?: never;
@@ -4738,7 +4738,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Las versiones de un formulario */
+        /** The versions of a form */
         get: operations["pendingForms.versions"];
         put?: never;
         post?: never;
@@ -4755,7 +4755,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Las respuestas de un formulario */
+        /** The answers of a form */
         get: operations["pendingForms.responses"];
         put?: never;
         post?: never;
@@ -4772,7 +4772,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Una respuesta */
+        /** One answer */
         get: operations["pendingForms.response"];
         put?: never;
         post?: never;
@@ -4789,7 +4789,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** El embudo de un formulario: enviados, abiertos, completados */
+        /** The funnel of a form: sent, opened, completed */
         get: operations["pendingForms.metrics"];
         put?: never;
         post?: never;
@@ -4809,8 +4809,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Enviar un formulario a un contacto
-         * @description Manda un formulario publicado en el número. Es un envío: sigue las reglas de WhatsApp (ventana de 24 horas, ritmo, frenos contra spam) y responde el mensaje en cola. Errores propios: `404 form_not_found`, `422 form_not_published`, `422 form_not_on_number`, `422 number_not_eligible`, `422 recipient_unreachable`.
+         * Send a form to a contact
+         * @description Sends a form published on the number. It is a send: it follows the WhatsApp rules (24-hour window, pace, anti-spam limits) and answers the queued message. Errors of its own: `404 form_not_found`, `422 form_not_published`, `422 form_not_on_number`, `422 number_not_eligible`, `422 recipient_unreachable`.
          */
         post: operations["pendingForms.send"];
         delete?: never;
@@ -4826,7 +4826,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Una acción de grupo */
+        /** A group action */
         get: operations["pendingGroups.action"];
         put?: never;
         post?: never;
@@ -4846,10 +4846,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Agregar participantes
-         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         * Add participants
+         * @description Group actions are **off by default**: until they are enabled, the route answers `403 route_not_available`. What each number allows is in `capabilities.groups` of `GET /api/v1/devices/{device}`; anything else answers `422 provider_unsupported`.
          *
-         *     Con un número oficial los invita (`invited`).
+         *     An official number invites them (`invited`).
          */
         post: operations["pendingGroups.addParticipants"];
         delete?: never;
@@ -4868,8 +4868,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Sacar participantes
-         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         * Remove participants
+         * @description Group actions are **off by default**: until they are enabled, the route answers `403 route_not_available`. What each number allows is in `capabilities.groups` of `GET /api/v1/devices/{device}`; anything else answers `422 provider_unsupported`.
          */
         post: operations["pendingGroups.removeParticipants"];
         delete?: never;
@@ -4888,10 +4888,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Hacer admins
-         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         * Make admins
+         * @description Group actions are **off by default**: until they are enabled, the route answers `403 route_not_available`. What each number allows is in `capabilities.groups` of `GET /api/v1/devices/{device}`; anything else answers `422 provider_unsupported`.
          *
-         *     Solo números QR. Cada teléfono tiene que ser del grupo.
+         *     QR numbers only. Each phone must be in the group.
          */
         post: operations["pendingGroups.promoteAdmins"];
         delete?: never;
@@ -4910,10 +4910,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Quitar admins
-         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         * Remove admins
+         * @description Group actions are **off by default**: until they are enabled, the route answers `403 route_not_available`. What each number allows is in `capabilities.groups` of `GET /api/v1/devices/{device}`; anything else answers `422 provider_unsupported`.
          *
-         *     Solo números QR.
+         *     QR numbers only.
          */
         post: operations["pendingGroups.demoteAdmins"];
         delete?: never;
@@ -4931,8 +4931,8 @@ export interface paths {
         };
         get?: never;
         /**
-         * Cambiar el nombre
-         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         * Change the name
+         * @description Group actions are **off by default**: until they are enabled, the route answers `403 route_not_available`. What each number allows is in `capabilities.groups` of `GET /api/v1/devices/{device}`; anything else answers `422 provider_unsupported`.
          */
         put: operations["pendingGroups.updateName"];
         post?: never;
@@ -4951,10 +4951,10 @@ export interface paths {
         };
         get?: never;
         /**
-         * Cambiar la descripción
-         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         * Change the description
+         * @description Group actions are **off by default**: until they are enabled, the route answers `403 route_not_available`. What each number allows is in `capabilities.groups` of `GET /api/v1/devices/{device}`; anything else answers `422 provider_unsupported`.
          *
-         *     `null` o vacía la borra (no con un número oficial).
+         *     `null` or empty clears it (not with an official number).
          */
         put: operations["pendingGroups.updateDescription"];
         post?: never;
@@ -4973,10 +4973,10 @@ export interface paths {
         };
         get?: never;
         /**
-         * Cambiar la foto
-         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         * Change the photo
+         * @description Group actions are **off by default**: until they are enabled, the route answers `403 route_not_available`. What each number allows is in `capabilities.groups` of `GET /api/v1/devices/{device}`; anything else answers `422 provider_unsupported`.
          *
-         *     Solo números QR. `photo_url`: una URL `https` pública a un JPG o PNG.
+         *     QR numbers only. `photo_url`: a public `https` URL to a JPG or PNG.
          */
         put: operations["pendingGroups.updatePhoto"];
         post?: never;
@@ -4995,10 +4995,10 @@ export interface paths {
         };
         get?: never;
         /**
-         * Cambiar quién puede escribir
-         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         * Change who can write
+         * @description Group actions are **off by default**: until they are enabled, the route answers `403 route_not_available`. What each number allows is in `capabilities.groups` of `GET /api/v1/devices/{device}`; anything else answers `422 provider_unsupported`.
          *
-         *     Solo números QR.
+         *     QR numbers only.
          */
         put: operations["pendingGroups.updateSettings"];
         post?: never;
@@ -5018,10 +5018,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Renovar el enlace de invitación
-         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         * Renew the invite link
+         * @description Group actions are **off by default**: until they are enabled, the route answers `403 route_not_available`. What each number allows is in `capabilities.groups` of `GET /api/v1/devices/{device}`; anything else answers `422 provider_unsupported`.
          *
-         *     El enlace nuevo llega en `result.invite_link`.
+         *     The new link arrives in `result.invite_link`.
          */
         post: operations["pendingGroups.renewInviteLink"];
         delete?: never;
@@ -5038,10 +5038,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * El enlace de invitación, leído en vivo
-         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         * The invite link, read live
+         * @description Group actions are **off by default**: until they are enabled, the route answers `403 route_not_available`. What each number allows is in `capabilities.groups` of `GET /api/v1/devices/{device}`; anything else answers `422 provider_unsupported`.
          *
-         *     Se guarda 30 segundos por grupo y número. Si WhatsApp falla: `502 provider_error`.
+         *     Cached for 30 seconds per group and number. If WhatsApp fails: `502 provider_error`.
          */
         get: operations["pendingGroups.inviteLink"];
         put?: never;
@@ -5060,10 +5060,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Las solicitudes de unión
-         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         * The join requests
+         * @description Group actions are **off by default**: until they are enabled, the route answers `403 route_not_available`. What each number allows is in `capabilities.groups` of `GET /api/v1/devices/{device}`; anything else answers `422 provider_unsupported`.
          *
-         *     Solo grupos de números oficiales; hasta 100, en el orden de WhatsApp.
+         *     Groups of official numbers only; up to 100, in WhatsApp's order.
          */
         get: operations["pendingGroups.joinRequests"];
         put?: never;
@@ -5084,10 +5084,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Aprobar solicitudes de unión
-         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         * Approve join requests
+         * @description Group actions are **off by default**: until they are enabled, the route answers `403 route_not_available`. What each number allows is in `capabilities.groups` of `GET /api/v1/devices/{device}`; anything else answers `422 provider_unsupported`.
          *
-         *     Solo números oficiales, y solo si `capabilities.groups.join_requests` es `list_and_decide`.
+         *     Official numbers only, and only when `capabilities.groups.join_requests` is `list_and_decide`.
          */
         post: operations["pendingGroups.approveJoinRequests"];
         delete?: never;
@@ -5106,10 +5106,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Rechazar solicitudes de unión
-         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         * Reject join requests
+         * @description Group actions are **off by default**: until they are enabled, the route answers `403 route_not_available`. What each number allows is in `capabilities.groups` of `GET /api/v1/devices/{device}`; anything else answers `422 provider_unsupported`.
          *
-         *     Solo números oficiales, y solo si `capabilities.groups.join_requests` es `list_and_decide`.
+         *     Official numbers only, and only when `capabilities.groups.join_requests` is `list_and_decide`.
          */
         post: operations["pendingGroups.rejectJoinRequests"];
         delete?: never;
@@ -6316,7 +6316,7 @@ export interface webhooks {
         put?: never;
         /**
          * message.status_changed
-         * @description Cambió el estado de entrega de un mensaje que enviaste con la API. Un aviso por transición, nunca uno que retroceda; `queued` no se avisa. Hay que pedirlo de forma explícita en `events`.
+         * @description The delivery status of a message you sent with the API changed. One notice per transition, never one that goes back; `queued` is not reported. It must be asked for explicitly in `events`.
          */
         post: {
             parameters: {
@@ -6329,20 +6329,20 @@ export interface webhooks {
                 content: {
                     "application/json": {
                         data?: {
-                            /** @description El `id` del mensaje en el historial del contacto. */
+                            /** @description The `id` of the message in the history of the contact. */
                             message_id: number;
                             contact_id: number;
-                            /** @description El número de tu cuenta que envió el mensaje. */
+                            /** @description The number of your account that sent the message. */
                             device_id: number | null;
                             /** @enum {string} */
                             status: "sent" | "delivered" | "read" | "failed";
                             /** @enum {string|null} */
                             previous_status: "sent" | "delivered" | "read" | "failed" | null;
-                            /** @description Solo cuando `status` es `failed`. */
+                            /** @description Only when `status` is `failed`. */
                             error?: components["schemas"]["PendingMessageError"];
                             /** Format: date-time */
                             occurred_at: string;
-                            /** @description La `client_reference` que mandaste en el envío, o `null`. */
+                            /** @description The `client_reference` you sent with the message, or `null`. */
                             client_reference: string | null;
                         };
                     };
@@ -6367,7 +6367,7 @@ export interface webhooks {
         put?: never;
         /**
          * device.connected
-         * @description Uno de los números de la cuenta quedó conectado: al escanear el código QR o al terminar el alta de un número de WhatsApp Cloud.
+         * @description One of the numbers of the account got connected: by scanning the QR code or by finishing the sign-up of a WhatsApp Cloud number.
          */
         post: {
             parameters: {
@@ -6383,7 +6383,7 @@ export interface webhooks {
                             device: {
                                 id: number;
                                 name: string | null;
-                                /** @description Solo dígitos, sin `+`. */
+                                /** @description Digits only, without `+`. */
                                 number: string | null;
                             };
                             /** Format: date-time */
@@ -6411,7 +6411,7 @@ export interface webhooks {
         put?: never;
         /**
          * device.disconnected
-         * @description Uno de los números de la cuenta se desconectó y dejó de poder enviar o recibir.
+         * @description One of the numbers of the account disconnected and can no longer send or receive.
          */
         post: {
             parameters: {
@@ -6427,7 +6427,7 @@ export interface webhooks {
                             device: {
                                 id: number;
                                 name: string | null;
-                                /** @description Solo dígitos, sin `+`. */
+                                /** @description Digits only, without `+`. */
                                 number: string | null;
                             };
                             /** Format: date-time */
@@ -6455,7 +6455,7 @@ export interface webhooks {
         put?: never;
         /**
          * billing.payment_failed
-         * @description Un cobro de la suscripción no pudo procesarse (solo suscripciones de Stripe).
+         * @description A charge of the subscription could not be processed (Stripe subscriptions only).
          */
         post: {
             parameters: {
@@ -6496,7 +6496,7 @@ export interface webhooks {
         put?: never;
         /**
          * billing.plan_blocked
-         * @description El plan quedó bloqueado por un cobro no procesado. Planificado: todavía no se emite.
+         * @description The plan was blocked by an unprocessed charge. Planned: not emitted yet.
          */
         post: {
             parameters: {
@@ -6529,7 +6529,7 @@ export interface webhooks {
         put?: never;
         /**
          * billing.upcoming_charge
-         * @description Se acerca el próximo cobro de la suscripción (solo suscripciones de Stripe).
+         * @description The next charge of the subscription is coming up (Stripe subscriptions only).
          */
         post: {
             parameters: {
@@ -6571,7 +6571,7 @@ export interface webhooks {
         put?: never;
         /**
          * subscription.expiring
-         * @description La suscripción está próxima a vencer. Planificado: todavía no se emite.
+         * @description The subscription is about to expire. Planned: not emitted yet.
          */
         post: {
             parameters: {
@@ -6604,7 +6604,7 @@ export interface webhooks {
         put?: never;
         /**
          * subscription.trial_ending
-         * @description El período de prueba está por terminar.
+         * @description The trial period is about to end.
          */
         post: {
             parameters: {
@@ -6644,7 +6644,7 @@ export interface webhooks {
         put?: never;
         /**
          * subscription.reactivated
-         * @description Se revirtió la cancelación programada de la suscripción (solo suscripciones de Stripe).
+         * @description The scheduled cancellation of the subscription was reverted (Stripe subscriptions only).
          */
         post: {
             parameters: {
@@ -6684,7 +6684,7 @@ export interface webhooks {
         put?: never;
         /**
          * subscription.cancellation_confirmed
-         * @description Quedó confirmada la cancelación de la suscripción (solo suscripciones de Stripe).
+         * @description The cancellation of the subscription was confirmed (Stripe subscriptions only).
          */
         post: {
             parameters: {
@@ -6724,7 +6724,7 @@ export interface webhooks {
         put?: never;
         /**
          * subscription.dormant_ending
-         * @description El período de cuenta en reposo está por terminar.
+         * @description The dormant-account period is about to end.
          */
         post: {
             parameters: {
@@ -6766,7 +6766,7 @@ export interface webhooks {
         put?: never;
         /**
          * ai_quota.low_balance
-         * @description La cuota de mensajes de IA está por agotarse. Planificado: todavía no se emite.
+         * @description The AI message quota is about to run out. Planned: not emitted yet.
          */
         post: {
             parameters: {
@@ -6799,7 +6799,7 @@ export interface webhooks {
         put?: never;
         /**
          * ai_quota.topup_succeeded
-         * @description Una recarga de cuota de IA se acreditó. Planificado: todavía no se emite.
+         * @description An AI quota top-up was credited. Planned: not emitted yet.
          */
         post: {
             parameters: {
@@ -6832,7 +6832,7 @@ export interface webhooks {
         put?: never;
         /**
          * ai_quota.topup_failed
-         * @description Una recarga de cuota de IA no pudo procesarse. Planificado: todavía no se emite.
+         * @description An AI quota top-up could not be processed. Planned: not emitted yet.
          */
         post: {
             parameters: {
@@ -6865,7 +6865,7 @@ export interface webhooks {
         put?: never;
         /**
          * mac.usage_80
-         * @description La cuenta alcanzó el 80 % de sus contactos activos mensuales del ciclo.
+         * @description The account reached 80% of its monthly active contacts of the cycle.
          */
         post: {
             parameters: {
@@ -6908,7 +6908,7 @@ export interface webhooks {
         put?: never;
         /**
          * mac.usage_100
-         * @description La cuenta agotó sus contactos activos mensuales del ciclo; se abre una gracia de 24 horas.
+         * @description The account used up its monthly active contacts of the cycle; a 24-hour grace period starts.
          */
         post: {
             parameters: {
@@ -6952,7 +6952,7 @@ export interface webhooks {
         put?: never;
         /**
          * mac.expiring
-         * @description Hay contactos activos mensuales que vencen en los próximos 7 días.
+         * @description Some monthly active contacts expire in the next 7 days.
          */
         post: {
             parameters: {
@@ -6993,7 +6993,7 @@ export interface webhooks {
         put?: never;
         /**
          * account.blocked
-         * @description La cuenta quedó bloqueada por consumo: terminó la gracia de 24 horas tras agotar los contactos activos mensuales.
+         * @description The account was blocked by usage: the 24-hour grace period after using up the monthly active contacts ended.
          */
         post: {
             parameters: {
@@ -7035,7 +7035,7 @@ export interface webhooks {
         put?: never;
         /**
          * group_action.failed
-         * @description Falló una acción sobre un grupo: una de una campaña (`action.uuid` es `null`) o una pedida por la API (`action.uuid` es el `action_id`). Las acciones con teléfonos no lo emiten: terminan con `group_action.completed` y el resultado de cada uno.
+         * @description An action on a group failed: one of a campaign (`action.uuid` is `null`) or one asked through the API (`action.uuid` is the `action_id`). Actions on phones do not emit it: they end with `group_action.completed` and the result of each phone.
          */
         post: {
             parameters: {
@@ -7053,7 +7053,7 @@ export interface webhooks {
                      *         "pipeline": null,
                      *         "group": {
                      *           "uid": "120363000000000001@g.us",
-                     *           "name": "Grupo de ejemplo"
+                     *           "name": "Example group"
                      *         },
                      *         "action": {
                      *           "uuid": "9b2f0a8e-1c3d-4e5f-8a7b-6c5d4e3f2a10",
@@ -7078,7 +7078,7 @@ export interface webhooks {
                                 name: string | null;
                             } | null;
                             action: {
-                                /** @description El `action_id` de una acción pedida por la API; `null` en las de una campaña. */
+                                /** @description The `action_id` of an action asked through the API; `null` for the ones of a campaign. */
                                 uuid: string | null;
                                 type: string;
                             };
@@ -7106,7 +7106,7 @@ export interface webhooks {
         put?: never;
         /**
          * daily_report.generated
-         * @description Se generó el reporte diario de la cuenta (clics, ingresos y salidas).
+         * @description The daily report of the account was generated (clicks, joins and leaves).
          */
         post: {
             parameters: {
@@ -7153,7 +7153,7 @@ export interface webhooks {
         put?: never;
         /**
          * campaign.no_groups_available
-         * @description Una campaña no tiene grupos a los que dirigir a las personas que entran por su link.
+         * @description A campaign has no groups to send the people who come through its link to.
          */
         post: {
             parameters: {
@@ -7169,7 +7169,7 @@ export interface webhooks {
                      *       "data": {
                      *         "campaign": {
                      *           "uuid": "xK9mQz",
-                     *           "name": "Campaña de ejemplo"
+                     *           "name": "Example campaign"
                      *         },
                      *         "reason": "none_selectable"
                      *       }
@@ -7197,7 +7197,7 @@ export interface webhooks {
         put?: never;
         /**
          * group.full
-         * @description Un grupo pasó de no estar lleno a estarlo.
+         * @description A group went from not full to full.
          */
         post: {
             parameters: {
@@ -7213,12 +7213,12 @@ export interface webhooks {
                      *       "data": {
                      *         "group": {
                      *           "uid": "120363000000000000@g.us",
-                     *           "name": "Grupo de ejemplo",
-                     *           "type": "tipo_de_ejemplo"
+                     *           "name": "Example group",
+                     *           "type": "example_type"
                      *         },
                      *         "campaign": {
                      *           "uuid": "xK9mQz",
-                     *           "name": "Campaña de ejemplo"
+                     *           "name": "Example campaign"
                      *         },
                      *         "trigger": "participants_limit",
                      *         "participants": 1024
@@ -7247,7 +7247,7 @@ export interface webhooks {
         put?: never;
         /**
          * whatsapp_form.completed
-         * @description Un contacto completó un formulario que le enviaste.
+         * @description A contact completed a form you sent them.
          */
         post: {
             parameters: {
@@ -7263,7 +7263,7 @@ export interface webhooks {
                      *       "data": {
                      *         "form": {
                      *           "id": 12,
-                     *           "name": "Encuesta de ejemplo",
+                     *           "name": "Example survey",
                      *           "version_id": 34
                      *         },
                      *         "message_id": 1002,
@@ -7272,8 +7272,8 @@ export interface webhooks {
                      *         "answers": [
                      *           {
                      *             "key": "nombre",
-                     *             "label": "Tu nombre",
-                     *             "value": "Contacto de ejemplo"
+                     *             "label": "Your name",
+                     *             "value": "Example contact"
                      *           }
                      *         ],
                      *         "occurred_at": "2026-10-22T12:00:00Z"
@@ -7283,7 +7283,7 @@ export interface webhooks {
                     "application/json": {
                         data?: {
                             form: {
-                                /** @description El formulario (`family_id`). */
+                                /** @description The form (`family_id`). */
                                 id: number;
                                 name: string;
                                 version_id: number;
@@ -7321,7 +7321,7 @@ export interface webhooks {
         put?: never;
         /**
          * group_action.completed
-         * @description Terminó una acción de grupo pedida por la API. `action.uuid` es el `action_id` que te devolvió.
+         * @description A group action asked through the API finished. `action.uuid` is the `action_id` it returned.
          */
         post: {
             parameters: {
@@ -7341,7 +7341,7 @@ export interface webhooks {
                      *         },
                      *         "group": {
                      *           "uid": "120363000000000001@g.us",
-                     *           "name": "Grupo de ejemplo"
+                     *           "name": "Example group"
                      *         },
                      *         "campaign": null,
                      *         "result": {
@@ -7371,7 +7371,7 @@ export interface webhooks {
                                 uuid?: string;
                                 name?: string;
                             } | null;
-                            /** @description Con teléfonos: `participants`; al crear o renovar el enlace: `invite_link`; al enviar: `message.uid`; el resto, vacío. */
+                            /** @description With phones: `participants`; creating or renewing the link: `invite_link`; sending: `message.uid`; the rest, empty. */
                             result: {
                                 participants?: components["schemas"]["PendingGroupParticipantResult"][];
                                 invite_link?: string;
@@ -7402,7 +7402,7 @@ export interface webhooks {
         put?: never;
         /**
          * group.message_received
-         * @description Alguien escribió en un grupo de uno de tus números. No se emite para los mensajes de tus propios números.
+         * @description Someone wrote in a group of one of your numbers. Not emitted for the messages of your own numbers.
          */
         post: {
             parameters: {
@@ -7418,12 +7418,12 @@ export interface webhooks {
                      *       "data": {
                      *         "group": {
                      *           "uid": "120363000000000001@g.us",
-                     *           "name": "Grupo de ejemplo"
+                     *           "name": "Example group"
                      *         },
                      *         "message": {
                      *           "uid": "3EB0C0FFEE0000000001",
                      *           "type": "text",
-                     *           "text": "Hola a todos",
+                     *           "text": "Hello everyone",
                      *           "caption": null,
                      *           "media_url": null,
                      *           "mime_type": null,
@@ -7447,7 +7447,7 @@ export interface webhooks {
                             message: {
                                 uid: string;
                                 type: string;
-                                /** @description Solo con `type: text`. */
+                                /** @description Only with `type: text`. */
                                 text: string | null;
                                 caption: string | null;
                                 media_url: string | null;
@@ -7484,7 +7484,7 @@ export interface webhooks {
         put?: never;
         /**
          * group.reaction_added
-         * @description Alguien reaccionó a un mensaje de un grupo.
+         * @description Someone reacted to a message of a group.
          */
         post: {
             parameters: {
@@ -7500,7 +7500,7 @@ export interface webhooks {
                      *       "data": {
                      *         "group": {
                      *           "uid": "120363000000000001@g.us",
-                     *           "name": "Grupo de ejemplo"
+                     *           "name": "Example group"
                      *         },
                      *         "message": {
                      *           "uid": "3EB0C0FFEE0000000001"
@@ -7553,7 +7553,7 @@ export interface webhooks {
         put?: never;
         /**
          * group_join_request.created
-         * @description Alguien pidió unirse a un grupo que requiere aprobación.
+         * @description Someone asked to join a group that requires approval.
          */
         post: {
             parameters: {
@@ -7569,7 +7569,7 @@ export interface webhooks {
                      *       "data": {
                      *         "group": {
                      *           "uid": "120363000000000001@g.us",
-                     *           "name": "Grupo de ejemplo"
+                     *           "name": "Example group"
                      *         },
                      *         "participant": {
                      *           "identity": "5491100000000",
@@ -7614,7 +7614,7 @@ export interface webhooks {
         put?: never;
         /**
          * group_join_request.revoked
-         * @description Alguien retiró su pedido para unirse a un grupo.
+         * @description Someone withdrew their request to join a group.
          */
         post: {
             parameters: {
@@ -7630,7 +7630,7 @@ export interface webhooks {
                      *       "data": {
                      *         "group": {
                      *           "uid": "120363000000000001@g.us",
-                     *           "name": "Grupo de ejemplo"
+                     *           "name": "Example group"
                      *         },
                      *         "participant": {
                      *           "identity": "5491100000000",
@@ -8705,7 +8705,7 @@ export interface components {
             health: string;
             number_key?: string | null;
             number_key_confirmed?: boolean;
-            /** @description El número usa la app de WhatsApp Business y la Cloud API a la vez. */
+            /** @description The number uses the WhatsApp Business app and the Cloud API at the same time. */
             is_coexistence?: boolean;
             /** @enum {string} */
             slot_state?: "free" | "reserved" | "pending" | "held";
@@ -8715,9 +8715,9 @@ export interface components {
             pool_keep?: boolean;
             qr_allowed?: boolean;
             can_change_to_meta?: boolean;
-            /** @description Lo que el número puede hacer por la API, según su proveedor (QR o WhatsApp Cloud) y lo que tu cuenta tiene habilitado. Consúltalo antes de ofrecer una función: un envío que el número no soporta responde `422 provider_unsupported`. */
+            /** @description What the number can do through the API, by provider (QR or WhatsApp Cloud) and what your account has enabled. Check it before offering a feature: a send the number does not support answers `422 provider_unsupported`. */
             capabilities: {
-                /** @description Tipos de mensaje que acepta el número. */
+                /** @description Message types the number takes. */
                 messages: {
                     text: boolean;
                     media: boolean;
@@ -8731,10 +8731,10 @@ export interface components {
                     contact_card: boolean;
                     reactions: boolean;
                 };
-                /** @description Acciones de grupo disponibles por este número. Todo `false` cuando el número no tiene grupos. */
+                /** @description Group actions available through this number. All `false` when the number has no groups. */
                 groups: {
                     create: boolean;
-                    /** @description `direct`: los agrega; `invite`: les manda el enlace de invitación; `false`: no se puede. */
+                    /** @description `direct`: adds them; `invite`: sends them the invite link; `false`: not possible. */
                     add_participants: ("direct" | "invite") | false;
                     remove_participants: boolean;
                     admins: boolean;
@@ -8742,10 +8742,10 @@ export interface components {
                     settings: boolean;
                     invite_link: boolean;
                     send: boolean;
-                    /** @description `list`: solo listar las solicitudes de unión; `list_and_decide`: también aprobarlas o rechazarlas; `false`: no se puede. */
+                    /** @description `list`: only list the join requests; `list_and_decide`: also approve or reject them; `false`: not possible. */
                     join_requests: ("list" | "list_and_decide") | false;
                 };
-                /** @description Los estados que llegan por `message.status_changed` para los mensajes de este número. */
+                /** @description The statuses `message.status_changed` reports for the messages of this number. */
                 statuses: ("sent" | "delivered" | "read" | "failed")[];
             };
         };
@@ -9718,17 +9718,17 @@ export interface components {
         WhatsappCostSummaryResource: {
             [key: string]: unknown;
         };
-        /** @description Tu referencia para correlacionar el envío con el historial y con `message.status_changed`: de 1 a 64 caracteres ASCII visibles, sin espacios. No es única ni está autenticada; no pongas datos personales. */
+        /** @description Your reference to match the send with the history and with `message.status_changed`: 1 to 64 visible ASCII characters, no spaces. It is neither unique nor authenticated; do not put personal data in it. */
         PendingClientReference: string;
         PendingWebhookSubscriptionFilters: {
-            /** @description Solo entrega los eventos de estas campañas. Un evento sin campaña no pasa el filtro. */
+            /** @description Only delivers the events of these campaigns. An event without a campaign does not pass the filter. */
             campaign_ids?: string[];
         };
-        /** @description Una suscripción de webhook unificada. Nunca trae el secreto. */
+        /** @description A unified webhook subscription. It never carries the secret. */
         PendingWebhookSubscription: {
             /**
              * Format: uuid
-             * @description Identificador de la suscripción. Guárdalo al crearla: es lo que identifica la tuya.
+             * @description Identifier of the subscription. Store it when you create it: it is what tells yours apart.
              */
             id: string;
             url: string;
@@ -9759,26 +9759,26 @@ export interface components {
             } | null;
         };
         PendingWebhookSubscriptionWithSecret: components["schemas"]["PendingWebhookSubscription"] & {
-            /** @description El secreto completo para verificar la firma. Se muestra una sola vez: guárdalo. */
+            /** @description The full secret to verify the signature. It is shown only once: store it. */
             secret: string;
             secret_notice: string;
         };
         PendingWebhookSubscriptionCreate: {
-            /** @description `https`, pública y sin usuario ni contraseña. */
+            /** @description `https`, public and without user or password. */
             url: string;
             description?: string | null;
-            /** @description Tipos del catálogo (`GET /api/v1/webhooks/events`). La clave necesita el permiso `{área}:read` del área de cada tipo. */
+            /** @description Types of the catalog (`GET /api/v1/webhooks/events`). The key needs the `{area}:read` permission of the area of each type. */
             events: string[];
             filters?: components["schemas"]["PendingWebhookSubscriptionFilters"] | null;
         };
         PendingWebhookSubscriptionUpdate: components["schemas"]["PendingWebhookSubscriptionCreate"] & {
             /**
-             * @description Opcional. `disabled` no se puede pedir.
+             * @description Optional. `disabled` cannot be asked for.
              * @enum {string}
              */
             status?: "active" | "paused";
         };
-        /** @description Un intento de entrega. Los intentos de un mismo evento comparten `event_id`. */
+        /** @description One delivery attempt. The attempts of the same event share `event_id`. */
         PendingWebhookSubscriptionDelivery: {
             id: number;
             event_id: string;
@@ -9792,7 +9792,7 @@ export interface components {
             /** Format: date-time */
             attempted_at: string | null;
         };
-        /** @description Resultado de la entrega de prueba (`webhook.test`). Responde 200 aunque tu servidor falle: mira `succeeded`. */
+        /** @description Result of the test delivery (`webhook.test`). It answers 200 even when your server fails: check `succeeded`. */
         PendingWebhookSubscriptionTestResult: {
             succeeded: boolean;
             response_status: number | null;
@@ -9800,22 +9800,22 @@ export interface components {
             duration_ms: number | null;
             delivery_id: number;
         };
-        /** @description Un mensaje como lo ve una clave: siempre estas diez claves. Es lo que responde un envío y `GET /api/v1/contacts/{contact}/messages/{message}`. */
+        /** @description A message as an API key sees it: always these ten keys. It is what a send answers and what `GET /api/v1/contacts/{contact}/messages/{message}` returns. */
         PendingPublicMessage: {
-            /** @description El id del mensaje en el historial del contacto: el mismo `message_id` de `message.status_changed`. */
+            /** @description The id of the message in the history of the contact: the same `message_id` of `message.status_changed`. */
             id: number;
             contact_id: number | null;
             device_id: number | null;
             /** @enum {string} */
             direction: "outbound" | "inbound";
-            /** @description El tipo público del mensaje (`text`, `image`, `contact`…), el mismo de `message.received`. */
+            /** @description The public type of the message (`text`, `image`, `contact`…), the same as in `message.received`. */
             type: string;
             /**
-             * @description Un envío recién aceptado está `queued` (aceptado no es enviado); después pasa a `sent`, `delivered`, `read` o `failed`. `null` cuando el mensaje no tiene estado de entrega (recibido, nota) o no se sabe.
+             * @description A send just accepted is `queued` (accepted is not sent); then it moves to `sent`, `delivered`, `read` or `failed`. `null` when the message has no delivery status (received, note) or it is unknown.
              * @enum {string|null}
              */
             status: "queued" | "sent" | "delivered" | "read" | "failed" | null;
-            /** @description Solo cuando `status` es `failed`. */
+            /** @description Only when `status` is `failed`. */
             error: components["schemas"]["PendingMessageError"] | null;
             client_reference: string | null;
             /** Format: date-time */
@@ -9823,37 +9823,37 @@ export interface components {
             /** Format: date-time */
             updated_at: string | null;
         };
-        /** @description El resultado de un reenvío para un destino, con su mensaje (`null` si no se registró nada para ese destino). */
+        /** @description The result of a forward for one destination, with its message (`null` when nothing was registered for that destination). */
         PendingForwardResult: {
             contact_id: number;
             /** @enum {string} */
             mode: "internal" | "native";
             /** @enum {string} */
             status: "queued" | "blocked";
-            /** @description Por qué se bloqueó: `device_unavailable`, `not_sent`, `target_not_found`, `mac_lockout_24h` o `mac_limit_reached`. */
+            /** @description Why it was blocked: `device_unavailable`, `not_sent`, `target_not_found`, `mac_lockout_24h` or `mac_limit_reached`. */
             reason: string | null;
             message: components["schemas"]["PendingPublicMessage"] | null;
         };
         PendingMessage: {
             message: string;
         };
-        /** @description Por qué falló. Cuando lo frenó Funnelchat, `code` es `null` y `reason` dice el motivo; cuando falló en WhatsApp, `code` y `title` son los del proveedor y `reason` es `null`. */
+        /** @description Why it failed. When Funnelchat stopped it, `code` is `null` and `reason` says why; when it failed in WhatsApp, `code` and `title` are the provider's and `reason` is `null`. */
         PendingMessageError: {
             code: number | null;
             title: string | null;
             /** @enum {string|null} */
             reason: "device_unavailable" | "insufficient_balance" | "window_closed" | "recipient_unreachable" | "template_not_found" | "template_unresolved_placeholder" | "not_queued" | "not_sent" | null;
         };
-        /** @description El mensaje que quedó registrado: `status: queued` y su `id`, el mismo `message_id` de `message.status_changed`. */
+        /** @description The registered message: `status: queued` and its `id`, the same `message_id` of `message.status_changed`. */
         PendingSendResult: {
             message: components["schemas"]["PendingPublicMessage"];
         };
         /**
-         * @description El tipo del archivo de `file`. Hace falta cuando la URL no termina en una extensión conocida (una URL firmada o sin extensión); si viene, gana sobre la extensión. Sin él, una URL sin extensión conocida responde `422 errors.file_type` y una extensión no soportada `415`.
+         * @description The type of the file in `file`. Needed when the URL does not end in a known extension (a signed URL, or one without extension); when present, it wins over the extension. Without it, a URL without a known extension answers `422 errors.file_type` and an unsupported extension `415`.
          * @enum {string|null}
          */
         PendingFileType: "image" | "video" | "audio" | "document" | "sticker" | null;
-        /** @description El nombre con que llega el documento. Con `file_type: document` y una URL sin extensión conocida es obligatorio y tiene que tener extensión (`422 errors.file_name`). */
+        /** @description The name the document arrives with. With `file_type: document` and a URL without a known extension it is required and must have an extension (`422 errors.file_name`). */
         PendingFileName: string | null;
         PendingFormLintIssue: {
             code: string;
@@ -9862,7 +9862,7 @@ export interface components {
             itemId?: string | null;
             message: string;
         };
-        /** @description Un número en el que el formulario está (o se está) publicando. */
+        /** @description A number where the form is published (or being published). */
         PendingFormNumber: {
             device_id: number | null;
             primary: boolean;
@@ -9870,50 +9870,50 @@ export interface components {
             status: "draft" | "publishing" | "published" | "failed";
             error: string | null;
         };
-        /** @description Una versión de un formulario. `id` es la versión; `family_id` es el formulario, el `form_id` que usas para enviarlo y el `form.id` de `whatsapp_form.completed`. */
+        /** @description One version of a form. `id` is the version; `family_id` is the form itself: the `form_id` you send it with and the `form.id` of `whatsapp_form.completed`. */
         PendingForm: {
-            /** @description La versión. */
+            /** @description The version. */
             id: number;
-            /** @description El formulario (todas sus versiones). */
+            /** @description The form (every version). */
             family_id: number;
-            /** @description El nombre en Meta (con el sufijo `__vN`). */
+            /** @description The name in Meta (with the `__vN` suffix). */
             name: string;
-            /** @description El nombre para mostrar. */
+            /** @description The display name. */
             label: string;
             category?: string | null;
             /** @enum {string} */
             status: "draft" | "published" | "deprecated";
             version: number;
-            /** @description La definición del formulario (pantallas y campos). Solo en el detalle. */
+            /** @description The definition of the form (screens and fields). Only in the detail. */
             definition?: unknown;
-            /** @description Solo en el detalle. */
+            /** @description Only in the detail. */
             fields?: unknown;
-            /** @description Solo en el detalle. */
+            /** @description Only in the detail. */
             mapping?: unknown;
-            /** @description Solo en el detalle. */
+            /** @description Only in the detail. */
             tag_rules?: unknown;
             has_endpoint?: boolean;
             first_screen?: string | null;
             first_screen_dynamic?: boolean | null;
             lint_errors_count?: number | null;
-            /** @description Solo en el listado: el borrador de la familia, si no es esta fila. */
+            /** @description Only in the list: the draft of the family, when it is not this row. */
             draft_id?: number;
             draft_version?: number;
-            /** @description Solo en el listado. */
+            /** @description Only in the list. */
             sends?: number;
-            /** @description Solo en el listado. */
+            /** @description Only in the list. */
             responses?: number;
             meta_flow_id?: string | null;
-            /** @description Solo en el detalle. */
+            /** @description Only in the detail. */
             flow_json?: unknown;
-            /** @description Solo en el detalle. */
+            /** @description Only in the detail. */
             validation_errors?: unknown;
             /** Format: date-time */
             published_at?: string | null;
             /** Format: date-time */
             updated_at?: string | null;
         };
-        /** @description La acción quedó en cola. Síguela con `GET /api/v1/groups/actions/{action}` o con los eventos `group_action.completed` y `group_action.failed`. */
+        /** @description The action is queued. Follow it with `GET /api/v1/groups/actions/{action}` or with the events `group_action.completed` and `group_action.failed`. */
         PendingGroupActionAccepted: {
             /** Format: uuid */
             action_id: string;
@@ -9921,7 +9921,7 @@ export interface components {
             status: "queued";
         };
         PendingGroupParticipantResult: {
-            /** @description El teléfono en dígitos, sin `+`, o un `…@lid`. */
+            /** @description The phone in digits, without `+`, or a `…@lid`. */
             identity: string;
             /** @enum {string} */
             identity_type: "phone" | "whatsapp_user";
@@ -9940,7 +9940,7 @@ export interface components {
                 uid: string;
                 name: string | null;
             } | null;
-            /** @description `null` mientras está abierta. Con teléfonos: `{participants: [...]}`; al crear: `{group, invite_link}`; al renovar el enlace: `{invite_link}`; al enviar: `{message: {uid}}`; el resto `{}`. */
+            /** @description `null` while it is open. With phones: `{participants: [...]}`; creating: `{group, invite_link}`; renewing the link: `{invite_link}`; sending: `{message: {uid}}`; the rest `{}`. */
             result: {
                 participants?: components["schemas"]["PendingGroupParticipantResult"][];
                 invite_link?: string;
@@ -11448,7 +11448,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Un mensaje por tarjeta, en el orden de `contact_card_ids`: `queued`, o `failed` (`not_queued`) si no se pudo encolar. */
+            /** @description One message per card, in the order of `contact_card_ids`: `queued`, or `failed` (`not_queued`) when it could not be queued. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -11932,7 +11932,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description El mensaje quedó registrado (`status: queued`) y sale desde la cola. */
+            /** @description The message was registered (`status: queued`) and goes out from the queue. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -11944,7 +11944,7 @@ export interface operations {
             401: components["responses"]["ConversationsAuthenticationException"];
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
-            /** @description La extensión del archivo no está soportada y no mandaste `file_type`. */
+            /** @description The extension of the file is not supported and no `file_type` was sent. */
             415: {
                 headers: {
                     [name: string]: unknown;
@@ -12725,7 +12725,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Un ítem por destino, en el orden pedido, cada uno con su `message` (o `null`: en cola sin registrar todavía, bloqueado, o no se pudo leer). */
+            /** @description One item per destination, in the order asked, each with its `message` (or `null`: queued but not registered yet, blocked, or it could not be read). */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -13610,7 +13610,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description El mensaje quedó registrado (`status: queued`) y sale desde la cola. */
+            /** @description The message was registered (`status: queued`) and goes out from the queue. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -13621,7 +13621,7 @@ export interface operations {
             };
             401: components["responses"]["ConversationsAuthenticationException"];
             403: components["responses"]["ConversationsAuthorizationException"];
-            /** @description La extensión del archivo no está soportada y no mandaste `file_type`. */
+            /** @description The extension of the file is not supported and no `file_type` was sent. */
             415: {
                 headers: {
                     [name: string]: unknown;
@@ -13902,7 +13902,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description La plantilla quedó registrada como mensaje (`status: queued`). */
+            /** @description The template was registered as a message (`status: queued`). */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -13926,7 +13926,7 @@ export interface operations {
             401: components["responses"]["ConversationsAuthenticationException"];
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
-            /** @description `template_unresolved_placeholder`: una variable apunta a un campo que no existe (`placeholders`, hasta 20, y `count`); `recipient_mismatch`; o una regla de envío. */
+            /** @description `template_unresolved_placeholder`: a variable points to a field that does not exist (`placeholders`, up to 20, and `count`); `recipient_mismatch`; or a send rule. */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -15522,19 +15522,19 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    /** @description The number of your account that runs the action: it must be admin of the group. */
                     device_id: number;
                     name: string;
                     description?: string | null;
-                    /** @description Solo con un número QR. Sin el número que ejecuta. */
+                    /** @description Only with a QR number. Without the number that runs the action. */
                     participants?: string[];
-                    /** @description Solo con un número oficial. */
+                    /** @description Only with an official number. */
                     join_approval_required?: boolean;
                 };
             };
         };
         responses: {
-            /** @description En cola. */
+            /** @description Queued. */
             202: {
                 headers: {
                     [name: string]: unknown;
@@ -15933,7 +15933,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                /** @description The WhatsApp uid of the group (`…@g.us`). */
                 group: string;
             };
             cookie?: never;
@@ -15941,23 +15941,23 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    /** @description The number of your account that runs the action: it must be admin of the group. */
                     device_id: number;
                     /** @enum {string} */
                     type: "text" | "image" | "video" | "audio" | "document";
-                    /** @description Solo con `type: text`. */
+                    /** @description Only with `type: text`. */
                     text?: string;
-                    /** @description Una URL `https` con la extensión del tipo. Solo con archivos. */
+                    /** @description An `https` URL with the extension of the type. Files only. */
                     media_url?: string;
-                    /** @description Solo imagen o video. */
+                    /** @description Image or video only. */
                     caption?: string | null;
-                    /** @description Solo documento. */
+                    /** @description Document only. */
                     file_name?: string | null;
                 };
             };
         };
         responses: {
-            /** @description En cola. */
+            /** @description Queued. */
             202: {
                 headers: {
                     [name: string]: unknown;
@@ -19386,7 +19386,7 @@ export interface operations {
                     "application/json": components["schemas"]["PendingPublicMessage"];
                 };
             };
-            /** @description El mensaje no existe o no es de ese contacto. */
+            /** @description The message does not exist or is not of that contact. */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -19439,7 +19439,7 @@ export interface operations {
                     "application/json": components["schemas"]["PendingWebhookSubscriptionWithSecret"];
                 };
             };
-            /** @description URL rechazada, tipos de evento inválidos o tope alcanzado */
+            /** @description URL rejected, invalid event types or cap reached */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -19609,7 +19609,7 @@ export interface operations {
                 q?: string;
                 status?: "draft" | "published" | "deprecated";
                 device_id?: number;
-                /** @description Por defecto 25. */
+                /** @description 25 by default. */
                 perPage?: number;
                 page?: number;
             };
@@ -19644,17 +19644,17 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description El número principal. */
+                    /** @description The primary number. */
                     device_id: number;
-                    /** @description Otros números donde publicarlo. */
+                    /** @description Other numbers to publish it on. */
                     device_ids?: number[];
-                    /** @description Una `key` de `GET /api/v1/forms/templates`. */
+                    /** @description A `key` of `GET /api/v1/forms/templates`. */
                     template_key?: string;
                 };
             };
         };
         responses: {
-            /** @description Creado como borrador. */
+            /** @description Created as a draft. */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -19701,7 +19701,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description La versión del formulario. */
+                /** @description The version of the form. */
                 id: number;
             };
             cookie?: never;
@@ -19734,7 +19734,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description La versión del formulario. */
+                /** @description The version of the form. */
                 id: number;
             };
             cookie?: never;
@@ -19743,9 +19743,9 @@ export interface operations {
             content: {
                 "application/json": {
                     name?: string;
-                    /** @description Pantallas y campos del formulario. */
+                    /** @description Screens and fields of the form. */
                     definition: Record<string, unknown>;
-                    /** @description El `updated_at` que leíste: si cambió desde entonces responde `409 STALE`. */
+                    /** @description The `updated_at` you read: if it changed since then, it answers `409 STALE`. */
                     expected_updated_at?: string | null;
                 };
             };
@@ -19770,14 +19770,14 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description La versión del formulario. */
+                /** @description The version of the form. */
                 id: number;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Borrado. Una versión publicada responde `409 PUBLISHED`. */
+            /** @description Deleted. A published version answers `409 PUBLISHED`. */
             204: {
                 headers: {
                     [name: string]: unknown;
@@ -19791,14 +19791,14 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description La versión del formulario. */
+                /** @description The version of the form. */
                 id: number;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Ya había un borrador: es ese (`created: false`). */
+            /** @description There was a draft already: this is it (`created: false`). */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -19812,7 +19812,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Borrador nuevo (`created: true`). */
+            /** @description New draft (`created: true`). */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -19833,7 +19833,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description La versión del formulario. */
+                /** @description The version of the form. */
                 id: number;
             };
             cookie?: never;
@@ -19860,14 +19860,14 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description La versión del formulario. */
+                /** @description The version of the form. */
                 id: number;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Publicado. Si Meta lo rechaza: `502 META` con `meta_code` y `lint`; si no pasa la validación: `422 LINT`. */
+            /** @description Published. If Meta rejects it: `502 META` with `meta_code` and `lint`; if it does not pass validation: `422 LINT`. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -19887,7 +19887,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description La versión del formulario. */
+                /** @description The version of the form. */
                 id: number;
             };
             cookie?: never;
@@ -19912,7 +19912,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description La versión del formulario. */
+                /** @description The version of the form. */
                 id: number;
             };
             cookie?: never;
@@ -19943,7 +19943,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description La versión del formulario. */
+                /** @description The version of the form. */
                 id: number;
                 deviceId: number;
             };
@@ -19951,7 +19951,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description El número principal no se puede sacar: `422 PRIMARY_NUMBER`. */
+            /** @description The primary number cannot be taken off: `422 PRIMARY_NUMBER`. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -19969,7 +19969,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description La versión del formulario. */
+                /** @description The version of the form. */
                 id: number;
             };
             cookie?: never;
@@ -19994,7 +19994,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description El formulario (`family_id`). */
+                /** @description The form (`family_id`). */
                 familyId: number;
             };
             cookie?: never;
@@ -20026,7 +20026,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description El formulario (`family_id`). */
+                /** @description The form (`family_id`). */
                 familyId: number;
             };
             cookie?: never;
@@ -20071,7 +20071,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                /** @description El formulario (`family_id`). */
+                /** @description The form (`family_id`). */
                 familyId: number;
             };
             cookie?: never;
@@ -20097,7 +20097,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description El formulario (`family_id`). */
+                /** @description The form (`family_id`). */
                 familyId: number;
                 runId: number;
             };
@@ -20127,7 +20127,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                /** @description El formulario (`family_id`). */
+                /** @description The form (`family_id`). */
                 familyId: number;
             };
             cookie?: never;
@@ -20159,19 +20159,19 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description El formulario (`family_id`). */
+                    /** @description The form (`family_id`). */
                     form_id: number;
                     device_id: number;
-                    /** @description El texto del mensaje. Por defecto, el nombre del formulario. */
+                    /** @description The text of the message. By default, the name of the form. */
                     text?: string;
-                    /** @description El texto del botón, sin emojis. Por defecto «Abrir». */
+                    /** @description The text of the button, without emojis. By default "Abrir" (or "Open"). */
                     button_text?: string;
                     client_reference?: components["schemas"]["PendingClientReference"];
                 };
             };
         };
         responses: {
-            /** @description El formulario quedó registrado como mensaje (`type: whatsapp_form`, `status: queued`). */
+            /** @description The form was registered as a message (`type: whatsapp_form`, `status: queued`). */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -20187,7 +20187,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description El `action_id` que devolvió la acción. */
+                /** @description The `action_id` the action returned. */
                 action: string;
             };
             cookie?: never;
@@ -20212,7 +20212,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                /** @description The WhatsApp uid of the group (`…@g.us`). */
                 group: string;
             };
             cookie?: never;
@@ -20220,15 +20220,15 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    /** @description The number of your account that runs the action: it must be admin of the group. */
                     device_id: number;
-                    /** @description Teléfonos con código de país. Se normalizan y se quitan los repetidos; después no pueden ser más de 20 (`422 max_phones`). */
+                    /** @description Phones with country code. They are normalized and deduplicated; after that, at most 20 (`422 max_phones`). */
                     phones: string[];
                 };
             };
         };
         responses: {
-            /** @description En cola. */
+            /** @description Queued. */
             202: {
                 headers: {
                     [name: string]: unknown;
@@ -20244,7 +20244,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                /** @description The WhatsApp uid of the group (`…@g.us`). */
                 group: string;
             };
             cookie?: never;
@@ -20252,15 +20252,15 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    /** @description The number of your account that runs the action: it must be admin of the group. */
                     device_id: number;
-                    /** @description Teléfonos con código de país. Se normalizan y se quitan los repetidos; después no pueden ser más de 20 (`422 max_phones`). */
+                    /** @description Phones with country code. They are normalized and deduplicated; after that, at most 20 (`422 max_phones`). */
                     phones: string[];
                 };
             };
         };
         responses: {
-            /** @description En cola. */
+            /** @description Queued. */
             202: {
                 headers: {
                     [name: string]: unknown;
@@ -20276,7 +20276,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                /** @description The WhatsApp uid of the group (`…@g.us`). */
                 group: string;
             };
             cookie?: never;
@@ -20284,15 +20284,15 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    /** @description The number of your account that runs the action: it must be admin of the group. */
                     device_id: number;
-                    /** @description Teléfonos con código de país. Se normalizan y se quitan los repetidos; después no pueden ser más de 20 (`422 max_phones`). */
+                    /** @description Phones with country code. They are normalized and deduplicated; after that, at most 20 (`422 max_phones`). */
                     phones: string[];
                 };
             };
         };
         responses: {
-            /** @description En cola. */
+            /** @description Queued. */
             202: {
                 headers: {
                     [name: string]: unknown;
@@ -20308,7 +20308,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                /** @description The WhatsApp uid of the group (`…@g.us`). */
                 group: string;
             };
             cookie?: never;
@@ -20316,15 +20316,15 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    /** @description The number of your account that runs the action: it must be admin of the group. */
                     device_id: number;
-                    /** @description Teléfonos con código de país. Se normalizan y se quitan los repetidos; después no pueden ser más de 20 (`422 max_phones`). */
+                    /** @description Phones with country code. They are normalized and deduplicated; after that, at most 20 (`422 max_phones`). */
                     phones: string[];
                 };
             };
         };
         responses: {
-            /** @description En cola. */
+            /** @description Queued. */
             202: {
                 headers: {
                     [name: string]: unknown;
@@ -20340,7 +20340,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                /** @description The WhatsApp uid of the group (`…@g.us`). */
                 group: string;
             };
             cookie?: never;
@@ -20348,14 +20348,14 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    /** @description The number of your account that runs the action: it must be admin of the group. */
                     device_id: number;
                     name: string;
                 };
             };
         };
         responses: {
-            /** @description En cola. */
+            /** @description Queued. */
             202: {
                 headers: {
                     [name: string]: unknown;
@@ -20371,7 +20371,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                /** @description The WhatsApp uid of the group (`…@g.us`). */
                 group: string;
             };
             cookie?: never;
@@ -20379,14 +20379,14 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    /** @description The number of your account that runs the action: it must be admin of the group. */
                     device_id: number;
                     description: string | null;
                 };
             };
         };
         responses: {
-            /** @description En cola. */
+            /** @description Queued. */
             202: {
                 headers: {
                     [name: string]: unknown;
@@ -20402,7 +20402,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                /** @description The WhatsApp uid of the group (`…@g.us`). */
                 group: string;
             };
             cookie?: never;
@@ -20410,14 +20410,14 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    /** @description The number of your account that runs the action: it must be admin of the group. */
                     device_id: number;
                     photo_url: string;
                 };
             };
         };
         responses: {
-            /** @description En cola. */
+            /** @description Queued. */
             202: {
                 headers: {
                     [name: string]: unknown;
@@ -20433,7 +20433,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                /** @description The WhatsApp uid of the group (`…@g.us`). */
                 group: string;
             };
             cookie?: never;
@@ -20441,14 +20441,14 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    /** @description The number of your account that runs the action: it must be admin of the group. */
                     device_id: number;
                     members_can_send_messages: boolean;
                 };
             };
         };
         responses: {
-            /** @description En cola. */
+            /** @description Queued. */
             202: {
                 headers: {
                     [name: string]: unknown;
@@ -20464,7 +20464,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                /** @description The WhatsApp uid of the group (`…@g.us`). */
                 group: string;
             };
             cookie?: never;
@@ -20472,13 +20472,13 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    /** @description The number of your account that runs the action: it must be admin of the group. */
                     device_id: number;
                 };
             };
         };
         responses: {
-            /** @description En cola. */
+            /** @description Queued. */
             202: {
                 headers: {
                     [name: string]: unknown;
@@ -20496,7 +20496,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                /** @description The WhatsApp uid of the group (`…@g.us`). */
                 group: string;
             };
             cookie?: never;
@@ -20525,7 +20525,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                /** @description The WhatsApp uid of the group (`…@g.us`). */
                 group: string;
             };
             cookie?: never;
@@ -20559,7 +20559,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                /** @description The WhatsApp uid of the group (`…@g.us`). */
                 group: string;
             };
             cookie?: never;
@@ -20567,15 +20567,15 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    /** @description The number of your account that runs the action: it must be admin of the group. */
                     device_id: number;
-                    /** @description Teléfonos con código de país. Se normalizan y se quitan los repetidos; después no pueden ser más de 20 (`422 max_phones`). */
+                    /** @description Phones with country code. They are normalized and deduplicated; after that, at most 20 (`422 max_phones`). */
                     phones: string[];
                 };
             };
         };
         responses: {
-            /** @description En cola. */
+            /** @description Queued. */
             202: {
                 headers: {
                     [name: string]: unknown;
@@ -20591,7 +20591,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                /** @description The WhatsApp uid of the group (`…@g.us`). */
                 group: string;
             };
             cookie?: never;
@@ -20599,15 +20599,15 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    /** @description The number of your account that runs the action: it must be admin of the group. */
                     device_id: number;
-                    /** @description Teléfonos con código de país. Se normalizan y se quitan los repetidos; después no pueden ser más de 20 (`422 max_phones`). */
+                    /** @description Phones with country code. They are normalized and deduplicated; after that, at most 20 (`422 max_phones`). */
                     phones: string[];
                 };
             };
         };
         responses: {
-            /** @description En cola. */
+            /** @description Queued. */
             202: {
                 headers: {
                     [name: string]: unknown;

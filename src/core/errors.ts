@@ -74,7 +74,7 @@ export class APIError extends FunnelchatError {
     const code = typeof record?.error === 'string' && record.error !== '' ? record.error : undefined;
     const apiMessage = typeof record?.message === 'string' && record.message !== '' ? record.message : undefined;
     const fallback = typeof body === 'string' && body.trim() !== '' && body.length <= 300 ? body.trim() : undefined;
-    super(apiMessage ?? code ?? fallback ?? `La API respondió ${init.status}.`);
+    super(apiMessage ?? code ?? fallback ?? `The API answered ${init.status}.`);
     this.status = init.status;
     this.code = code;
     this.retryAfter = parseRetryAfter(init.headers.get('retry-after'));
@@ -133,7 +133,7 @@ export class InternalServerError extends APIError {}
 
 /** The request never got a response: DNS, connection refused, reset, TLS… */
 export class APIConnectionError extends FunnelchatError {
-  constructor(message = 'No se pudo conectar con la API de Funnelchat.', options?: { cause?: unknown }) {
+  constructor(message = 'Could not connect to the Funnelchat API.', options?: { cause?: unknown }) {
     super(message, options);
   }
 }
@@ -141,14 +141,14 @@ export class APIConnectionError extends FunnelchatError {
 /** The request took longer than `timeoutMs`. */
 export class APIConnectionTimeoutError extends APIConnectionError {
   constructor(timeoutMs: number, options?: { cause?: unknown }) {
-    super(`La API de Funnelchat no respondió en ${timeoutMs} ms.`, options);
+    super(`The Funnelchat API did not answer within ${timeoutMs} ms.`, options);
   }
 }
 
 /** The caller aborted the request with its own `AbortSignal`. Never retried. */
 export class APIUserAbortError extends FunnelchatError {
   constructor(options?: { cause?: unknown }) {
-    super('La solicitud se canceló.', options);
+    super('The request was aborted.', options);
   }
 }
 

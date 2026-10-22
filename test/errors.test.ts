@@ -89,7 +89,7 @@ describe('typed errors', () => {
 
   it('has a fallback message for an empty body', async () => {
     const error = await errorFor({ status: 500 });
-    expect(error.message).toBe('La API respondió 500.');
+    expect(error.message).toBe('The API answered 500.');
     expect(error.body).toBeNull();
   });
 

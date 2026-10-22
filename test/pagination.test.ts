@@ -59,7 +59,7 @@ describe('pagination', () => {
     const second = await first.getNextPage();
     expect(second.data).toEqual([{ id: 2 }]);
     expect(second.hasNextPage()).toBe(false);
-    await expect(second.getNextPage()).rejects.toThrow('No hay más páginas.');
+    await expect(second.getNextPage()).rejects.toThrow('There are no more pages.');
     expect(calls).toHaveLength(2);
   });
 

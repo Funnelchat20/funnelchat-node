@@ -104,15 +104,15 @@ export class Funnelchat {
   constructor(options: ClientOptions = {}) {
     const apiKey = options.apiKey ?? readEnv('FUNNELCHAT_API_KEY');
     if (!apiKey) {
-      throw new FunnelchatError('Falta la clave de API: pásala en `apiKey` o en la variable FUNNELCHAT_API_KEY.');
+      throw new FunnelchatError('Missing API key: pass it as `apiKey` or in the FUNNELCHAT_API_KEY environment variable.');
     }
     const environment = options.environment ?? 'production';
     if (!(environment in BASE_URLS)) {
-      throw new FunnelchatError(`Entorno desconocido: ${String(environment)}. Usa "production" o "staging".`);
+      throw new FunnelchatError(`Unknown environment: ${String(environment)}. Use "production" or "staging".`);
     }
     const fetchImpl = options.fetch ?? globalThis.fetch;
     if (typeof fetchImpl !== 'function') {
-      throw new FunnelchatError('No hay fetch disponible: usa Node 18 o posterior, o pasa `fetch` en las opciones.');
+      throw new FunnelchatError('No fetch available: use Node 18 or later, or pass `fetch` in the options.');
     }
 
     this.#apiKey = apiKey;

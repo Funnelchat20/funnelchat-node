@@ -42,9 +42,9 @@ function parseArgs(argv) {
     if (arg === '--check') args.check = true;
     else if (arg === '--spec') args.spec = argv[++i];
     else if (arg.startsWith('--spec=')) args.spec = arg.slice('--spec='.length);
-    else throw new Error(`Argumento desconocido: ${arg}`);
+    else throw new Error(`Unknown argument: ${arg}`);
   }
-  if (args.spec === undefined) throw new Error('--spec necesita la ruta del archivo');
+  if (args.spec === undefined) throw new Error('--spec needs the path of the file');
   return args;
 }
 
@@ -77,7 +77,7 @@ function importSpec(source) {
 
   const provenance = {
     description:
-      'De dónde salió spec/funnelchat.json. Lo escribe `npm run generate -- --spec <archivo>`; no lo edites a mano.',
+      'Where spec/funnelchat.json came from. Written by `npm run generate -- --spec <file>`; do not edit it by hand.',
     file: 'spec/funnelchat.json',
     sha256: sha256(bytes),
     bytes: bytes.length,
@@ -111,7 +111,7 @@ function importSpec(source) {
   mkdirSync(dirname(SPEC_FILE), { recursive: true });
   writeFileSync(SPEC_FILE, bytes);
   writeFileSync(PROVENANCE_FILE, `${JSON.stringify(provenance, null, 2)}\n`);
-  console.log(`spec: copiada de ${relPath ?? sourcePath} (${provenance.source.branch ?? '?'} @ ${provenance.source.commit?.slice(0, 7) ?? '?'})`);
+  console.log(`spec: copied from ${relPath ?? sourcePath} (${provenance.source.branch ?? '?'} @ ${provenance.source.commit?.slice(0, 7) ?? '?'})`);
 }
 
 function matches(target, condition) {
@@ -133,7 +133,7 @@ function mergePending(spec, pending) {
 
   for (const [name, schema] of Object.entries(pending.components?.schemas ?? {})) {
     if (merged.components.schemas[name]) {
-      throw new Error(`spec/pending.json: el esquema ${name} ya existe en la instantánea; renómbralo.`);
+      throw new Error(`spec/pending.json: the schema ${name} already exists in the snapshot; rename it.`);
     }
     merged.components.schemas[name] = schema;
   }
@@ -153,7 +153,7 @@ function mergePending(spec, pending) {
   }
 
   for (const patch of pending.operationPatches ?? []) {
-    const label = `${patch.method.toUpperCase()} ${patch.path} (parche: ${Object.keys(patch.requestBodyProperties ?? {}).join(', ')})`;
+    const label = `${patch.method.toUpperCase()} ${patch.path} (patch: ${Object.keys(patch.requestBodyProperties ?? {}).join(', ')})`;
     const op = merged.paths[patch.path]?.[patch.method];
     if (!op) {
       report.missing.push(label);
@@ -179,7 +179,7 @@ function mergePending(spec, pending) {
 
   // Schema patches add properties to a component schema, each one only while the schema lacks it.
   for (const patch of pending.schemaPatches ?? []) {
-    const label = `esquema ${patch.schema} (parche: ${Object.keys(patch.properties ?? {}).join(', ')})`;
+    const label = `schema ${patch.schema} (patch: ${Object.keys(patch.properties ?? {}).join(', ')})`;
     const schema = merged.components.schemas[patch.schema];
     if (!schema) {
       report.missing.push(label);
@@ -201,7 +201,7 @@ function mergePending(spec, pending) {
   // Response patches replace every 2xx response of the operation (and any other code they bring)
   // while the operation matches `while`.
   for (const patch of pending.responsePatches ?? []) {
-    const label = `${patch.method.toUpperCase()} ${patch.path} (respuesta: ${Object.keys(patch.responses ?? {}).join(', ')})`;
+    const label = `${patch.method.toUpperCase()} ${patch.path} (response: ${Object.keys(patch.responses ?? {}).join(', ')})`;
     const op = merged.paths[patch.path]?.[patch.method];
     if (!op) {
       report.missing.push(label);
@@ -476,17 +476,17 @@ ${dataLines.join('\n')}
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.spec) {
-    if (args.check) throw new Error('--check y --spec no se combinan');
+    if (args.check) throw new Error('--check and --spec cannot be combined');
     importSpec(args.spec);
   }
-  if (!existsSync(SPEC_FILE)) throw new Error('Falta spec/funnelchat.json: corre `npm run generate -- --spec <archivo>`.');
+  if (!existsSync(SPEC_FILE)) throw new Error('Missing spec/funnelchat.json: run `npm run generate -- --spec <file>`.');
 
   const bytes = readFileSync(SPEC_FILE);
   const specHash = sha256(bytes);
   if (existsSync(PROVENANCE_FILE)) {
     const provenance = JSON.parse(readFileSync(PROVENANCE_FILE, 'utf8'));
     if (provenance.sha256 !== specHash) {
-      console.warn('aviso: spec/funnelchat.json no coincide con el sha256 de spec/procedencia.json (¿la editaron a mano?).');
+      console.warn('warning: spec/funnelchat.json does not match the sha256 in spec/procedencia.json (was it edited by hand?).');
     }
   }
 
@@ -500,13 +500,13 @@ async function main() {
     'events.ts': generateEvents(merged, specHash),
   };
 
-  console.log(`pendiente de la especificación: ${report.applied.length} entradas aplicadas.`);
+  console.log(`pending of the spec: ${report.applied.length} entries applied.`);
   if (report.superseded.length) {
-    console.log(`la instantánea ya trae ${report.superseded.length} entradas de spec/pending.json; se pueden borrar de ahí:`);
+    console.log(`the snapshot already has ${report.superseded.length} entries of spec/pending.json; they can be deleted from it:`);
     for (const label of report.superseded) console.log(`  - ${label}`);
   }
   if (report.missing.length) {
-    console.warn(`aviso: ${report.missing.length} parches no encontraron su operación en la instantánea:`);
+    console.warn(`warning: ${report.missing.length} patches did not find their operation in the snapshot:`);
     for (const label of report.missing) console.warn(`  - ${label}`);
   }
 
@@ -516,16 +516,16 @@ async function main() {
       return !existsSync(file) || readFileSync(file, 'utf8') !== content;
     });
     if (stale.length) {
-      console.error(`src/generated está desactualizado (${stale.map(([n]) => n).join(', ')}): corre \`npm run generate\`.`);
+      console.error(`src/generated is out of date (${stale.map(([n]) => n).join(', ')}): run \`npm run generate\`.`);
       process.exit(1);
     }
-    console.log('src/generated está al día.');
+    console.log('src/generated is up to date.');
     return;
   }
 
   mkdirSync(OUT_DIR, { recursive: true });
   for (const [name, content] of Object.entries(files)) writeFileSync(resolve(OUT_DIR, name), content);
-  console.log(`generado: ${Object.keys(files).map((n) => `src/generated/${n}`).join(', ')}`);
+  console.log(`generated: ${Object.keys(files).map((n) => `src/generated/${n}`).join(', ')}`);
 }
 
 main().catch((error) => {

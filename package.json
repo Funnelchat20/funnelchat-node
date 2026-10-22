@@ -1,7 +1,7 @@
 {
   "name": "@funnelchat/sdk",
   "version": "0.1.0",
-  "description": "SDK oficial de Node.js y TypeScript para la API pública de Funnelchat: WhatsApp, contactos, mensajes, plantillas, formularios, grupos y webhooks",
+  "description": "Official Node.js and TypeScript SDK for the Funnelchat public API: WhatsApp, contacts, messages, templates, forms, groups and webhooks",
   "license": "MIT",
   "author": {
     "name": "Funnelchat",

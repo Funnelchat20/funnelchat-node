@@ -1,22 +1,22 @@
 # funnelchat-node
 
-SDK oficial de Node.js y TypeScript para la [API pública de Funnelchat](https://developers-portal.funnelchat.app/docs/): contactos, conversaciones y mensajes, formularios de WhatsApp, plantillas, etiquetas, campos personalizados, grupos, números y webhooks, con tipos generados de la especificación OpenAPI.
+Official Node.js and TypeScript SDK for the [Funnelchat public API](https://developers-portal.funnelchat.app/docs/): contacts, conversations and messages, WhatsApp forms, templates, tags, custom fields, groups, numbers and webhooks, with types generated from the OpenAPI spec.
 
-- TypeScript, ESM y CommonJS. Node 18 o posterior, con el `fetch` del propio Node.
-- Sin dependencias en tiempo de ejecución.
-- Reintentos seguros, paginación con `for await`, errores tipados con el `X-Request-Id` de cada respuesta y verificación de la firma de los webhooks.
+- TypeScript, ESM and CommonJS. Node 18 or later, with Node's own `fetch`.
+- No runtime dependencies.
+- Safe retries, pagination with `for await`, typed errors carrying the `X-Request-Id` of each response, and webhook signature verification.
 
-> **v0.** La API pública está en v0 y puede cambiar. Lo que la API ya tiene pero su especificación todavía no describe está en [Pendiente de la especificación](#pendiente-de-la-especificación).
+> **v0.** The public API is in v0 and may change. What the API already has but its spec does not describe yet is listed in [Pending of the spec](#pending-of-the-spec).
 
-## Instalación
+## Install
 
 ```bash
 npm install @funnelchat/sdk
 ```
 
-## Primera llamada
+## First call
 
-Necesitas una clave de API (`<id>|fc_live_...`) creada en «Desarrolladores», con los permisos de lo que vas a usar. Guárdala en una variable de entorno: el cliente la lee de `FUNNELCHAT_API_KEY` si no se la pasas.
+You need an API key (`<id>|fc_live_...`) created in the "Developers" section of the panel, with the permissions of what you are going to use. Keep it in an environment variable: the client reads `FUNNELCHAT_API_KEY` when you do not pass it.
 
 ```ts
 import { Funnelchat } from '@funnelchat/sdk';
@@ -24,48 +24,48 @@ import { Funnelchat } from '@funnelchat/sdk';
 
 const funnelchat = new Funnelchat({ apiKey: process.env.FUNNELCHAT_API_KEY });
 
-// Tus números de WhatsApp (permiso accounts:read). El `id` de cada uno es el `device_id` con el que envías.
+// Your WhatsApp numbers (permission accounts:read). The `id` of each one is the `device_id` you send with.
 for await (const device of funnelchat.devices.list()) {
   console.log(device.id, device.number, device.capabilities.messages.templates);
 }
 ```
 
-Opciones del cliente:
+Client options:
 
-| Opción | Qué es | Por defecto |
+| Option | What it is | Default |
 |---|---|---|
-| `apiKey` | Tu clave. | `FUNNELCHAT_API_KEY` |
-| `environment` | `production` (`https://api.funnelchat.com`) o `staging`. | `production` |
-| `baseUrl` | Otra URL base, por ejemplo la del [sandbox](#probar-contra-el-sandbox); gana sobre `environment`. | — |
-| `timeoutMs` | Tiempo máximo de cada intento. | `30000` |
-| `maxRetries` | Reintentos automáticos (ver [Reintentos](#reintentos)). `0` los apaga. | `2` |
-| `defaultHeaders` | Cabeceras que van en todos los pedidos. | — |
-| `fetch` | Otra implementación de `fetch`. | la de Node |
+| `apiKey` | Your key. | `FUNNELCHAT_API_KEY` |
+| `environment` | `production` (`https://api.funnelchat.com`) or `staging`. | `production` |
+| `baseUrl` | Another base URL, for example the [sandbox](#test-against-the-sandbox)'s; it wins over `environment`. | — |
+| `timeoutMs` | Maximum time of each attempt. | `30000` |
+| `maxRetries` | Automatic retries (see [Retries](#retries)). `0` turns them off. | `2` |
+| `defaultHeaders` | Headers sent with every request. | — |
+| `fetch` | Another `fetch` implementation. | Node's |
 
-Cada pedido manda `Authorization: Bearer <clave>`, `Accept: application/json` y `User-Agent: funnelchat-node/<versión> node/<versión>`. La clave nunca aparece en un `console.log` del cliente ni en un error.
+Every request sends `Authorization: Bearer <key>`, `Accept: application/json` and `User-Agent: funnelchat-node/<version> node/<version>`. The key never shows up in a `console.log` of the client or in an error.
 
-## Las piezas
+## The pieces
 
-| Recurso | Qué tiene |
+| Resource | What it has |
 |---|---|
-| `funnelchat.contacts` | `list`, `create`, `upsert`, `retrieve`, `update`, `delete`, etiquetas y campos de un contacto, `metaWindow` (la ventana de 24 horas), notas. |
-| `funnelchat.conversations` | `list`, `update`, contadores, marcar todo como leído o no leído. |
-| `funnelchat.messages` | `send`, `sendDirect`, `sendForm`, `sendContactCard`, `forward`, `get` (un mensaje por id), `list` (el historial de un contacto), `react`, `removeReaction`. |
-| `funnelchat.forms` | Formularios de WhatsApp: `list`, `templates`, `create`, `retrieve`, `update`, `delete`, `createVersion`, `sync`, `publish`, números, `versions`, respuestas y `metrics`. |
+| `funnelchat.contacts` | `list`, `create`, `upsert`, `retrieve`, `update`, `delete`, the tags and fields of a contact, `metaWindow` (the 24-hour window), notes. |
+| `funnelchat.conversations` | `list`, `update`, counters, mark everything as read or unread. |
+| `funnelchat.messages` | `send`, `sendDirect`, `sendForm`, `sendContactCard`, `forward`, `get` (one message by id), `list` (the history of a contact), `react`, `removeReaction`. |
+| `funnelchat.forms` | WhatsApp forms: `list`, `templates`, `create`, `retrieve`, `update`, `delete`, `createVersion`, `sync`, `publish`, numbers, `versions`, answers and `metrics`. |
 | `funnelchat.templates` | `list`, `create`, `retrieve`, `update`, `quickReplyButtons`, `send`, `delete`. |
 | `funnelchat.tags` | `list`, `create`, `retrieve`, `update`, `delete`, `listContacts`. |
 | `funnelchat.customFields` | `list`, `create`, `retrieve`, `update`, `delete`. |
-| `funnelchat.groups` | Leer grupos, participantes, eventos y mensajes; las [acciones de grupo](#grupos) y las solicitudes de unión. |
-| `funnelchat.devices` | `list`, `retrieve` (con `capabilities`), `update`, `status`, `health`, `me`, `checkPhone`, historial de conexión. |
-| `funnelchat.webhooks` | Suscripciones (`list`, `create`, `retrieve`, `update`, `delete`, `test`, `listDeliveries`), el catálogo (`events`), `verify` y `constructEvent`. |
+| `funnelchat.groups` | Read groups, participants, events and messages; the [group actions](#groups) and the join requests. |
+| `funnelchat.devices` | `list`, `retrieve` (with `capabilities`), `update`, `status`, `health`, `me`, `checkPhone`, connection history. |
+| `funnelchat.webhooks` | Subscriptions (`list`, `create`, `retrieve`, `update`, `delete`, `test`, `listDeliveries`), the catalog (`events`), `verify` and `constructEvent`. |
 
-Los parámetros, los cuerpos y las respuestas están tipados con la especificación. Para cualquier otra ruta, ver [Cualquier ruta](#cualquier-ruta).
+Parameters, bodies and responses are typed from the spec. For any other route, see [Any route](#any-route).
 
-## Enviar un mensaje
+## Send a message
 
-Enviar con una clave pide el permiso `conversations:send` y sigue las reglas de WhatsApp. **Cada envío responde enseguida con el mensaje registrado, `status: 'queued'`:** aceptado no es entregado. Lo que pasa después llega por el webhook `message.status_changed` o se lee con `messages.get`.
+Sending with a key needs the `conversations:send` permission and follows the WhatsApp rules. **Every send answers right away with the registered message, `status: 'queued'`:** accepted is not delivered. What happens next arrives by the `message.status_changed` webhook, or is read with `messages.get`.
 
-**Ventana abierta: texto libre.** Con un número oficial de Meta solo puedes mandar texto libre si el contacto te escribió en las últimas 24 horas. Mira la ventana antes:
+**Open window: free text.** With an official Meta number you can only send free text if the contact wrote to you in the last 24 hours. Check the window first:
 
 ```ts
 const window = await funnelchat.contacts.metaWindow(2001, { device_id: 3 });
@@ -73,104 +73,104 @@ const window = await funnelchat.contacts.metaWindow(2001, { device_id: 3 });
 if (window.is_open) {
   const { message } = await funnelchat.messages.send(2001, {
     device_id: 3,
-    phone: '5491100000000',            // el teléfono del mismo contacto, sin +
-    text: '¡Hola! Te paso la info…',
-    client_reference: 'pedido-8841',   // opcional: tu referencia para seguirlo
+    phone: '5491100000000',            // the phone of the same contact, without +
+    text: 'Hi! Here is the info…',
+    client_reference: 'order-8841',    // optional: your reference to follow it
   });
   console.log(message.id, message.status); // 1002 'queued'
 }
 ```
 
-- `message.id` es el mismo `message_id` de `message.status_changed`. Con él, `funnelchat.messages.get(2001, message.id)` te dice cómo va: `status` pasa de `queued` a `sent`, `delivered`, `read` o `failed`, y en `failed` trae `error` (`code`, `title` y `reason`).
-- `client_reference` (de 1 a 64 caracteres ASCII visibles, sin espacios) vuelve en el historial del contacto y en `message.status_changed`.
-- `contact_id` va en el cuerpo, pero `send` lo completa con el contacto de la ruta si no lo pasas. Manda `phone` (o `whatsapp_id`) del mismo contacto: si no corresponde, la API responde `422 recipient_mismatch`.
-- `sendDirect` es la misma operación por `POST /api/v1/message/send-message`, con `device_id` y `contact_id` en el cuerpo.
-- Las tarjetas de contacto (`sendContactCard`) devuelven `{ messages }`, uno por tarjeta; el reenvío (`forward`) un ítem por destino con su `message` (o `null` si ese destino se bloqueó); la plantilla (`templates.send`) y el formulario (`sendForm`) `{ message }`.
+- `message.id` is the same `message_id` of `message.status_changed`. With it, `funnelchat.messages.get(2001, message.id)` tells you how it is going: `status` moves from `queued` to `sent`, `delivered`, `read` or `failed`, and a `failed` one carries `error` (`code`, `title` and `reason`).
+- `client_reference` (1 to 64 visible ASCII characters, no spaces) comes back in the history of the contact and in `message.status_changed`.
+- `contact_id` goes in the body, but `send` fills it with the contact of the route when you leave it out. Send the `phone` (or `whatsapp_id`) of the same contact: when it does not match, the API answers `422 recipient_mismatch`.
+- `sendDirect` is the same operation through `POST /api/v1/message/send-message`, with `device_id` and `contact_id` in the body.
+- Contact cards (`sendContactCard`) return `{ messages }`, one per card; a forward (`forward`) one item per destination with its `message` (or `null` when that destination was blocked); a template (`templates.send`) and a form (`sendForm`) `{ message }`.
 
-**Un archivo por URL.** `file` es la URL del archivo. Si no termina en una extensión conocida (una URL firmada o sin extensión), di qué es con `file_type` y, si es un documento, con qué nombre llega:
+**A file by URL.** `file` is the URL of the file. When it does not end in a known extension (a signed URL, or one without extension), say what it is with `file_type` and, for a document, the name it arrives with:
 
 ```ts
 await funnelchat.messages.send(2001, {
   device_id: 3,
   phone: '5491100000000',
   file: 'https://files.example.com/download?signature=abc123',
-  file_type: 'document',        // image, video, audio, document o sticker
-  file_name: 'factura.pdf',
+  file_type: 'document',        // image, video, audio, document or sticker
+  file_name: 'invoice.pdf',
 });
 ```
 
-Sin `file_type`, una URL sin extensión conocida responde `422` con `errors.file_type`, y una extensión no soportada `415` (`UnsupportedMediaTypeError`, con `supported_file_types` en `error.body`).
+Without `file_type`, a URL without a known extension answers `422` with `errors.file_type`, and an unsupported extension `415` (`UnsupportedMediaTypeError`, with `supported_file_types` in `error.body`).
 
-**Ventana cerrada: una plantilla aprobada.** En la ruta van el número (`3`) y el id de la plantilla (`45`), que sale de `funnelchat.templates.list()`:
+**Closed window: an approved template.** The route takes the number (`3`) and the id of the template (`45`), which comes from `funnelchat.templates.list()`:
 
 ```ts
 const { message } = await funnelchat.templates.send(3, '45', {
   phone: '5491100000000',
   contact_id: 2001,
-  template_variables: { body: ['Lucía'] }, // las variables del cuerpo, en orden
+  template_variables: { body: ['Lucía'] }, // the body variables, in order
 });
 ```
 
-**Si te frenamos.** Si un envío rompe una regla, no sale ni se guarda: te llega un error con su `code`.
+**When a send is stopped.** A send that breaks a rule is neither sent nor stored: you get an error with its `code`.
 
-| Error | Qué pasó | Qué hacer |
+| Error | What happened | What to do |
 |---|---|---|
-| `422 window_closed` | Texto libre con la ventana cerrada, en un número oficial. | Manda una plantilla aprobada. |
-| `422 antiblock_duplicate_content` | El mismo contenido repetido al mismo contacto. | Cambia el texto o espera. |
-| `422 antiblock_unanswered_limit` | Demasiados mensajes seguidos a alguien que no contesta. | Espera a que responda. |
-| `422 recipient_mismatch` | El `phone` o `whatsapp_id` no es el del contacto de la ruta. | Usa los datos de ese contacto. |
-| `422 recipient_unsupported` | El contacto es un grupo, una lista de difusión o un canal. | Por esta ruta solo se escribe a personas. |
-| `422 provider_unsupported` | El número no puede mandar eso. | Mira `capabilities` del número. |
-| `422 device_unavailable` | El número no está conectado. | Reconéctalo. |
-| `429 rate_limited` | Superaste el ritmo de tu número. Trae `retryAfter`. | Espera esos segundos y reintenta. |
-| `429 mac_lockout_24h` | La cuenta está en el bloqueo de 24 horas por agotar los contactos activos del mes. | Esperar unos segundos no lo resuelve. |
+| `422 window_closed` | Free text with the window closed, on an official number. | Send an approved template. |
+| `422 antiblock_duplicate_content` | The same content repeated to the same contact. | Change the text or wait. |
+| `422 antiblock_unanswered_limit` | Too many messages in a row to someone who does not answer. | Wait until they answer. |
+| `422 recipient_mismatch` | The `phone` or `whatsapp_id` is not the contact of the route. | Use that contact's data. |
+| `422 recipient_unsupported` | The contact is a group, a broadcast list or a channel. | This route only writes to people. |
+| `422 provider_unsupported` | The number cannot send that. | Check the `capabilities` of the number. |
+| `422 device_unavailable` | The number is not connected. | Reconnect it. |
+| `429 rate_limited` | You went over the pace of your number. It carries `retryAfter`. | Wait those seconds and retry. |
+| `429 mac_lockout_24h` | The account is in the 24-hour lockout after using up the monthly active contacts. | Waiting a few seconds does not fix it. |
 
-`isSendRuleError(error.code)` te dice si el error es un rechazo de envío; `SEND_ERROR_CODES` tiene todos, con su código HTTP. Un envío **nunca se reintenta solo** (ver [Reintentos](#reintentos)).
+`isSendRuleError(error.code)` tells you whether the error is a rejected send; `SEND_ERROR_CODES` has all of them, with their HTTP status. A send is **never retried automatically** (see [Retries](#retries)).
 
-## Formularios
+## Forms
 
-Un formulario de WhatsApp se arma, se publica en uno o más números y se envía a un contacto. Hay dos ids: `id` es una versión; `family_id` es el formulario, el que usas para enviarlo y el que vuelve como `form.id` en `whatsapp_form.completed`.
+A WhatsApp form is built, published on one or more numbers and sent to a contact. There are two ids: `id` is one version; `family_id` is the form itself, the one you send it with and the one that comes back as `form.id` in `whatsapp_form.completed`.
 
 ```ts
-const { data: draft } = await funnelchat.forms.create({ device_id: 3, template_key: 'encuesta' }); // permiso conversations:write
+const { data: draft } = await funnelchat.forms.create({ device_id: 3, template_key: 'lead' }); // permission conversations:write
 await funnelchat.forms.publish(draft.id);
 
 const { message } = await funnelchat.messages.sendForm(2001, {
   form_id: draft.family_id,
   device_id: 3,
-  text: '¿Nos cuentas cómo te fue?',
-  client_reference: 'encuesta-8841',
+  text: 'How did it go?',
+  client_reference: 'survey-8841',
 });
 ```
 
-Las respuestas llegan por el webhook `whatsapp_form.completed` (`answers`: `key`, `label` y `value`) y se leen con `forms.listResponses(familyId)`. `forms.templates()` lista las plantillas para empezar; `forms.update(id, { definition, expected_updated_at })` guarda un borrador y responde `409 STALE` si alguien lo guardó antes.
+The answers arrive by the `whatsapp_form.completed` webhook (`answers`: `key`, `label` and `value`) and are read with `forms.listResponses(familyId)`. `forms.templates()` lists the templates to start from; `forms.update(id, { definition, expected_updated_at })` saves a draft and answers `409 STALE` when someone saved it first.
 
-## Grupos
+## Groups
 
-Además de leer grupos, la API puede **actuar sobre ellos a través de uno de tus números**: crearlos, agregar y sacar participantes, cambiar admins, nombre, descripción, foto y permisos, renovar el enlace de invitación, enviar mensajes y decidir las solicitudes de unión.
+Besides reading groups, the API can **act on them through one of your numbers**: create them, add and remove participants, change admins, name, description, photo and settings, renew the invite link, send messages and decide the join requests.
 
-> Las acciones de grupo están **apagadas por defecto**. Mientras no estén habilitadas, responden `403 route_not_available`.
+> Group actions are **off by default**. Until they are enabled, they answer `403 route_not_available`.
 
-Cada acción responde `202` con su `action_id` y corre en segundo plano:
+Each action answers `202` with its `action_id` and runs in the background:
 
 ```ts
 const { action_id } = await funnelchat.groups.addParticipants('120363000000000001@g.us', {
-  device_id: 4,                       // tu número, admin del grupo
-  phones: ['5491100000001'],          // hasta 20
+  device_id: 4,                       // your number, admin of the group
+  phones: ['5491100000001'],          // up to 20
 });
 
 const { data: action } = await funnelchat.groups.action(action_id);
 console.log(action.status, action.result); // 'completed', { participants: [{ identity, status: 'added', … }] }
 ```
 
-- El grupo va por su uid de WhatsApp (`…@g.us`).
-- Lo que puede hacer cada número está en `capabilities.groups` de `funnelchat.devices.retrieve(id)`: un número QR puede todo menos decidir solicitudes; uno oficial crea, invita (en vez de agregar), saca, cambia nombre y descripción y maneja el enlace. Lo demás responde `422 provider_unsupported`.
-- El final llega por `group_action.completed` (o `group_action.failed`) con el mismo `action_id` en `action.uuid`.
-- Permisos: `communities:operate` para las acciones, `communities:send` para `sendMessage` y `communities:read` para leer. Los errores propios están en `GROUP_ACTION_ERROR_CODES`.
+- The group goes by its WhatsApp uid (`…@g.us`).
+- What each number can do is in `capabilities.groups` of `funnelchat.devices.retrieve(id)`: a QR number can do everything except deciding join requests; an official one creates, invites (instead of adding), removes, changes name and description and handles the invite link. Anything else answers `422 provider_unsupported`.
+- The end arrives by `group_action.completed` (or `group_action.failed`) with the same `action_id` in `action.uuid`.
+- Permissions: `communities:operate` for the actions, `communities:send` for `sendMessage` and `communities:read` to read. Their own errors are in `GROUP_ACTION_ERROR_CODES`.
 
-## Recibir webhooks con Express
+## Receive webhooks with Express
 
-Verifica la firma sobre el **cuerpo crudo**, tal como llegó. Si lo parseas y lo vuelves a serializar, cambia la firma: usa `express.raw`, no `express.json`.
+Verify the signature over the **raw body**, exactly as it arrived. If you parse it and serialize it again, the signature changes: use `express.raw`, not `express.json`.
 
 ```ts
 import express from 'express';
@@ -182,17 +182,17 @@ app.post('/hooks/funnelchat', express.raw({ type: 'application/json' }), (req, r
   let event;
   try {
     event = Funnelchat.webhooks.constructEvent(
-      req.body,                                // Buffer: el cuerpo crudo
+      req.body,                                // Buffer: the raw body
       req.get('X-Funnelchat-Signature'),
-      process.env.FUNNELCHAT_WEBHOOK_SECRET!,  // el secreto completo, con whsec_
+      process.env.FUNNELCHAT_WEBHOOK_SECRET!,  // the full secret, with whsec_
     );
   } catch (error) {
-    if (error instanceof WebhookVerificationError) return res.sendStatus(400); // error.reason dice por qué
+    if (error instanceof WebhookVerificationError) return res.sendStatus(400); // error.reason says why
     throw error;
   }
 
-  res.sendStatus(200); // responde rápido (menos de 10 s) y procesa después
-  queue.push(event);   // deduplica por event.id: un reintento trae el mismo
+  res.sendStatus(200); // answer fast (under 10 s) and process later
+  queue.push(event);   // deduplicate by event.id: a retry brings the same one
 });
 
 function handle(event) {
@@ -207,43 +207,43 @@ function handle(event) {
       console.log(event.data.form.id, event.data.answers);
       break;
     default:
-      // Un tipo que tu código no conoce todavía: no es un error, responde 2xx igual.
+      // A type your code does not know yet: it is not an error, answer 2xx anyway.
   }
 }
 ```
 
-- `constructEvent` verifica la firma y devuelve el evento tipado: con `event.type` TypeScript sabe la forma de `event.data`. Si algo falla, lanza `WebhookVerificationError` con `reason`: `missing_header`, `malformed_header`, `timestamp_out_of_tolerance`, `signature_mismatch`, `invalid_body`, `invalid_json`…
-- Si solo quieres saber sí o no, `Funnelchat.webhooks.verify(rawBody, signatureHeader, secret)` devuelve `true` o `false` y nunca lanza errores.
-- Las dos rechazan una firma con un `t` a más de 300 segundos de tu reloj. Para cambiarlo: `{ toleranceSeconds: 600 }` como cuarto argumento.
-- El algoritmo es el del portal: `X-Funnelchat-Signature: t=<unix>,v1=<hex>`, donde `v1` es el HMAC-SHA256 con el secreto completo de `"<t>." + cuerpo crudo`, comparado en tiempo constante, y puede haber varias `v1`. Los tests usan los vectores de prueba del portal.
-- `webhookEvents` lista los tipos que conoce el SDK, con su estado (`live` o `planned`).
+- `constructEvent` verifies the signature and returns the typed event: with `event.type`, TypeScript knows the shape of `event.data`. When something fails, it throws `WebhookVerificationError` with `reason`: `missing_header`, `malformed_header`, `timestamp_out_of_tolerance`, `signature_mismatch`, `invalid_body`, `invalid_json`…
+- To just get a yes or no, `Funnelchat.webhooks.verify(rawBody, signatureHeader, secret)` returns `true` or `false` and never throws.
+- Both reject a signature whose `t` is more than 300 seconds away from your clock. To change it: `{ toleranceSeconds: 600 }` as the fourth argument.
+- The algorithm is the portal's: `X-Funnelchat-Signature: t=<unix>,v1=<hex>`, where `v1` is the HMAC-SHA256, with the full secret, of `"<t>." + raw body`, compared in constant time; there can be several `v1`. The tests use the portal's test vectors.
+- `webhookEvents` lists the types the SDK knows, with their status (`live` or `planned`).
 
-### Suscribirte
+### Subscribe
 
 ```ts
 const subscription = await funnelchat.webhooks.create({
-  url: 'https://tu-servidor.example/hooks/funnelchat',
+  url: 'https://your-server.example/hooks/funnelchat',
   events: ['message.received', 'message.status_changed', 'whatsapp_form.completed'],
-  description: 'Mi integración',
+  description: 'My integration',
 });
-// Guarda subscription.id y subscription.secret: el secreto se muestra una sola vez.
+// Store subscription.id and subscription.secret: the secret is shown only once.
 ```
 
-- Permisos: `webhooks:read` para leer y `webhooks:write` para el resto. Además, la clave solo puede suscribirse a eventos de las áreas que puede leer (`conversations:read`, `communities:read`, `accounts:read`): pedir otros es un `422` en `events`.
-- Las suscripciones son de la cuenta: `list()` trae también las de otras integraciones. Para cambiar la URL usa `update(id, …)` (el secreto no cambia). `test(id)` manda un `webhook.test` firmado ahora mismo y `listDeliveries(id)` es el historial.
-- `rotateSecret(id)` **no está abierta a claves de API** (`403 route_not_available`): rota el secreto desde el panel.
+- Permissions: `webhooks:read` to read and `webhooks:write` for the rest. Also, a key can only subscribe to events of the areas it can read (`conversations:read`, `communities:read`, `accounts:read`): asking for others is a `422` on `events`.
+- Subscriptions belong to the account: `list()` also brings the ones of other integrations. To change the URL use `update(id, …)` (the secret stays). `test(id)` sends a signed `webhook.test` right now and `listDeliveries(id)` is the history.
+- `rotateSecret(id)` is **not open to API keys** (`403 route_not_available`): rotate the secret from the panel.
 
-## Paginación
+## Pagination
 
-Los métodos `list…` devuelven una página perezosa: no se pide nada hasta que la usas.
+`list…` methods return a lazy page: nothing is requested until you use it.
 
 ```ts
-// Todos los ítems de todas las páginas:
+// Every item of every page:
 for await (const contact of funnelchat.contacts.list({ perPage: 100, tag_mode: 'any', tag_ids: [12] })) {
   console.log(contact.id);
 }
 
-// Página por página:
+// Page by page:
 let page = await funnelchat.tags.list({ perPage: 50 });
 console.log(page.data, page.requestId);
 while (page.hasNextPage()) {
@@ -251,23 +251,23 @@ while (page.hasNextPage()) {
 }
 ```
 
-El SDK entiende las tres formas de paginar de la API: por número de página (`meta.current_page` y `meta.last_page`), por cursor (`meta.next_cursor`) y las listas que vienen enteras en un array. El tamaño de página se pide con el parámetro de cada ruta (`perPage`, `per_page` o `pageSize`, según la especificación).
+The SDK understands the three ways the API paginates: by page number (`meta.current_page` and `meta.last_page`), by cursor (`meta.next_cursor`) and lists that come whole in an array. The page size is asked with the parameter of each route (`perPage`, `per_page` or `pageSize`, as the spec says).
 
-## Errores
+## Errors
 
-Todo lo que lanza el SDK hereda de `FunnelchatError`. Cuando la API responde con un error, es un `APIError`:
+Everything the SDK throws extends `FunnelchatError`. When the API answers with an error, it is an `APIError`:
 
-| Propiedad | Qué es |
+| Property | What it is |
 |---|---|
-| `status` | El código HTTP. |
-| `code` | El `error` estable del cuerpo (`window_closed`, `rate_limited`, `route_not_available`…), o `undefined` si no trae (por ejemplo un `422` de validación). |
-| `message` | El `message` del cuerpo, para personas. Decide por `status` y `code`, no por `message`. |
-| `requestId` | El `X-Request-Id` de la respuesta. **Cítalo cuando reportes un problema.** |
-| `retryAfter` | Los segundos de `Retry-After`, si vino. |
-| `errors` | En un `422` de validación, los mensajes por campo. |
-| `body` | El cuerpo completo, con los campos propios de cada error. |
+| `status` | The HTTP status. |
+| `code` | The stable `error` of the body (`window_closed`, `rate_limited`, `route_not_available`…), or `undefined` when there is none (for example a validation `422`). |
+| `message` | The `message` of the body, meant for people. Decide by `status` and `code`, not by `message`. |
+| `requestId` | The `X-Request-Id` of the response. **Quote it when you report a problem.** |
+| `retryAfter` | The seconds of `Retry-After`, when present. |
+| `errors` | In a validation `422`, the messages per field. |
+| `body` | The full body, with the fields of each error. |
 
-Cada código HTTP tiene su clase: `BadRequestError` (400), `AuthenticationError` (401), `PermissionDeniedError` (403), `NotFoundError` (404), `ConflictError` (409), `UnsupportedMediaTypeError` (415), `UnprocessableEntityError` (422), `RateLimitError` (429) e `InternalServerError` (5xx). Sin respuesta: `APIConnectionError`, y `APIConnectionTimeoutError` si se pasó de `timeoutMs`. Si cancelaste con tu `AbortSignal`: `APIUserAbortError`.
+Each HTTP status has its class: `BadRequestError` (400), `AuthenticationError` (401), `PermissionDeniedError` (403), `NotFoundError` (404), `ConflictError` (409), `UnsupportedMediaTypeError` (415), `UnprocessableEntityError` (422), `RateLimitError` (429) and `InternalServerError` (5xx). No response: `APIConnectionError`, and `APIConnectionTimeoutError` when it went over `timeoutMs`. Aborted with your own `AbortSignal`: `APIUserAbortError`.
 
 ```ts
 import { APIError, RateLimitError } from '@funnelchat/sdk';
@@ -276,7 +276,7 @@ try {
   await funnelchat.contacts.retrieve(2001);
 } catch (error) {
   if (error instanceof RateLimitError) {
-    console.log(`Espera ${error.retryAfter} s`);
+    console.log(`Wait ${error.retryAfter} s`);
   } else if (error instanceof APIError) {
     console.log(error.status, error.code, error.message, error.requestId);
   } else {
@@ -285,40 +285,40 @@ try {
 }
 ```
 
-Los errores de la entrada de la API y del control de acceso valen para cualquier ruta (`ACCESS_ERROR_CODES`):
+The errors of the API entry and of access control apply to any route (`ACCESS_ERROR_CODES`):
 
-| Error | Qué pasó |
+| Error | What happened |
 |---|---|
-| `401 unauthenticated` | Falta la clave o no es válida. |
-| `403 permission_denied` | La clave no tiene el permiso de la ruta. |
-| `403 route_not_available` | La ruta no está abierta a claves de API (o está apagada). |
-| `404 route_not_found` | La ruta no existe en la API pública. |
-| `429 daily_cap_exceeded` | Se superó el tope diario de llamadas de la clave. Trae `Retry-After`. |
-| `500 edge_misconfigured` | Un problema de nuestro lado: repórtalo con el `requestId`. |
-| `502 origin_unreachable` | La API no pudo llegar al área de la ruta. Trátalo como un timeout: si era una escritura, comprueba si se aplicó antes de repetirla. |
-| `503 gate_unavailable` | No se pudo evaluar la llamada y no se ejecutó nada. Trae `Retry-After`. |
+| `401 unauthenticated` | The key is missing or not valid. |
+| `403 permission_denied` | The key lacks the permission of the route. |
+| `403 route_not_available` | The route is not open to API keys (or it is turned off). |
+| `404 route_not_found` | The route does not exist in the public API. |
+| `429 daily_cap_exceeded` | The daily call cap of the key was reached. It carries `Retry-After`. |
+| `500 edge_misconfigured` | A problem on our side: report it with the `requestId`. |
+| `502 origin_unreachable` | The API could not reach the area of the route. Treat it as a timeout: if it was a write, check whether it was applied before repeating it. |
+| `503 gate_unavailable` | The call could not be evaluated and nothing ran. It carries `Retry-After`. |
 
-**El `X-Request-Id` de una respuesta que salió bien** también está a mano: cada llamada devuelve una promesa con `withResponse()`.
+**The `X-Request-Id` of a successful response** is at hand too: every call returns a promise with `withResponse()`.
 
 ```ts
 const { data, requestId, response } = await funnelchat.contacts.retrieve(2001).withResponse();
 ```
 
-## Reintentos
+## Retries
 
-- Las lecturas y las escrituras que dan lo mismo repetidas (`GET`, `PUT`, `DELETE`) se reintentan ante un `429`, un `5xx` o un error de red (también si se pasó el `timeoutMs`), hasta `maxRetries` veces (2 por defecto).
-- Las demás escrituras (`POST`, `PATCH`) se reintentan **solo cuando la API asegura que no se aplicaron**: `429` y `503`. Un `500`, `502` o `504`, un timeout o una conexión cortada pueden llegar después de que la escritura se aplicó, así que el error sale enseguida: lee el estado antes de repetirla.
-- **Un envío nunca se reintenta solo**: los `POST` con permiso `conversations:send` o `communities:send` (mensajes, formularios, tarjetas, reenvíos, plantillas, mensajes a grupos). Si un `429 rate_limited` no envió nada y quieres que el SDK reintente por ti, pídelo en esa llamada con `{ retrySend: true }`: sigue la regla de las escrituras. `mac_lockout_24h` y `mac_limit_reached` no se reintentan nunca.
-- Con `Retry-After`, se espera exactamente lo que pide. Si pide más de 60 segundos, no se espera: el error sale enseguida con su `retryAfter` y decides tú. Sin `Retry-After`, la espera es exponencial: 0,5 s, 1 s, 2 s… hasta 8 s, con un poco de azar.
-- Por llamada puedes cambiar `maxRetries`, `timeoutMs` y `signal`:
+- Reads and writes that give the same result when repeated (`GET`, `PUT`, `DELETE`) are retried on a `429`, a `5xx` or a network error (also when `timeoutMs` ran out), up to `maxRetries` times (2 by default).
+- Other writes (`POST`, `PATCH`) are retried **only when the API guarantees they were not applied**: `429` and `503`. A `500`, `502` or `504`, a timeout or a dropped connection can come after the write was applied, so the error is thrown right away: read the state before repeating it.
+- **A send is never retried automatically**: the `POST`s with the `conversations:send` or `communities:send` permission (messages, forms, cards, forwards, templates, group messages). If a `429 rate_limited` sent nothing and you want the SDK to retry for you, ask for it in that call with `{ retrySend: true }`: it then follows the rule of writes. `mac_lockout_24h` and `mac_limit_reached` are never retried.
+- With `Retry-After`, the wait is exactly what it asks for. If it asks for more than 60 seconds, there is no wait: the error is thrown right away with its `retryAfter` and you decide. Without `Retry-After`, the wait is exponential: 0.5 s, 1 s, 2 s… up to 8 s, with some jitter.
+- Per call you can change `maxRetries`, `timeoutMs` and `signal`:
 
 ```ts
 await funnelchat.tags.list({}, { maxRetries: 0, timeoutMs: 5000, signal: AbortSignal.timeout(10_000) });
 ```
 
-## Cualquier ruta
+## Any route
 
-`request` llama a cualquier ruta. Con una ruta de la especificación, los parámetros de ruta, la query, el cuerpo y la respuesta están tipados:
+`request` calls any route. With a route of the spec, the path parameters, the query, the body and the response are typed:
 
 ```ts
 const contact = await funnelchat.request('GET', '/api/v1/contacts/{contact}', { path: { contact: 2001 } });
@@ -326,74 +326,74 @@ const contact = await funnelchat.request('GET', '/api/v1/contacts/{contact}', { 
 const stats = await funnelchat.request('GET', '/api/v1/broadcasts/{broadcast}/statistics', { path: { broadcast: 77 } });
 ```
 
-Con una ruta que todavía no está en la especificación funciona igual, sin tipos (o con los que le pases):
+A route that is not in the spec yet works the same, untyped (or with the types you pass):
 
 ```ts
-const result = await funnelchat.request<{ ok: boolean }>('POST', '/api/v1/algo-nuevo', { body: { a: 1 } });
+const result = await funnelchat.request<{ ok: boolean }>('POST', '/api/v1/something-new', { body: { a: 1 } });
 ```
 
-`paginate` es lo mismo para listas: `for await (const item of funnelchat.paginate('/api/v1/broadcasts'))`.
+`paginate` is the same for lists: `for await (const item of funnelchat.paginate('/api/v1/broadcasts'))`.
 
-La query se arma como la lee Laravel: los arrays van como `clave[]=a&clave[]=b`, los objetos con corchetes y los booleanos como `1` y `0`.
+The query is built the way Laravel reads it: arrays as `key[]=a&key[]=b`, objects with brackets and booleans as `1` and `0`.
 
-Los tipos de la especificación también se exportan: `paths`, `components`, `operations`, y los atajos `Body<'/api/v1/tags', 'POST'>`, `Query<'/api/v1/contacts'>`, `ResponseBody<…>`. La tabla `routes` tiene cada operación con su área y su permiso.
+The types of the spec are exported too: `paths`, `components`, `operations`, and the shorthands `Body<'/api/v1/tags', 'POST'>`, `Query<'/api/v1/contacts'>`, `ResponseBody<…>`. The `routes` table has every operation with its area and its permission.
 
-## Probar contra el sandbox
+## Test against the sandbox
 
-[funnelchat-sandbox](https://github.com/Funnelchat20/funnelchat-sandbox) imita la API en tu máquina: envíos con su ciclo de estados, webhooks firmados y las reglas de WhatsApp, sin cuenta real. Apunta el cliente a él:
+[funnelchat-sandbox](https://github.com/Funnelchat20/funnelchat-sandbox) imitates the API on your machine: sends with their status cycle, signed webhooks and the WhatsApp rules, without a real account. Point the client at it:
 
 ```ts
 const funnelchat = new Funnelchat({ apiKey: '1|fc_live_sandbox', baseUrl: 'http://localhost:4010' });
 ```
 
-## Pendiente de la especificación
+## Pending of the spec
 
-La especificación publicada todavía no describe todo lo que la API en producción ya tiene. Lo que falta está en una capa aparte, `spec/pending.json`, que la generación suma a los tipos **solo mientras la especificación no lo traiga**, y cada entrada cita de dónde salió:
+The published spec does not describe everything the API in production already has yet. What is missing lives in a separate layer, `spec/pending.json`, which generation adds to the types **only while the spec does not bring it**; each entry cites where it came from:
 
-- lo que responden los envíos (el mensaje en cola), `messages.get`, `client_reference`, `file_type` y `file_name`;
-- los formularios y `messages.sendForm`;
-- las acciones de grupo y las solicitudes de unión;
-- `capabilities` de los números;
-- las suscripciones de webhooks y los eventos que la especificación no trae (`message.status_changed` con su forma, `whatsapp_form.completed`, los de grupos y los de la cuenta).
+- what sends answer (the queued message), `messages.get`, `client_reference`, `file_type` and `file_name`;
+- forms and `messages.sendForm`;
+- group actions and join requests;
+- the `capabilities` of numbers;
+- webhook subscriptions and the events the spec does not bring (`message.status_changed` with its shape, `whatsapp_form.completed`, the group ones and the account ones).
 
-`src/pending/` tiene lo que no es OpenAPI (`device_id` en `message.received`) y `src/core/error-codes.ts` los códigos de error.
+`src/pending/` has what is not OpenAPI (`device_id` in `message.received`) and `src/core/error-codes.ts` the error codes.
 
-## Desarrollo
+## Development
 
 ```bash
 npm install
-npm run generate:check   # lo generado y spec/pending.json están al día
-npm run typecheck        # tsc, incluye los chequeos de tipos de test/types.test.ts
+npm run generate:check   # the generated files and spec/pending.json are up to date
+npm run typecheck        # tsc, including the type checks of test/types.test.ts
 npm run lint
-npm test                 # vitest, sin red ni claves: fetch simulado
-npm run build            # dist/ en ESM y CJS, con .d.ts
-FUNNELCHAT_SANDBOX_URL=http://127.0.0.1:4010 npm run test:e2e   # contra un sandbox corriendo
+npm test                 # vitest, no network and no keys: a mocked fetch
+npm run build            # dist/ in ESM and CJS, with .d.ts
+FUNNELCHAT_SANDBOX_URL=http://127.0.0.1:4010 npm run test:e2e   # against a running sandbox
 ```
 
-El SDK corre en Node 18 o posterior; las herramientas de desarrollo (vitest 4, eslint 9) piden Node 20 o posterior.
+The SDK runs on Node 18 or later; the development tools (vitest 4, eslint 9) need Node 20 or later.
 
-Todo lo generado sale de un solo script:
+Everything generated comes from one script:
 
 ```bash
-npm run generate -- --spec <ruta>/funnelchat.json   # con una especificación unificada nueva del portal
-npm run generate                                    # con la de spec/, por ejemplo después de tocar spec/pending.json
+npm run generate -- --spec <path>/funnelchat.json   # with a new unified spec of the portal
+npm run generate                                    # with the one in spec/, for example after editing spec/pending.json
 ```
 
-1. Con `--spec`, copia la especificación a `spec/funnelchat.json` y escribe `spec/procedencia.json`: repositorio, rama, commit, fecha y `sha256` del archivo.
-2. Suma `spec/pending.json`, pero solo lo que la especificación no trae, y lista lo que ya trae para que lo borres de ahí.
-3. Escribe `src/generated/openapi.ts` (con [openapi-typescript](https://openapi-ts.dev)), `src/generated/routes.ts` (cada operación, con área y permiso) y `src/generated/events.ts` (el catálogo de eventos y la forma de `data` de cada uno).
+1. With `--spec`, it copies the spec to `spec/funnelchat.json` and writes `spec/procedencia.json`: repository, branch, commit, date and `sha256` of the file.
+2. It adds `spec/pending.json`, but only what the spec does not bring, and lists what it already brings so you can delete it from there.
+3. It writes `src/generated/openapi.ts` (with [openapi-typescript](https://openapi-ts.dev)), `src/generated/routes.ts` (every operation, with area and permission) and `src/generated/events.ts` (the event catalog and the shape of the `data` of each one).
 
 ```
-spec/            la especificación, su procedencia y la capa pendiente
-scripts/         generate.mjs (el generador) y format-pending.mjs
-src/generated/   lo generado (no se edita)
-src/pending/     lo pendiente de la especificación que no es OpenAPI
-src/core/        HTTP, reintentos, paginación, errores y sus códigos
-src/resources/   las piezas
-src/webhooks/    firma y eventos
-test/            vitest; test/e2e contra el sandbox
+spec/            the spec, its provenance and the pending layer
+scripts/         generate.mjs (the generator) and format-pending.mjs
+src/generated/   generated code (never edited by hand)
+src/pending/     what is pending of the spec and is not OpenAPI
+src/core/        HTTP, retries, pagination, errors and their codes
+src/resources/   the pieces
+src/webhooks/    signature and events
+test/            vitest; test/e2e against the sandbox
 ```
 
-## Licencia
+## License
 
 [MIT](LICENSE)

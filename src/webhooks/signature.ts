@@ -43,17 +43,17 @@ function toBytes(body: unknown): Buffer | null {
 /** Runs every check and says which one failed. */
 export function checkSignature(rawBody: unknown, signatureHeader: unknown, secret: unknown, options: VerifyOptions = {}): CheckResult {
   if (typeof secret !== 'string' || secret === '') {
-    return fail('missing_secret', 'Falta el secreto de la suscripción.');
+    return fail('missing_secret', 'Missing the subscription secret.');
   }
   const body = toBytes(rawBody);
   if (body === null) {
     return fail(
       'invalid_body',
-      'El cuerpo tiene que ser el crudo (string, Buffer o Uint8Array), tal como llegó. Si usas Express, léelo con express.raw({ type: "application/json" }) y no con express.json().',
+      'The body must be the raw one (string, Buffer or Uint8Array), exactly as it arrived. With Express, read it with express.raw({ type: "application/json" }), not express.json().',
     );
   }
   if (typeof signatureHeader !== 'string' || signatureHeader === '') {
-    return fail('missing_header', `Falta la cabecera ${SIGNATURE_HEADER}.`);
+    return fail('missing_header', `Missing the ${SIGNATURE_HEADER} header.`);
   }
 
   let t: string | null = null;
@@ -67,12 +67,12 @@ export function checkSignature(rawBody: unknown, signatureHeader: unknown, secre
     if (key === 'v1') signatures.push(value);
   }
   if (t === null || !/^\d+$/.test(t) || signatures.length === 0) {
-    return fail('malformed_header', `La cabecera ${SIGNATURE_HEADER} no tiene la forma t=<unix>,v1=<hex>.`);
+    return fail('malformed_header', `The ${SIGNATURE_HEADER} header is not t=<unix>,v1=<hex>.`);
   }
 
   const tolerance = options.toleranceSeconds ?? DEFAULT_TOLERANCE_SECONDS;
   if (Math.abs(Math.floor(Date.now() / 1000) - Number(t)) > tolerance) {
-    return fail('timestamp_out_of_tolerance', `La firma tiene más de ${tolerance} segundos de diferencia con el reloj local.`);
+    return fail('timestamp_out_of_tolerance', `The signature is more than ${tolerance} seconds away from the local clock.`);
   }
 
   const expected = Buffer.from(createHmac('sha256', secret).update(`${t}.`).update(body).digest('hex'), 'utf8');
@@ -80,7 +80,7 @@ export function checkSignature(rawBody: unknown, signatureHeader: unknown, secre
     const candidate = Buffer.from(v1, 'utf8');
     return candidate.length === expected.length && timingSafeEqual(candidate, expected);
   });
-  return matched ? { ok: true } : fail('signature_mismatch', 'La firma no coincide con el cuerpo y el secreto.');
+  return matched ? { ok: true } : fail('signature_mismatch', 'The signature does not match the body and the secret.');
 }
 
 /**

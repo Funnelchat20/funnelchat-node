@@ -40,7 +40,7 @@ const current = readFileSync(FILE, 'utf8');
 const formatted = `${format(JSON.parse(current))}\n`;
 if (process.argv.includes('--check')) {
   if (current !== formatted) {
-    console.error('spec/pending.json no está formateado: corre `node scripts/format-pending.mjs`.');
+    console.error('spec/pending.json is not formatted: run `node scripts/format-pending.mjs`.');
     process.exit(1);
   }
 } else {

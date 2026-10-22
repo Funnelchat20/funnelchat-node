@@ -54,7 +54,7 @@ export class Page<T> implements AsyncIterable<T> {
   /** Fetches the next page. Throws when there is none: check {@link hasNextPage} first. */
   async getNextPage(): Promise<Page<T>> {
     const next = this.nextPageQuery();
-    if (next === null) throw new Error('No hay más páginas.');
+    if (next === null) throw new Error('There are no more pages.');
     const query = { ...this.#query, ...next };
     if ('cursor' in next) delete query.page;
     return new Page<T>(this.#fetchPage, query, await this.#fetchPage(query));

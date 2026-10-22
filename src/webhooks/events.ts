@@ -49,10 +49,10 @@ export function constructEvent(rawBody: RawBody, signatureHeader: string | null 
   try {
     parsed = JSON.parse(text);
   } catch {
-    throw new WebhookVerificationError('invalid_json', 'La firma es válida pero el cuerpo no es JSON.');
+    throw new WebhookVerificationError('invalid_json', 'The signature is valid but the body is not JSON.');
   }
   if (!isEnvelope(parsed)) {
-    throw new WebhookVerificationError('invalid_event', 'La firma es válida pero el cuerpo no tiene la forma de un evento (id, type, data).');
+    throw new WebhookVerificationError('invalid_event', 'The signature is valid but the body is not an event (id, type, data).');
   }
   return parsed as WebhookEvent;
 }

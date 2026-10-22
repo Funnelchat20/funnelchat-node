@@ -84,7 +84,7 @@ export async function startReceiver(): Promise<Receiver> {
         };
         const timer = setTimeout(() => {
           cleanup();
-          reject(new Error(`No llegó el evento esperado en ${timeoutMs} ms. Llegaron: ${events.map((e) => e.type).join(', ') || 'ninguno'}.`));
+          reject(new Error(`The expected event did not arrive within ${timeoutMs} ms. Arrived: ${events.map((e) => e.type).join(', ') || 'none'}.`));
         }, timeoutMs);
         const cleanup = () => {
           clearTimeout(timer);

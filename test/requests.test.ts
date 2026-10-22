@@ -32,7 +32,7 @@ describe('client configuration', () => {
   it('fails early without a key or with an unknown environment', () => {
     vi.stubEnv('FUNNELCHAT_API_KEY', '');
     expect(() => new Funnelchat({ fetch: vi.fn() as never })).toThrow(FunnelchatError);
-    expect(() => new Funnelchat({ apiKey: TEST_API_KEY, environment: 'dev' as never })).toThrow(/Entorno desconocido/);
+    expect(() => new Funnelchat({ apiKey: TEST_API_KEY, environment: 'dev' as never })).toThrow(/Unknown environment/);
   });
 
   it('never exposes the key when the client is logged or serialized', () => {
@@ -133,14 +133,14 @@ describe('resources build the right requests', () => {
 
   it('messages.send fills contact_id from the route and carries client_reference', async () => {
     const req = await capture(
-      (c) => c.messages.send(2001, { device_id: 3, phone: '5491100000000', text: '¡Hola! Te paso la info…', client_reference: 'pedido-123' }),
+      (c) => c.messages.send(2001, { device_id: 3, phone: '5491100000000', text: 'Hi! Here is the info…', client_reference: 'order-123' }),
       { status: 204 },
     );
     expect(req).toEqual({
       method: 'POST',
       path: '/api/v1/contacts/2001/message',
       search: '',
-      body: { device_id: 3, phone: '5491100000000', text: '¡Hola! Te paso la info…', client_reference: 'pedido-123', contact_id: 2001 },
+      body: { device_id: 3, phone: '5491100000000', text: 'Hi! Here is the info…', client_reference: 'order-123', contact_id: 2001 },
     });
   });
 

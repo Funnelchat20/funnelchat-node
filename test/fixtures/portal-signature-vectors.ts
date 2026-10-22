@@ -40,19 +40,19 @@ export function portalCases(t: number): SignatureCase[] {
   const utf8Body = Buffer.from('{"texto":"Ñandú 🚀 — acentos: áéíóú"}', 'utf8');
   const secretWithoutPrefix = '9f3a1c7e5b2d4a6c8e0f1a3b5c7d9e1f';
   return [
-    { name: 'firma correcta', body: BODY, header: ok, secret: SECRET, expected: true },
-    { name: 'cuerpo alterado (un carácter)', body: alteredBody, header: ok, secret: SECRET, expected: false },
-    { name: 'cuerpo re-serializado (mismo JSON, otros espacios)', body: reserialized, header: ok, secret: SECRET, expected: false },
-    { name: 'firma alterada (un dígito)', body: BODY, header: `t=${t},v1=${v1Altered}`, secret: SECRET, expected: false },
-    { name: 'secreto equivocado', body: BODY, header: ok, secret: `${SECRET}x`, expected: false },
-    { name: 'timestamp alterado en la cabecera', body: BODY, header: `t=${t + 1},v1=${v1}`, secret: SECRET, expected: false },
-    { name: 'timestamp viejo (hace 10 min), bien firmado', body: BODY, header: sign(BODY, SECRET, t - 600), secret: SECRET, expected: false },
-    { name: 'cabecera mal formada', body: BODY, header: `sha256=${v1}`, secret: SECRET, expected: false },
-    { name: 'cabecera sin v1', body: BODY, header: `t=${t}`, secret: SECRET, expected: false },
-    { name: 'cabecera vacía', body: BODY, header: '', secret: SECRET, expected: false },
-    { name: 'cuerpo UTF-8 (ñ, emoji) firmado sobre los bytes crudos', body: utf8Body, header: sign(utf8Body, SECRET, t), secret: SECRET, expected: true },
-    { name: 'secreto sin prefijo whsec_ (se usa tal cual)', body: BODY, header: sign(BODY, secretWithoutPrefix, t), secret: secretWithoutPrefix, expected: true },
-    { name: 'secreto con prefijo recortado por error', body: BODY, header: ok, secret: SECRET.replace(/^whsec_/, ''), expected: false },
+    { name: 'correct signature', body: BODY, header: ok, secret: SECRET, expected: true },
+    { name: 'body altered (one character)', body: alteredBody, header: ok, secret: SECRET, expected: false },
+    { name: 'body re-serialized (same JSON, other spacing)', body: reserialized, header: ok, secret: SECRET, expected: false },
+    { name: 'signature altered (one digit)', body: BODY, header: `t=${t},v1=${v1Altered}`, secret: SECRET, expected: false },
+    { name: 'wrong secret', body: BODY, header: ok, secret: `${SECRET}x`, expected: false },
+    { name: 'timestamp altered in the header', body: BODY, header: `t=${t + 1},v1=${v1}`, secret: SECRET, expected: false },
+    { name: 'old timestamp (10 min ago), correctly signed', body: BODY, header: sign(BODY, SECRET, t - 600), secret: SECRET, expected: false },
+    { name: 'malformed header', body: BODY, header: `sha256=${v1}`, secret: SECRET, expected: false },
+    { name: 'header without v1', body: BODY, header: `t=${t}`, secret: SECRET, expected: false },
+    { name: 'empty header', body: BODY, header: '', secret: SECRET, expected: false },
+    { name: 'UTF-8 body (ñ, emoji) signed over the raw bytes', body: utf8Body, header: sign(utf8Body, SECRET, t), secret: SECRET, expected: true },
+    { name: 'secret without the whsec_ prefix (used as is)', body: BODY, header: sign(BODY, secretWithoutPrefix, t), secret: secretWithoutPrefix, expected: true },
+    { name: 'secret with the prefix stripped by mistake', body: BODY, header: ok, secret: SECRET.replace(/^whsec_/, ''), expected: false },
   ];
 }
 
