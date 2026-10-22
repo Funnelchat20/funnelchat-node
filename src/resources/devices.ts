@@ -10,7 +10,11 @@ export class Devices extends Resource {
     return this.client.paginate('/api/v1/devices', { ...options });
   }
 
-  /** `GET /api/v1/devices/{device}`. */
+  /**
+   * `GET /api/v1/devices/{device}`. `capabilities` says what the number can do by API: message
+   * types (`messages`), group actions (`groups`) and the statuses `message.status_changed` reports
+   * (`statuses`).
+   */
   retrieve(device: DeviceId, options?: RequestOptions) {
     return this.client.request('GET', '/api/v1/devices/{device}', { ...options, path: { device } });
   }

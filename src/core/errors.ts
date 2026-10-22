@@ -8,6 +8,7 @@
  *   │   ├── PermissionDeniedError   403
  *   │   ├── NotFoundError           404
  *   │   ├── ConflictError           409
+ *   │   ├── UnsupportedMediaTypeError 415
  *   │   ├── UnprocessableEntityError 422
  *   │   ├── RateLimitError          429
  *   │   └── InternalServerError     5xx
@@ -18,6 +19,7 @@
  */
 
 import { requestIdOf } from './api-promise.js';
+import type { KnownErrorCode } from './error-codes.js';
 
 /** Base class of every error thrown by the SDK. */
 export class FunnelchatError extends Error {
@@ -43,7 +45,8 @@ export interface APIErrorInit {
  *
  * - `status`: the HTTP status.
  * - `code`: the stable `error` code of the body (`window_closed`, `rate_limited`,
- *   `route_not_available`…), or `undefined` when the body has none (for example a Laravel
+ *   `route_not_available`…; see `SEND_ERROR_CODES`, `ACCESS_ERROR_CODES` and
+ *   `GROUP_ACTION_ERROR_CODES`), or `undefined` when the body has none (for example a Laravel
  *   validation `422`, which carries `errors` instead).
  * - `message`: the `message` of the body, meant for people. Decide by `status` and `code`.
  * - `retryAfter`: seconds from the `Retry-After` header, when present.
@@ -51,7 +54,8 @@ export interface APIErrorInit {
  */
 export class APIError extends FunnelchatError {
   readonly status: number;
-  readonly code: string | undefined;
+  /** The `error` of the body. The known codes autocomplete; the API can send others. */
+  readonly code: KnownErrorCode | (string & {}) | undefined;
   readonly retryAfter: number | undefined;
   /** `X-Request-Id` of the response: the API sets it on every response, errors included. */
   readonly requestId: string | undefined;
@@ -90,6 +94,7 @@ export class APIError extends FunnelchatError {
     if (status === 403) return new PermissionDeniedError(init);
     if (status === 404) return new NotFoundError(init);
     if (status === 409) return new ConflictError(init);
+    if (status === 415) return new UnsupportedMediaTypeError(init);
     if (status === 422) return new UnprocessableEntityError(init);
     if (status === 429) return new RateLimitError(init);
     if (status >= 500) return new InternalServerError(init);
@@ -103,10 +108,27 @@ export class AuthenticationError extends APIError {}
 export class PermissionDeniedError extends APIError {}
 export class NotFoundError extends APIError {}
 export class ConflictError extends APIError {}
-/** `422`: validation (`errors`) or a WhatsApp rule (`window_closed`, `antiblock_*`, `recipient_*`…). */
+/**
+ * `415`: the extension of `file` is not supported and no `file_type` was sent. The body lists
+ * `supported_file_types`. Send `file_type` (and `file_name` for a document) with a URL that has no
+ * known extension.
+ */
+export class UnsupportedMediaTypeError extends APIError {}
+/**
+ * `422`: validation (`errors`, for example `errors.file_type`) or a rule of the send
+ * (`window_closed`, `antiblock_*`, `recipient_*`, `provider_unsupported`…).
+ */
 export class UnprocessableEntityError extends APIError {}
-/** `429`: rate limit. `retryAfter` says how many seconds to wait. */
+/**
+ * `429`: rate limit (`rate_limited`, `daily_cap_exceeded`; `retryAfter` says how many seconds to
+ * wait) or the monthly active contacts (`mac_lockout_24h`, `mac_limit_reached`), which waiting
+ * does not fix.
+ */
 export class RateLimitError extends APIError {}
+/**
+ * `5xx`. `502 origin_unreachable` and `500 edge_misconfigured` come from the API entry. After a
+ * `5xx` on a write, read the state before repeating it: it may have been applied.
+ */
 export class InternalServerError extends APIError {}
 
 /** The request never got a response: DNS, connection refused, reset, TLS… */

@@ -216,6 +216,13 @@ describe('sends are not retried unless asked', () => {
     expect(second.calls).toHaveLength(1);
   });
 
+  it('never retries a 429 of the monthly active contacts, even with retrySend', async () => {
+    const { fetch, calls } = mockFetch({ status: 429, body: { error: 'mac_lockout_24h', message: 'x' } });
+    await expect(send(client(fetch), true)).rejects.toBeInstanceOf(RateLimitError);
+    await vi.runAllTimersAsync();
+    expect(calls).toHaveLength(1);
+  });
+
   it('retrySend makes a send follow the rule of every write: 429 yes, 502 no', async () => {
     const { fetch, calls } = mockFetch({ status: 502, body: { error: 'origin_unreachable' } });
     await expect(send(client(fetch), true)).rejects.toBeInstanceOf(InternalServerError);
@@ -225,9 +232,9 @@ describe('sends are not retried unless asked', () => {
 });
 
 describe('retry policy helpers', () => {
-  it('detects every POST with conversations:send in the spec, and nothing else', () => {
-    const sendPosts = routes.filter((r) => r.method === 'POST' && r.permission === 'conversations:send');
-    expect(sendPosts.length).toBeGreaterThanOrEqual(5);
+  it('detects every POST with a *:send permission in the spec, and nothing else', () => {
+    const sendPosts = routes.filter((r) => r.method === 'POST' && r.permission?.endsWith(':send'));
+    expect(sendPosts.length).toBeGreaterThanOrEqual(7);
     for (const route of sendPosts) {
       expect(isSendRequest('POST', route.path.replace(/\{[^}]+\}/g, '123'))).toBe(true);
     }
@@ -236,6 +243,9 @@ describe('retry policy helpers', () => {
     expect(isSendRequest('GET', '/api/v1/contacts/2001/messages')).toBe(false);
     expect(isSendRequest('POST', '/api/v1/contacts/delete')).toBe(false);
     expect(isSendRequest('POST', '/api/v1/contacts')).toBe(false);
+    expect(isSendRequest('POST', '/api/v1/contacts/2001/message/form')).toBe(true);
+    expect(isSendRequest('POST', '/api/v1/groups/120363000000000001@g.us/messages')).toBe(true);
+    expect(isSendRequest('POST', '/api/v1/groups/120363000000000001@g.us/participants')).toBe(false);
     expect(isSendRequest('PUT', '/api/v1/contacts/2001/messages/9/reaction')).toBe(false);
   });
 

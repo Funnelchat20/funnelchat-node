@@ -2375,7 +2375,13 @@ export interface paths {
          */
         get: operations["group.index"];
         put?: never;
-        post?: never;
+        /**
+         * Crear un grupo
+         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         *
+         *     Con un número QR, `participants` es obligatorio; con uno oficial no se acepta (los invitás después).
+         */
+        post: operations["pendingGroups.create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2525,7 +2531,13 @@ export interface paths {
          */
         get: operations["group.messages"];
         put?: never;
-        post?: never;
+        /**
+         * Enviar un mensaje a un grupo
+         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         *
+         *     El id de WhatsApp del mensaje llega en `result.message.uid` de la acción.
+         */
+        post: operations["pendingGroups.sendMessage"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4420,9 +4432,7 @@ export interface paths {
         };
         /**
          * Ver un mensaje por id
-         * @description Un mensaje de tu cuenta por el id que te dio el envío o un webhook (`message_id` de `message.status_changed`). Aceptado no es entregado: `status` es `queued`, `sent`, `delivered`, `read` o `failed` en los que enviaste, y `null` en los recibidos, las notas y los de resultado desconocido. Responde 404 si el mensaje no existe o no es de ese contacto.
-         *
-         *     **Pendiente de la especificación** (conversations feat/envio-devuelve-id @ d3ac33994, rama local sin PR): la forma puede cambiar.
+         * @description Un mensaje por el `id` que te dio un envío o un webhook (`message_id` de `message.status_changed`). Aceptado no es entregado: `status` pasa de `queued` a `sent`, `delivered`, `read` o `failed`.
          */
         get: operations["pendingMessage.show"];
         put?: never;
@@ -4443,16 +4453,12 @@ export interface paths {
         /**
          * Listar las suscripciones de webhook
          * @description Todas las suscripciones de la cuenta (como máximo 50), también las que crearon otras integraciones. Solo el titular de la cuenta.
-         *
-         *     **Pendiente de la especificación** (accounts origin/main @ c34cba2c).
          */
         get: operations["pendingWebhookSubscription.index"];
         put?: never;
         /**
          * Crear una suscripción de webhook
          * @description Devuelve el `secret` una sola vez. Tope: 50 suscripciones por cuenta (la siguiente responde 422).
-         *
-         *     **Pendiente de la especificación** (accounts origin/main @ c34cba2c).
          */
         post: operations["pendingWebhookSubscription.store"];
         delete?: never;
@@ -4471,23 +4477,17 @@ export interface paths {
         /**
          * Ver una suscripción de webhook
          * @description No trae el secreto. Si lo perdiste, rotalo.
-         *
-         *     **Pendiente de la especificación** (accounts origin/main @ c34cba2c).
          */
         get: operations["pendingWebhookSubscription.show"];
         /**
          * Cambiar una suscripción de webhook
          * @description Reemplaza `url`, `events`, `description` y `filters`; `status` es opcional (`active` o `paused`). El secreto no cambia.
-         *
-         *     **Pendiente de la especificación** (accounts origin/main @ c34cba2c).
          */
         put: operations["pendingWebhookSubscription.update"];
         post?: never;
         /**
          * Eliminar una suscripción de webhook
          * @description Borra la suscripción con su historial de entregas.
-         *
-         *     **Pendiente de la especificación** (accounts origin/main @ c34cba2c).
          */
         delete: operations["pendingWebhookSubscription.destroy"];
         options?: never;
@@ -4506,9 +4506,9 @@ export interface paths {
         put?: never;
         /**
          * Generar un secreto nuevo
-         * @description Devuelve el secreto nuevo una sola vez; el anterior deja de valer de inmediato.
+         * @description Un secreto nuevo, que se muestra una sola vez; el anterior deja de valer.
          *
-         *     **Pendiente de la especificación** (accounts origin/main @ c34cba2c).
+         *     **No está abierta a claves de API:** con una clave responde `403 route_not_available`. Rotá el secreto desde el panel.
          */
         post: operations["pendingWebhookSubscription.rotateSecret"];
         delete?: never;
@@ -4529,8 +4529,6 @@ export interface paths {
         /**
          * Enviar ahora un evento de prueba
          * @description Una entrega firmada de `webhook.test`, sin reintentos. Queda en el historial.
-         *
-         *     **Pendiente de la especificación** (accounts origin/main @ c34cba2c).
          */
         post: operations["pendingWebhookSubscription.test"];
         delete?: never;
@@ -4549,12 +4547,571 @@ export interface paths {
         /**
          * Ver el historial de entregas
          * @description Un registro por intento, lo más reciente primero. Pagina con `page` y `per_page` (25 por defecto, 100 como máximo).
-         *
-         *     **Pendiente de la especificación** (accounts origin/main @ c34cba2c).
          */
         get: operations["pendingWebhookSubscription.deliveries"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar formularios */
+        get: operations["pendingForms.list"];
+        put?: never;
+        /** Crear un formulario desde una plantilla */
+        post: operations["pendingForms.create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Plantillas para empezar un formulario */
+        get: operations["pendingForms.templates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Una versión de un formulario */
+        get: operations["pendingForms.retrieve"];
+        /** Guardar la definición de un borrador */
+        put: operations["pendingForms.update"];
+        post?: never;
+        /** Borrar un borrador */
+        delete: operations["pendingForms.delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/{id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Abrir una versión nueva (borrador) de un formulario publicado */
+        post: operations["pendingForms.createVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/{id}/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Subir el borrador a Meta sin publicarlo */
+        post: operations["pendingForms.sync"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publicar en Meta */
+        post: operations["pendingForms.publish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/{id}/numbers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Los números del formulario */
+        get: operations["pendingForms.numbers"];
+        put?: never;
+        /** Publicarlo también en otro número */
+        post: operations["pendingForms.addNumber"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/{id}/numbers/{deviceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Sacarlo de un número */
+        delete: operations["pendingForms.removeNumber"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/{id}/numbers/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reintentar los números que fallaron */
+        post: operations["pendingForms.retryNumbers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/families/{familyId}/definition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** La definición vigente de un formulario */
+        get: operations["pendingForms.definition"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/families/{familyId}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Las versiones de un formulario */
+        get: operations["pendingForms.versions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/families/{familyId}/responses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Las respuestas de un formulario */
+        get: operations["pendingForms.responses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/families/{familyId}/responses/{runId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Una respuesta */
+        get: operations["pendingForms.response"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/families/{familyId}/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** El embudo de un formulario: enviados, abiertos, completados */
+        get: operations["pendingForms.metrics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contacts/{contact}/message/form": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Enviar un formulario a un contacto
+         * @description Manda un formulario publicado en el número. Es un envío: sigue las reglas de WhatsApp (ventana de 24 horas, ritmo, frenos contra spam) y responde el mensaje en cola. Errores propios: `404 form_not_found`, `422 form_not_published`, `422 form_not_on_number`, `422 number_not_eligible`, `422 recipient_unreachable`.
+         */
+        post: operations["pendingForms.send"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/actions/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Una acción de grupo */
+        get: operations["pendingGroups.action"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/participants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Agregar participantes
+         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         *
+         *     Con un número oficial los invita (`invited`).
+         */
+        post: operations["pendingGroups.addParticipants"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/participants/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sacar participantes
+         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         */
+        post: operations["pendingGroups.removeParticipants"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/admins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hacer admins
+         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         *
+         *     Solo números QR. Cada teléfono tiene que ser del grupo.
+         */
+        post: operations["pendingGroups.promoteAdmins"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/admins/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Quitar admins
+         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         *
+         *     Solo números QR.
+         */
+        post: operations["pendingGroups.demoteAdmins"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/name": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Cambiar el nombre
+         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         */
+        put: operations["pendingGroups.updateName"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/description": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Cambiar la descripción
+         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         *
+         *     `null` o vacía la borra (no con un número oficial).
+         */
+        put: operations["pendingGroups.updateDescription"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Cambiar la foto
+         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         *
+         *     Solo números QR. `photo_url`: una URL `https` pública a un JPG o PNG.
+         */
+        put: operations["pendingGroups.updatePhoto"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Cambiar quién puede escribir
+         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         *
+         *     Solo números QR.
+         */
+        put: operations["pendingGroups.updateSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/invite-link/renew": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Renovar el enlace de invitación
+         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         *
+         *     El enlace nuevo llega en `result.invite_link`.
+         */
+        post: operations["pendingGroups.renewInviteLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/invite-link/live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * El enlace de invitación, leído en vivo
+         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         *
+         *     Se guarda 30 segundos por grupo y número. Si WhatsApp falla: `502 provider_error`.
+         */
+        get: operations["pendingGroups.inviteLink"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/join-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Las solicitudes de unión
+         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         *
+         *     Solo grupos de números oficiales; hasta 100, en el orden de WhatsApp.
+         */
+        get: operations["pendingGroups.joinRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/join-requests/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Aprobar solicitudes de unión
+         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         *
+         *     Solo números oficiales, y solo si `capabilities.groups.join_requests` es `list_and_decide`.
+         */
+        post: operations["pendingGroups.approveJoinRequests"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/join-requests/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rechazar solicitudes de unión
+         * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
+         *
+         *     Solo números oficiales, y solo si `capabilities.groups.join_requests` es `list_and_decide`.
+         */
+        post: operations["pendingGroups.rejectJoinRequests"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5759,7 +6316,7 @@ export interface webhooks {
         put?: never;
         /**
          * message.status_changed
-         * @description Cambió el estado de entrega de un mensaje 1:1 enviado. Un aviso por transición, nunca uno que retroceda. Hay que pedirlo de forma explícita en `events`.
+         * @description Cambió el estado de entrega de un mensaje que enviaste con la API. Un aviso por transición, nunca uno que retroceda; `queued` no se avisa. Hay que pedirlo de forma explícita en `events`.
          */
         post: {
             parameters: {
@@ -5782,10 +6339,7 @@ export interface webhooks {
                             /** @enum {string|null} */
                             previous_status: "sent" | "delivered" | "read" | "failed" | null;
                             /** @description Solo cuando `status` es `failed`. */
-                            error?: {
-                                code: number | null;
-                                title: string | null;
-                            };
+                            error?: components["schemas"]["PendingMessageError"];
                             /** Format: date-time */
                             occurred_at: string;
                             /** @description La `client_reference` que mandaste en el envío, o `null`. */
@@ -6481,7 +7035,7 @@ export interface webhooks {
         put?: never;
         /**
          * group_action.failed
-         * @description Una acción automática sobre un grupo falló.
+         * @description Falló una acción sobre un grupo: una de una campaña (`action.uuid` es `null`) o una pedida por la API (`action.uuid` es el `action_id`). Las acciones con teléfonos no lo emiten: terminan con `group_action.completed` y el resultado de cada uno.
          */
         post: {
             parameters: {
@@ -6495,26 +7049,42 @@ export interface webhooks {
                     /**
                      * @example {
                      *       "data": {
-                     *         "campaign": {
-                     *           "uuid": "xK9mQz",
-                     *           "name": "Campaña de ejemplo"
-                     *         },
-                     *         "pipeline": {
-                     *           "uuid": "bN7vLs",
-                     *           "name": "Pipeline de ejemplo"
-                     *         },
+                     *         "campaign": null,
+                     *         "pipeline": null,
                      *         "group": {
-                     *           "uid": "120363000000000000@g.us",
+                     *           "uid": "120363000000000001@g.us",
                      *           "name": "Grupo de ejemplo"
                      *         },
                      *         "action": {
-                     *           "type": "tipo_de_ejemplo"
+                     *           "uuid": "9b2f0a8e-1c3d-4e5f-8a7b-6c5d4e3f2a10",
+                     *           "type": "update_name"
                      *         },
-                     *         "reason": "motivo_de_ejemplo"
+                     *         "reason": "device_not_group_admin"
                      *       }
                      *     }
                      */
-                    "application/json": Record<string, unknown>;
+                    "application/json": {
+                        data?: {
+                            campaign: {
+                                uuid: string;
+                                name: string | null;
+                            } | null;
+                            pipeline: {
+                                uuid: string;
+                                name: string | null;
+                            } | null;
+                            group: {
+                                uid: string;
+                                name: string | null;
+                            } | null;
+                            action: {
+                                /** @description El `action_id` de una acción pedida por la API; `null` en las de una campaña. */
+                                uuid: string | null;
+                                type: string;
+                            };
+                            reason: string;
+                        };
+                    };
                 };
             };
             responses: never;
@@ -6656,6 +7226,434 @@ export interface webhooks {
                      *     }
                      */
                     "application/json": Record<string, unknown>;
+                };
+            };
+            responses: never;
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "whatsapp_form.completed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * whatsapp_form.completed
+         * @description Un contacto completó un formulario que le enviaste.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "form": {
+                     *           "id": 12,
+                     *           "name": "Encuesta de ejemplo",
+                     *           "version_id": 34
+                     *         },
+                     *         "message_id": 1002,
+                     *         "contact_id": 2001,
+                     *         "device_id": 3,
+                     *         "answers": [
+                     *           {
+                     *             "key": "nombre",
+                     *             "label": "Tu nombre",
+                     *             "value": "Contacto de ejemplo"
+                     *           }
+                     *         ],
+                     *         "occurred_at": "2026-10-22T12:00:00Z"
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data?: {
+                            form: {
+                                /** @description El formulario (`family_id`). */
+                                id: number;
+                                name: string;
+                                version_id: number;
+                            };
+                            message_id: number | null;
+                            contact_id: number | null;
+                            device_id: number | null;
+                            answers: {
+                                key: string;
+                                label: string | null;
+                                value: boolean | number | string | string[] | null;
+                            }[];
+                            /** Format: date-time */
+                            occurred_at: string;
+                        };
+                    };
+                };
+            };
+            responses: never;
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "group_action.completed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * group_action.completed
+         * @description Terminó una acción de grupo pedida por la API. `action.uuid` es el `action_id` que te devolvió.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "action": {
+                     *           "uuid": "9b2f0a8e-1c3d-4e5f-8a7b-6c5d4e3f2a10",
+                     *           "type": "add_participants"
+                     *         },
+                     *         "group": {
+                     *           "uid": "120363000000000001@g.us",
+                     *           "name": "Grupo de ejemplo"
+                     *         },
+                     *         "campaign": null,
+                     *         "result": {
+                     *           "participants": [
+                     *             {
+                     *               "identity": "5491100000000",
+                     *               "identity_type": "phone",
+                     *               "status": "added",
+                     *               "reason": null
+                     *             }
+                     *           ]
+                     *         }
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data?: {
+                            action: {
+                                uuid: string;
+                                type: string;
+                            };
+                            group: {
+                                uid: string;
+                                name: string | null;
+                            } | null;
+                            campaign: {
+                                uuid?: string;
+                                name?: string;
+                            } | null;
+                            /** @description Con teléfonos: `participants`; al crear o renovar el enlace: `invite_link`; al enviar: `message.uid`; el resto, vacío. */
+                            result: {
+                                participants?: components["schemas"]["PendingGroupParticipantResult"][];
+                                invite_link?: string;
+                                message?: {
+                                    uid?: string;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+            responses: never;
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "group.message_received": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * group.message_received
+         * @description Alguien escribió en un grupo de uno de tus números. No se emite para los mensajes de tus propios números.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "group": {
+                     *           "uid": "120363000000000001@g.us",
+                     *           "name": "Grupo de ejemplo"
+                     *         },
+                     *         "message": {
+                     *           "uid": "3EB0C0FFEE0000000001",
+                     *           "type": "text",
+                     *           "text": "Hola a todos",
+                     *           "caption": null,
+                     *           "media_url": null,
+                     *           "mime_type": null,
+                     *           "file_name": null,
+                     *           "quoted_uid": null
+                     *         },
+                     *         "participant": {
+                     *           "identity": "5491100000000",
+                     *           "identity_type": "phone",
+                     *           "name": null
+                     *         }
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data?: {
+                            group: {
+                                uid: string;
+                                name: string | null;
+                            };
+                            message: {
+                                uid: string;
+                                type: string;
+                                /** @description Solo con `type: text`. */
+                                text: string | null;
+                                caption: string | null;
+                                media_url: string | null;
+                                mime_type: string | null;
+                                file_name: string | null;
+                                quoted_uid: string | null;
+                            };
+                            participant: {
+                                identity: string;
+                                /** @enum {string} */
+                                identity_type: "phone" | "whatsapp_user";
+                                name: string | null;
+                            };
+                        };
+                    };
+                };
+            };
+            responses: never;
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "group.reaction_added": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * group.reaction_added
+         * @description Alguien reaccionó a un mensaje de un grupo.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "group": {
+                     *           "uid": "120363000000000001@g.us",
+                     *           "name": "Grupo de ejemplo"
+                     *         },
+                     *         "message": {
+                     *           "uid": "3EB0C0FFEE0000000001"
+                     *         },
+                     *         "participant": {
+                     *           "identity": "5491100000000",
+                     *           "identity_type": "phone",
+                     *           "name": null
+                     *         },
+                     *         "reaction": "👍"
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data?: {
+                            group: {
+                                uid: string;
+                                name: string | null;
+                            };
+                            message: {
+                                uid: string;
+                            };
+                            participant: {
+                                identity: string;
+                                /** @enum {string} */
+                                identity_type: "phone" | "whatsapp_user";
+                                name: string | null;
+                            };
+                            reaction: string;
+                        };
+                    };
+                };
+            };
+            responses: never;
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "group_join_request.created": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * group_join_request.created
+         * @description Alguien pidió unirse a un grupo que requiere aprobación.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "group": {
+                     *           "uid": "120363000000000001@g.us",
+                     *           "name": "Grupo de ejemplo"
+                     *         },
+                     *         "participant": {
+                     *           "identity": "5491100000000",
+                     *           "identity_type": "phone",
+                     *           "name": null
+                     *         }
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data?: {
+                            group: {
+                                uid: string;
+                                name: string | null;
+                            };
+                            participant: {
+                                identity: string;
+                                /** @enum {string} */
+                                identity_type: "phone" | "whatsapp_user";
+                                name: string | null;
+                            };
+                        };
+                    };
+                };
+            };
+            responses: never;
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "group_join_request.revoked": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * group_join_request.revoked
+         * @description Alguien retiró su pedido para unirse a un grupo.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "group": {
+                     *           "uid": "120363000000000001@g.us",
+                     *           "name": "Grupo de ejemplo"
+                     *         },
+                     *         "participant": {
+                     *           "identity": "5491100000000",
+                     *           "identity_type": "phone",
+                     *           "name": null
+                     *         }
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data?: {
+                            group: {
+                                uid: string;
+                                name: string | null;
+                            };
+                            participant: {
+                                identity: string;
+                                /** @enum {string} */
+                                identity_type: "phone" | "whatsapp_user";
+                                name: string | null;
+                            };
+                        };
+                    };
                 };
             };
             responses: never;
@@ -7705,6 +8703,51 @@ export interface components {
              *     this shape (also reused by the Increment 4 detail endpoint).
              */
             health: string;
+            number_key?: string | null;
+            number_key_confirmed?: boolean;
+            /** @description El número usa la app de WhatsApp Business y la Cloud API a la vez. */
+            is_coexistence?: boolean;
+            /** @enum {string} */
+            slot_state?: "free" | "reserved" | "pending" | "held";
+            pool_suspended?: boolean;
+            /** @enum {string|null} */
+            pool_suspension_reason?: "over_pool" | "payment_lapse" | null;
+            pool_keep?: boolean;
+            qr_allowed?: boolean;
+            can_change_to_meta?: boolean;
+            /** @description Lo que el número puede hacer por la API, según su proveedor (QR o WhatsApp Cloud) y lo que tu cuenta tiene habilitado. Consultalo antes de ofrecer una función: un envío que el número no soporta responde `422 provider_unsupported`. */
+            capabilities: {
+                /** @description Tipos de mensaje que acepta el número. */
+                messages: {
+                    text: boolean;
+                    media: boolean;
+                    buttons: boolean;
+                    lists: boolean;
+                    templates: boolean;
+                    location: boolean;
+                    voice_note: boolean;
+                    polls: boolean;
+                    events: boolean;
+                    contact_card: boolean;
+                    reactions: boolean;
+                };
+                /** @description Acciones de grupo disponibles por este número. Todo `false` cuando el número no tiene grupos. */
+                groups: {
+                    create: boolean;
+                    /** @description `direct`: los agrega; `invite`: les manda el enlace de invitación; `false`: no se puede. */
+                    add_participants: ("direct" | "invite") | false;
+                    remove_participants: boolean;
+                    admins: boolean;
+                    photo: boolean;
+                    settings: boolean;
+                    invite_link: boolean;
+                    send: boolean;
+                    /** @description `list`: solo listar las solicitudes de unión; `list_and_decide`: también aprobarlas o rechazarlas; `false`: no se puede. */
+                    join_requests: ("list" | "list_and_decide") | false;
+                };
+                /** @description Los estados que llegan por `message.status_changed` para los mensajes de este número. */
+                statuses: ("sent" | "delivered" | "read" | "failed")[];
+            };
         };
         /** DisconnectSurveyResource */
         DisconnectSurveyResource: {
@@ -8250,6 +9293,8 @@ export interface components {
                 domain?: string;
             };
             client_reference?: components["schemas"]["PendingClientReference"];
+            file_type?: components["schemas"]["PendingFileType"];
+            file_name?: components["schemas"]["PendingFileName"];
         };
         /**
          * SslValidationMethod
@@ -8673,7 +9718,7 @@ export interface components {
         WhatsappCostSummaryResource: {
             [key: string]: unknown;
         };
-        /** @description Tu referencia para correlacionar el envío con el historial y con `message.status_changed`: de 1 a 64 caracteres ASCII visibles, sin espacios. No es única ni está autenticada; no pongas datos personales. Pendiente de la especificación (conversations PR #2284, sin mergear). */
+        /** @description Tu referencia para correlacionar el envío con el historial y con `message.status_changed`: de 1 a 64 caracteres ASCII visibles, sin espacios. No es única ni está autenticada; no pongas datos personales. */
         PendingClientReference: string;
         PendingWebhookSubscriptionFilters: {
             /** @description Solo entrega los eventos de estas campañas. Un evento sin campaña no pasa el filtro. */
@@ -8755,7 +9800,7 @@ export interface components {
             duration_ms: number | null;
             delivery_id: number;
         };
-        /** @description Un mensaje como lo ve una clave: siempre estas diez claves. Pendiente de la especificación (conversations feat/envio-devuelve-id @ d3ac33994, sin PR): la forma puede cambiar. */
+        /** @description Un mensaje como lo ve una clave: siempre estas diez claves. Es lo que responde un envío y `GET /api/v1/contacts/{contact}/messages/{message}`. */
         PendingPublicMessage: {
             /** @description El id del mensaje en el historial del contacto: el mismo `message_id` de `message.status_changed`. */
             id: number;
@@ -8766,49 +9811,156 @@ export interface components {
             /** @description El tipo público del mensaje (`text`, `image`, `contact`…), el mismo de `message.received`. */
             type: string;
             /**
-             * @description Un envío recién aceptado está `queued`. `null` cuando el mensaje no tiene estado de entrega (recibido, nota) o no se sabe.
+             * @description Un envío recién aceptado está `queued` (aceptado no es enviado); después pasa a `sent`, `delivered`, `read` o `failed`. `null` cuando el mensaje no tiene estado de entrega (recibido, nota) o no se sabe.
              * @enum {string|null}
              */
             status: "queued" | "sent" | "delivered" | "read" | "failed" | null;
             /** @description Solo cuando `status` es `failed`. */
-            error: {
-                code: number | null;
-                title: string | null;
-            } | null;
+            error: components["schemas"]["PendingMessageError"] | null;
             client_reference: string | null;
             /** Format: date-time */
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
         };
-        /** @description Una tarjeta de contacto después de la primera: las mismas claves del mensaje, sin id. Pendiente de la especificación (conversations feat/envio-devuelve-id @ d3ac33994, sin PR). */
-        PendingQueuedContactCard: {
-            id: null;
-            contact_id: number | null;
-            device_id: number | null;
-            /** @enum {string} */
-            direction: "outbound";
-            /** @enum {string} */
-            type: "contact";
-            /** @enum {string} */
-            status: "queued" | "failed";
-            error: string | null;
-            client_reference: string | null;
-            created_at: string | null;
-            updated_at: string | null;
-        };
-        /** @description El resultado de un reenvío para un destino, con su mensaje. Pendiente de la especificación (conversations feat/envio-devuelve-id @ d3ac33994, sin PR). */
+        /** @description El resultado de un reenvío para un destino, con su mensaje (`null` si no se registró nada para ese destino). */
         PendingForwardResult: {
             contact_id: number;
             /** @enum {string} */
             mode: "internal" | "native";
             /** @enum {string} */
             status: "queued" | "blocked";
+            /** @description Por qué se bloqueó: `device_unavailable`, `not_sent`, `target_not_found`, `mac_lockout_24h` o `mac_limit_reached`. */
             reason: string | null;
             message: components["schemas"]["PendingPublicMessage"] | null;
         };
         PendingMessage: {
             message: string;
+        };
+        /** @description Por qué falló. Cuando lo frenó Funnelchat, `code` es `null` y `reason` dice el motivo; cuando falló en WhatsApp, `code` y `title` son los del proveedor y `reason` es `null`. */
+        PendingMessageError: {
+            code: number | null;
+            title: string | null;
+            /** @enum {string|null} */
+            reason: "device_unavailable" | "insufficient_balance" | "window_closed" | "recipient_unreachable" | "template_not_found" | "template_unresolved_placeholder" | "not_queued" | "not_sent" | null;
+        };
+        /** @description El mensaje que quedó registrado: `status: queued` y su `id`, el mismo `message_id` de `message.status_changed`. */
+        PendingSendResult: {
+            message: components["schemas"]["PendingPublicMessage"];
+        };
+        /**
+         * @description El tipo del archivo de `file`. Hace falta cuando la URL no termina en una extensión conocida (una URL firmada o sin extensión); si viene, gana sobre la extensión. Sin él, una URL sin extensión conocida responde `422 errors.file_type` y una extensión no soportada `415`.
+         * @enum {string|null}
+         */
+        PendingFileType: "image" | "video" | "audio" | "document" | "sticker" | null;
+        /** @description El nombre con que llega el documento. Con `file_type: document` y una URL sin extensión conocida es obligatorio y tiene que tener extensión (`422 errors.file_name`). */
+        PendingFileName: string | null;
+        PendingFormLintIssue: {
+            code: string;
+            severity: string;
+            screenId?: string | null;
+            itemId?: string | null;
+            message: string;
+        };
+        /** @description Un número en el que el formulario está (o se está) publicando. */
+        PendingFormNumber: {
+            device_id: number | null;
+            primary: boolean;
+            /** @enum {string} */
+            status: "draft" | "publishing" | "published" | "failed";
+            error: string | null;
+        };
+        /** @description Una versión de un formulario. `id` es la versión; `family_id` es el formulario, el `form_id` que usás para enviarlo y el `form.id` de `whatsapp_form.completed`. */
+        PendingForm: {
+            /** @description La versión. */
+            id: number;
+            /** @description El formulario (todas sus versiones). */
+            family_id: number;
+            /** @description El nombre en Meta (con el sufijo `__vN`). */
+            name: string;
+            /** @description El nombre para mostrar. */
+            label: string;
+            category?: string | null;
+            /** @enum {string} */
+            status: "draft" | "published" | "deprecated";
+            version: number;
+            /** @description La definición del formulario (pantallas y campos). Solo en el detalle. */
+            definition?: unknown;
+            /** @description Solo en el detalle. */
+            fields?: unknown;
+            /** @description Solo en el detalle. */
+            mapping?: unknown;
+            /** @description Solo en el detalle. */
+            tag_rules?: unknown;
+            has_endpoint?: boolean;
+            first_screen?: string | null;
+            first_screen_dynamic?: boolean | null;
+            lint_errors_count?: number | null;
+            /** @description Solo en el listado: el borrador de la familia, si no es esta fila. */
+            draft_id?: number;
+            draft_version?: number;
+            /** @description Solo en el listado. */
+            sends?: number;
+            /** @description Solo en el listado. */
+            responses?: number;
+            meta_flow_id?: string | null;
+            /** @description Solo en el detalle. */
+            flow_json?: unknown;
+            /** @description Solo en el detalle. */
+            validation_errors?: unknown;
+            /** Format: date-time */
+            published_at?: string | null;
+            /** Format: date-time */
+            updated_at?: string | null;
+        };
+        /** @description La acción quedó en cola. Seguila con `GET /api/v1/groups/actions/{action}` o con los eventos `group_action.completed` y `group_action.failed`. */
+        PendingGroupActionAccepted: {
+            /** Format: uuid */
+            action_id: string;
+            /** @enum {string} */
+            status: "queued";
+        };
+        PendingGroupParticipantResult: {
+            /** @description El teléfono en dígitos, sin `+`, o un `…@lid`. */
+            identity: string;
+            /** @enum {string} */
+            identity_type: "phone" | "whatsapp_user";
+            /** @enum {string} */
+            status: "added" | "invited" | "removed" | "promoted" | "demoted" | "approved" | "rejected" | "failed";
+            reason: string | null;
+        };
+        PendingGroupAction: {
+            /** Format: uuid */
+            action_id: string;
+            type: string;
+            /** @enum {string} */
+            status: "queued" | "running" | "completed" | "failed";
+            device_id: number | null;
+            group: {
+                uid: string;
+                name: string | null;
+            } | null;
+            /** @description `null` mientras está abierta. Con teléfonos: `{participants: [...]}`; al crear: `{group, invite_link}`; al renovar el enlace: `{invite_link}`; al enviar: `{message: {uid}}`; el resto `{}`. */
+            result: {
+                participants?: components["schemas"]["PendingGroupParticipantResult"][];
+                invite_link?: string;
+                group?: {
+                    uid?: string;
+                    name?: string | null;
+                };
+                message?: {
+                    uid?: string;
+                };
+            } | null;
+            reason: string | null;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            started_at: string | null;
+            /** Format: date-time */
+            completed_at: string | null;
+            /** Format: date-time */
+            failed_at: string | null;
         };
     };
     responses: {
@@ -10296,23 +11448,16 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Una entrada por tarjeta, en orden: la primera es el mensaje (o `null` si no se pudo leer), las demás una marca `queued` o `failed` sin id. */
+            /** @description Un mensaje por tarjeta, en el orden de `contact_card_ids`: `queued`, o `failed` (`not_queued`) si no se pudo encolar. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        messages: (components["schemas"]["PendingPublicMessage"] | components["schemas"]["PendingQueuedContactCard"] | null)[];
+                        messages: components["schemas"]["PendingPublicMessage"][];
                     };
                 };
-            };
-            /** @description Hasta que se despliegue conversations feat/envio-devuelve-id: sin cuerpo. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
             403: components["responses"]["ConversationsAuthorizationException"];
@@ -10787,36 +11932,27 @@ export interface operations {
             };
         };
         responses: {
-            /** @description El mensaje quedó registrado (`status: queued`) y sale desde la cola. `message` es `null` si no se pudo leer de vuelta. */
+            /** @description El mensaje quedó registrado (`status: queued`) y sale desde la cola. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        message: components["schemas"]["PendingPublicMessage"] | null;
-                    };
+                    "application/json": components["schemas"]["PendingSendResult"];
                 };
-            };
-            /** @description Hasta que se despliegue conversations feat/envio-devuelve-id: sin cuerpo. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
-            /** @description Unsupported Media Type */
+            /** @description La extensión del archivo no está soportada y no mandaste `file_type`. */
             415: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        error: string;
-                        supported_file_types: unknown[];
+                        error?: string;
+                        supported_file_types?: string[];
                     };
                 };
             };
@@ -12468,24 +13604,35 @@ export interface operations {
                     local_id?: string | null;
                     note?: boolean;
                     client_reference?: components["schemas"]["PendingClientReference"];
+                    file_type?: components["schemas"]["PendingFileType"];
+                    file_name?: components["schemas"]["PendingFileName"];
                 };
             };
         };
         responses: {
-            /** @description El mensaje registrado, y `error` si el envío directo falló. */
+            /** @description El mensaje quedó registrado (`status: queued`) y sale desde la cola. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        message: components["schemas"]["PendingPublicMessage"] | null;
-                        error: string | null;
-                    };
+                    "application/json": components["schemas"]["PendingSendResult"];
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
             403: components["responses"]["ConversationsAuthorizationException"];
+            /** @description La extensión del archivo no está soportada y no mandaste `file_type`. */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error?: string;
+                        supported_file_types?: string[];
+                    };
+                };
+            };
             422: components["responses"]["ConversationsValidationException"];
         };
     };
@@ -12755,15 +13902,13 @@ export interface operations {
             };
         };
         responses: {
-            /** @description La plantilla quedó registrada como mensaje. */
+            /** @description La plantilla quedó registrada como mensaje (`status: queued`). */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        message: components["schemas"]["PendingPublicMessage"] | null;
-                    };
+                    "application/json": components["schemas"]["PendingSendResult"];
                 };
             };
             /** @description Bad Request */
@@ -12781,7 +13926,20 @@ export interface operations {
             401: components["responses"]["ConversationsAuthenticationException"];
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
-            422: components["responses"]["ConversationsValidationException"];
+            /** @description `template_unresolved_placeholder`: una variable apunta a un campo que no existe (`placeholders`, hasta 20, y `count`); `recipient_mismatch`; o una regla de envío. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        message: string;
+                        placeholders?: string[];
+                        count?: number;
+                    };
+                };
+            };
             /** @description Internal Server Error */
             500: {
                 headers: {
@@ -12794,17 +13952,18 @@ export interface operations {
                     };
                 };
             };
-            /** @description Meta rechazó la plantilla. El cuerpo llega en `APIError.body`. */
+            /** @description Bad Gateway */
             502: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        error: string;
+                        /** @constant */
+                        error: "Failed to send template";
                         error_code: string | null;
-                        placeholders: string[];
-                        message: components["schemas"]["PendingPublicMessage"] | null;
+                        placeholders: string | string[];
+                        details: string;
                     };
                 };
             };
@@ -14353,6 +15512,39 @@ export interface operations {
             422: components["responses"]["CommunitiesValidationException"];
         };
     };
+    "pendingGroups.create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    device_id: number;
+                    name: string;
+                    description?: string | null;
+                    /** @description Solo con un número QR. Sin el número que ejecuta. */
+                    participants?: string[];
+                    /** @description Solo con un número oficial. */
+                    join_approval_required?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description En cola. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingGroupActionAccepted"];
+                };
+            };
+        };
+    };
     "group.groups": {
         parameters: {
             query?: {
@@ -14734,6 +15926,46 @@ export interface operations {
             401: components["responses"]["CommunitiesAuthenticationException"];
             403: components["responses"]["CommunitiesAuthorizationException"];
             404: components["responses"]["CommunitiesModelNotFoundException"];
+        };
+    };
+    "pendingGroups.sendMessage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    device_id: number;
+                    /** @enum {string} */
+                    type: "text" | "image" | "video" | "audio" | "document";
+                    /** @description Solo con `type: text`. */
+                    text?: string;
+                    /** @description Una URL `https` con la extensión del tipo. Solo con archivos. */
+                    media_url?: string;
+                    /** @description Solo imagen o video. */
+                    caption?: string | null;
+                    /** @description Solo documento. */
+                    file_name?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description En cola. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingGroupActionAccepted"];
+                };
+            };
         };
     };
     "group.scheduledMessages": {
@@ -18367,6 +19599,1021 @@ export interface operations {
                             total: number;
                         };
                     };
+                };
+            };
+        };
+    };
+    "pendingForms.list": {
+        parameters: {
+            query?: {
+                q?: string;
+                status?: "draft" | "published" | "deprecated";
+                device_id?: number;
+                /** @description Por defecto 25. */
+                perPage?: number;
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PendingForm"][];
+                        links?: Record<string, unknown>;
+                        meta?: Record<string, unknown>;
+                    };
+                };
+            };
+        };
+    };
+    "pendingForms.create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description El número principal. */
+                    device_id: number;
+                    /** @description Otros números donde publicarlo. */
+                    device_ids?: number[];
+                    /** @description Una `key` de `GET /api/v1/forms/templates`. */
+                    template_key?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Creado como borrador. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PendingForm"];
+                        lint?: components["schemas"]["PendingFormLintIssue"][];
+                        numbers?: components["schemas"]["PendingFormNumber"][];
+                    };
+                };
+            };
+        };
+    };
+    "pendingForms.templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            key: string;
+                            title: string;
+                            description?: string | null;
+                            category?: string | null;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    "pendingForms.retrieve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description La versión del formulario. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PendingForm"];
+                        lint?: components["schemas"]["PendingFormLintIssue"][];
+                        versions?: {
+                            id?: number;
+                            version?: number;
+                            status?: string;
+                            published_at?: string | null;
+                        }[];
+                        numbers?: components["schemas"]["PendingFormNumber"][];
+                    };
+                };
+            };
+        };
+    };
+    "pendingForms.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description La versión del formulario. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    /** @description Pantallas y campos del formulario. */
+                    definition: Record<string, unknown>;
+                    /** @description El `updated_at` que leíste: si cambió desde entonces responde `409 STALE`. */
+                    expected_updated_at?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PendingForm"];
+                        lint?: components["schemas"]["PendingFormLintIssue"][];
+                    };
+                };
+            };
+        };
+    };
+    "pendingForms.delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description La versión del formulario. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Borrado. Una versión publicada responde `409 PUBLISHED`. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    "pendingForms.createVersion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description La versión del formulario. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ya había un borrador: es ese (`created: false`). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PendingForm"];
+                        lint?: components["schemas"]["PendingFormLintIssue"][];
+                        created?: boolean;
+                        numbers?: components["schemas"]["PendingFormNumber"][];
+                    };
+                };
+            };
+            /** @description Borrador nuevo (`created: true`). */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PendingForm"];
+                        lint?: components["schemas"]["PendingFormLintIssue"][];
+                        created?: boolean;
+                        numbers?: components["schemas"]["PendingFormNumber"][];
+                    };
+                };
+            };
+        };
+    };
+    "pendingForms.sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description La versión del formulario. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PendingForm"];
+                        lint?: components["schemas"]["PendingFormLintIssue"][];
+                        numbers?: components["schemas"]["PendingFormNumber"][];
+                    };
+                };
+            };
+        };
+    };
+    "pendingForms.publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description La versión del formulario. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Publicado. Si Meta lo rechaza: `502 META` con `meta_code` y `lint`; si no pasa la validación: `422 LINT`. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PendingForm"];
+                        lint?: components["schemas"]["PendingFormLintIssue"][];
+                        numbers?: components["schemas"]["PendingFormNumber"][];
+                    };
+                };
+            };
+        };
+    };
+    "pendingForms.numbers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description La versión del formulario. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        numbers: components["schemas"]["PendingFormNumber"][];
+                    };
+                };
+            };
+        };
+    };
+    "pendingForms.addNumber": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description La versión del formulario. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    device_id: number;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        numbers: components["schemas"]["PendingFormNumber"][];
+                    };
+                };
+            };
+        };
+    };
+    "pendingForms.removeNumber": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description La versión del formulario. */
+                id: number;
+                deviceId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description El número principal no se puede sacar: `422 PRIMARY_NUMBER`. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        numbers: components["schemas"]["PendingFormNumber"][];
+                    };
+                };
+            };
+        };
+    };
+    "pendingForms.retryNumbers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description La versión del formulario. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        numbers: components["schemas"]["PendingFormNumber"][];
+                    };
+                };
+            };
+        };
+    };
+    "pendingForms.definition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description El formulario (`family_id`). */
+                familyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            family_id?: number;
+                            form_id?: number;
+                            name?: string;
+                            status?: string;
+                            version?: number;
+                            definition?: unknown;
+                        } | null;
+                    };
+                };
+            };
+        };
+    };
+    "pendingForms.versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description El formulario (`family_id`). */
+                familyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id?: number;
+                            version?: number;
+                            name?: string;
+                            status?: string;
+                            is_current?: boolean;
+                            published_at?: string | null;
+                            deprecated_at?: string | null;
+                            meta_flow_id?: string | null;
+                            retained_reason?: string | null;
+                            responses?: number;
+                            templates?: unknown;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    "pendingForms.responses": {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                version_id?: number;
+                origin?: string;
+                status?: string;
+                search?: string;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                /** @description El formulario (`family_id`). */
+                familyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: Record<string, unknown>[];
+                        columns?: unknown[];
+                    };
+                };
+            };
+        };
+    };
+    "pendingForms.response": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description El formulario (`family_id`). */
+                familyId: number;
+                runId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+        };
+    };
+    "pendingForms.metrics": {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                version_id?: number;
+            };
+            header?: never;
+            path: {
+                /** @description El formulario (`family_id`). */
+                familyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+        };
+    };
+    "pendingForms.send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description El formulario (`family_id`). */
+                    form_id: number;
+                    device_id: number;
+                    /** @description El texto del mensaje. Por defecto, el nombre del formulario. */
+                    text?: string;
+                    /** @description El texto del botón, sin emojis. Por defecto «Abrir». */
+                    button_text?: string;
+                    client_reference?: components["schemas"]["PendingClientReference"];
+                };
+            };
+        };
+        responses: {
+            /** @description El formulario quedó registrado como mensaje (`type: whatsapp_form`, `status: queued`). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingSendResult"];
+                };
+            };
+        };
+    };
+    "pendingGroups.action": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description El `action_id` que devolvió la acción. */
+                action: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PendingGroupAction"];
+                    };
+                };
+            };
+        };
+    };
+    "pendingGroups.addParticipants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    device_id: number;
+                    /** @description Teléfonos con código de país. Se normalizan y se quitan los repetidos; después no pueden ser más de 20 (`422 max_phones`). */
+                    phones: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description En cola. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingGroupActionAccepted"];
+                };
+            };
+        };
+    };
+    "pendingGroups.removeParticipants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    device_id: number;
+                    /** @description Teléfonos con código de país. Se normalizan y se quitan los repetidos; después no pueden ser más de 20 (`422 max_phones`). */
+                    phones: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description En cola. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingGroupActionAccepted"];
+                };
+            };
+        };
+    };
+    "pendingGroups.promoteAdmins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    device_id: number;
+                    /** @description Teléfonos con código de país. Se normalizan y se quitan los repetidos; después no pueden ser más de 20 (`422 max_phones`). */
+                    phones: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description En cola. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingGroupActionAccepted"];
+                };
+            };
+        };
+    };
+    "pendingGroups.demoteAdmins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    device_id: number;
+                    /** @description Teléfonos con código de país. Se normalizan y se quitan los repetidos; después no pueden ser más de 20 (`422 max_phones`). */
+                    phones: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description En cola. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingGroupActionAccepted"];
+                };
+            };
+        };
+    };
+    "pendingGroups.updateName": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    device_id: number;
+                    name: string;
+                };
+            };
+        };
+        responses: {
+            /** @description En cola. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingGroupActionAccepted"];
+                };
+            };
+        };
+    };
+    "pendingGroups.updateDescription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    device_id: number;
+                    description: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description En cola. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingGroupActionAccepted"];
+                };
+            };
+        };
+    };
+    "pendingGroups.updatePhoto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    device_id: number;
+                    photo_url: string;
+                };
+            };
+        };
+        responses: {
+            /** @description En cola. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingGroupActionAccepted"];
+                };
+            };
+        };
+    };
+    "pendingGroups.updateSettings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    device_id: number;
+                    members_can_send_messages: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description En cola. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingGroupActionAccepted"];
+                };
+            };
+        };
+    };
+    "pendingGroups.renewInviteLink": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    device_id: number;
+                };
+            };
+        };
+        responses: {
+            /** @description En cola. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingGroupActionAccepted"];
+                };
+            };
+        };
+    };
+    "pendingGroups.inviteLink": {
+        parameters: {
+            query: {
+                device_id: number;
+            };
+            header?: never;
+            path: {
+                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            invite_link: string;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    "pendingGroups.joinRequests": {
+        parameters: {
+            query: {
+                device_id: number;
+            };
+            header?: never;
+            path: {
+                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            participant: {
+                                identity: string;
+                                /** @enum {string} */
+                                identity_type: "phone" | "whatsapp_user";
+                                name: string | null;
+                            };
+                            /** Format: date-time */
+                            requested_at: string | null;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    "pendingGroups.approveJoinRequests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    device_id: number;
+                    /** @description Teléfonos con código de país. Se normalizan y se quitan los repetidos; después no pueden ser más de 20 (`422 max_phones`). */
+                    phones: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description En cola. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingGroupActionAccepted"];
+                };
+            };
+        };
+    };
+    "pendingGroups.rejectJoinRequests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description El uid de WhatsApp del grupo (`…@g.us`). */
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo. */
+                    device_id: number;
+                    /** @description Teléfonos con código de país. Se normalizan y se quitan los repetidos; después no pueden ser más de 20 (`422 max_phones`). */
+                    phones: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description En cola. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingGroupActionAccepted"];
                 };
             };
         };

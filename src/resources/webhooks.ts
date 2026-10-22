@@ -8,12 +8,10 @@ type SubscriptionId = PathParams<'/api/v1/webhooks/{id}', 'GET'>['id'];
 /**
  * Webhook subscriptions (accounts area) and the verification of deliveries.
  *
- * PENDING OF THE SPEC: the `/api/v1/webhooks` subscription routes come from accounts
- * `origin/main` @ c34cba2c (unified subscriptions, in production since 13-10), not from the
- * snapshot; their types are in spec/pending.json until a snapshot brings them. At that commit
- * the routes are not in the gate's `allowed` list, so an API key may get
- * `403 route_not_available` until accounts opens them. The event catalog (`events()`) is in the
- * snapshot.
+ * Reading needs `webhooks:read` and the rest `webhooks:write`; the catalog (`events()`) needs
+ * `accounts:read`. A key only sees and manages subscriptions to events of the areas it can read
+ * (`conversations:read`, `communities:read`, `accounts:read`): asking for others is a `422` on
+ * `events`, and touching a subscription that has them is `403 permission_denied`.
  */
 export class Webhooks extends Resource {
   /** Same as `Funnelchat.webhooks.verify`. */
@@ -51,7 +49,10 @@ export class Webhooks extends Resource {
     return this.client.request('DELETE', '/api/v1/webhooks/{id}', { ...options, path: { id } });
   }
 
-  /** `POST /api/v1/webhooks/{id}/rotate-secret`: the new secret comes once; the old one stops working. */
+  /**
+   * `POST /api/v1/webhooks/{id}/rotate-secret`: the new secret comes once; the old one stops
+   * working. **Not open to API keys** (`403 route_not_available`): rotate it from the panel.
+   */
   rotateSecret(id: SubscriptionId, options?: RequestOptions) {
     return this.client.request('POST', '/api/v1/webhooks/{id}/rotate-secret', { ...options, path: { id } });
   }

@@ -2,6 +2,8 @@
  * GENERATED FILE — do not edit. Run `npm run generate`.
  * Source: spec/funnelchat.json (sha256 8bbbae569b4cab52…) + spec/pending.json.
  */
+import type { components } from './openapi.js';
+
 /** One entry of the webhook event catalog. `pending` = taken from spec/pending.json. */
 export interface WebhookEventInfo {
   readonly type: string;
@@ -12,7 +14,7 @@ export interface WebhookEventInfo {
   readonly description: string | null;
 }
 
-/** Every webhook event type known to the spec (48). */
+/** Every webhook event type known to the spec (54). */
 export const webhookEvents = [
   {"type":"account.blocked","domains":["accounts"],"status":"live","pending":true,"description":"La cuenta quedó bloqueada por consumo: terminó la gracia de 24 horas tras agotar los contactos activos mensuales."},
   {"type":"ai_quota.low_balance","domains":["accounts"],"status":"planned","pending":true,"description":"La cuota de mensajes de IA está por agotarse. Planificado: todavía no se emite."},
@@ -36,7 +38,10 @@ export const webhookEvents = [
   {"type":"device.disconnected","domains":["accounts"],"status":"live","pending":true,"description":"Uno de los números de la cuenta se desconectó y dejó de poder enviar o recibir."},
   {"type":"flow.completed","domains":["conversations"],"status":"live","pending":false,"description":"Un contacto terminó un flujo de automatización.\n\nSe envía una sola vez por cada ejecución de un flujo, cuando termina con éxito. No se envía si la ejecución se cortó, se canceló, quedó bloqueada o falló. `contact` es `null` si la ejecución no tiene un contacto asociado. Un flujo muy usado puede generar muchos eventos seguidos."},
   {"type":"flow.failed","domains":["conversations"],"status":"live","pending":false,"description":"La ejecución de un flujo para un contacto terminó por un error.\n\nSe envía una sola vez por cada ejecución de un flujo que termina por un error, no porque llegó al final. `reason` indica el motivo y toma uno de estos valores: `node_missing` (el paso a ejecutar ya no existe), `unknown_node_type` (el paso es de un tipo no reconocido), `missing_subflow` (el flujo que debía ejecutarse dentro de otro ya no existe), `malformed_node` (el paso tiene una configuración dañada), `loop_detected` (la ejecución dio vueltas sin esperar nada) y `execution_error` (un error inesperado detuvo la ejecución). No se envía si la ejecución se canceló, quedó bloqueada o se cortó porque se editó el flujo o se unieron contactos. `contact` es `null` si la ejecución no tiene un contacto asociado."},
-  {"type":"group_action.failed","domains":["communities"],"status":"live","pending":true,"description":"Una acción automática sobre un grupo falló."},
+  {"type":"group_action.completed","domains":["communities"],"status":"live","pending":true,"description":"Terminó una acción de grupo pedida por la API. `action.uuid` es el `action_id` que te devolvió."},
+  {"type":"group_action.failed","domains":["communities"],"status":"live","pending":true,"description":"Falló una acción sobre un grupo: una de una campaña (`action.uuid` es `null`) o una pedida por la API (`action.uuid` es el `action_id`). Las acciones con teléfonos no lo emiten: terminan con `group_action.completed` y el resultado de cada uno."},
+  {"type":"group_join_request.created","domains":["communities"],"status":"live","pending":true,"description":"Alguien pidió unirse a un grupo que requiere aprobación."},
+  {"type":"group_join_request.revoked","domains":["communities"],"status":"live","pending":true,"description":"Alguien retiró su pedido para unirse a un grupo."},
   {"type":"group_participant.joined","domains":["communities"],"status":"live","pending":false,"description":"Una persona entró a un grupo de una campaña."},
   {"type":"group_participant.left","domains":["communities"],"status":"live","pending":false,"description":"Una persona salió de un grupo de una campaña."},
   {"type":"group.blocked","domains":["communities"],"status":"live","pending":false,"description":"Un grupo quedó inoperable: sin administrador conectado, con el link de invitación inválido o suspendido por WhatsApp."},
@@ -44,12 +49,14 @@ export const webhookEvents = [
   {"type":"group.full","domains":["communities"],"status":"live","pending":true,"description":"Un grupo pasó de no estar lleno a estarlo."},
   {"type":"group.invite_link_down","domains":["communities"],"status":"live","pending":false,"description":"El enlace de invitación de un grupo quedó confirmado caído (WhatsApp respondió que no existe y la renovación no consiguió otro); no se publica por errores transitorios ni por grupos prohibidos o suspendidos, y se publica una sola vez por episodio de bloqueo."},
   {"type":"group.invite_link_renewed","domains":["communities"],"status":"live","pending":false,"description":"El enlace de invitación de un grupo cambió por una renovación, automática al detectarse inválido o pedida por el usuario; en v0 no se publican los cambios que detecta la sincronización ni el enlace inicial al crear el grupo."},
+  {"type":"group.message_received","domains":["communities"],"status":"live","pending":true,"description":"Alguien escribió en un grupo de uno de tus números. No se emite para los mensajes de tus propios números."},
+  {"type":"group.reaction_added","domains":["communities"],"status":"live","pending":true,"description":"Alguien reaccionó a un mensaje de un grupo."},
   {"type":"group.recovered","domains":["communities"],"status":"live","pending":false,"description":"Un grupo que estaba bloqueado volvió a operar."},
   {"type":"mac.expiring","domains":["accounts"],"status":"live","pending":true,"description":"Hay contactos activos mensuales que vencen en los próximos 7 días."},
   {"type":"mac.usage_100","domains":["accounts"],"status":"live","pending":true,"description":"La cuenta agotó sus contactos activos mensuales del ciclo; se abre una gracia de 24 horas."},
   {"type":"mac.usage_80","domains":["accounts"],"status":"live","pending":true,"description":"La cuenta alcanzó el 80 % de sus contactos activos mensuales del ciclo."},
   {"type":"message.received","domains":["conversations"],"status":"live","pending":false,"description":"Un contacto le escribió a un número de WhatsApp de la cuenta."},
-  {"type":"message.status_changed","domains":["conversations"],"status":"planned","pending":true,"description":"Cambió el estado de entrega de un mensaje 1:1 enviado. Un aviso por transición, nunca uno que retroceda. Hay que pedirlo de forma explícita en `events`."},
+  {"type":"message.status_changed","domains":["conversations"],"status":"live","pending":true,"description":"Cambió el estado de entrega de un mensaje que enviaste con la API. Un aviso por transición, nunca uno que retroceda; `queued` no se avisa. Hay que pedirlo de forma explícita en `events`."},
   {"type":"pipeline.finished","domains":["communities"],"status":"live","pending":false,"description":"Terminó un pipeline de operaciones sobre grupos, con su resultado agregado."},
   {"type":"poll.voted","domains":["communities"],"status":"live","pending":false,"description":"Un participante votó en una encuesta enviada a un grupo, o cambió su voto."},
   {"type":"scheduled_message.finished","domains":["communities"],"status":"live","pending":false,"description":"Un envío programado terminó, con su resultado agregado."},
@@ -62,6 +69,7 @@ export const webhookEvents = [
   {"type":"subscription.trial_ending","domains":["accounts"],"status":"live","pending":true,"description":"El período de prueba está por terminar."},
   {"type":"template.status_changed","domains":["conversations"],"status":"live","pending":false,"description":"Una plantilla cambió de estado de aprobación en Meta.\n\n`template` identifica la plantilla igual que `GET /templates` (`id`, `uid`, `name`, `category`). `previous_status` y `status` son los estados tal como los devuelve la API (por ejemplo `PENDING`, `APPROVED`, `REJECTED`, `PAUSED`); `previous_status` es `null` si la plantilla no tenía estado. `reason` trae la observación de rechazo (traducida como en la API y limitada a 500 caracteres) cuando el cambio es un rechazo informado al crear la plantilla, y es `null` en el resto. No se emite si Meta reenvía el estado que la plantilla ya tenía. Si una misma plantilla de Meta figura en varias cuentas, cada cuenta recibe su propio evento."},
   {"type":"webhook.test","domains":["conversations","communities"],"status":"live","pending":false,"description":"Evento de prueba enviado desde la ruta de prueba de una suscripción."},
+  {"type":"whatsapp_form.completed","domains":["conversations"],"status":"live","pending":true,"description":"Un contacto completó un formulario que le enviaste."},
 ] as const satisfies readonly WebhookEventInfo[];
 
 /** A webhook event type known to the spec. */
@@ -272,24 +280,73 @@ export interface WebhookEventDataMap {
     };
     reason: string;
   };
-  /** `group_action.failed` (live, pending of the spec; typed from: example). Una acción automática sobre un grupo falló. */
-  "group_action.failed": {
-    campaign: {
-      uuid: string;
-      name: string;
-    };
-    pipeline: {
-      uuid: string;
-      name: string;
-    };
-    group: {
-      uid: string;
-      name: string;
-    };
+  /** `group_action.completed` (live, pending of the spec; typed from: schema). Terminó una acción de grupo pedida por la API. `action.uuid` es el `action_id` que te devolvió. */
+  "group_action.completed": {
     action: {
+      uuid: string;
+      type: string;
+    };
+    group: ({
+      uid: string;
+      name: string | null;
+    }) | null;
+    campaign: {
+      uuid?: string;
+      name?: string;
+    } | null;
+    /** Con teléfonos: `participants`; al crear o renovar el enlace: `invite_link`; al enviar: `message.uid`; el resto, vacío. */
+    result: {
+      participants?: components["schemas"]["PendingGroupParticipantResult"][];
+      invite_link?: string;
+      message?: {
+        uid?: string;
+      };
+    };
+  };
+  /** `group_action.failed` (live, pending of the spec; typed from: schema). Falló una acción sobre un grupo: una de una campaña (`action.uuid` es `null`) o una pedida por la API (`action.uuid` es el `action_id`). Las acciones con teléfonos no lo emiten: terminan con `group_action.completed` y el resultado de cada uno. */
+  "group_action.failed": {
+    campaign: ({
+      uuid: string;
+      name: string | null;
+    }) | null;
+    pipeline: ({
+      uuid: string;
+      name: string | null;
+    }) | null;
+    group: ({
+      uid: string;
+      name: string | null;
+    }) | null;
+    action: {
+      /** El `action_id` de una acción pedida por la API; `null` en las de una campaña. */
+      uuid: string | null;
       type: string;
     };
     reason: string;
+  };
+  /** `group_join_request.created` (live, pending of the spec; typed from: schema). Alguien pidió unirse a un grupo que requiere aprobación. */
+  "group_join_request.created": {
+    group: {
+      uid: string;
+      name: string | null;
+    };
+    participant: {
+      identity: string;
+      identity_type: "phone" | "whatsapp_user";
+      name: string | null;
+    };
+  };
+  /** `group_join_request.revoked` (live, pending of the spec; typed from: schema). Alguien retiró su pedido para unirse a un grupo. */
+  "group_join_request.revoked": {
+    group: {
+      uid: string;
+      name: string | null;
+    };
+    participant: {
+      identity: string;
+      identity_type: "phone" | "whatsapp_user";
+      name: string | null;
+    };
   };
   /** `group_participant.joined` (live; typed from: example). Una persona entró a un grupo de una campaña. */
   "group_participant.joined": {
@@ -389,6 +446,45 @@ export interface WebhookEventDataMap {
     trigger: string;
     recovered: boolean;
   };
+  /** `group.message_received` (live, pending of the spec; typed from: schema). Alguien escribió en un grupo de uno de tus números. No se emite para los mensajes de tus propios números. */
+  "group.message_received": {
+    group: {
+      uid: string;
+      name: string | null;
+    };
+    message: {
+      uid: string;
+      type: string;
+      /** Solo con `type: text`. */
+      text: string | null;
+      caption: string | null;
+      media_url: string | null;
+      mime_type: string | null;
+      file_name: string | null;
+      quoted_uid: string | null;
+    };
+    participant: {
+      identity: string;
+      identity_type: "phone" | "whatsapp_user";
+      name: string | null;
+    };
+  };
+  /** `group.reaction_added` (live, pending of the spec; typed from: schema). Alguien reaccionó a un mensaje de un grupo. */
+  "group.reaction_added": {
+    group: {
+      uid: string;
+      name: string | null;
+    };
+    message: {
+      uid: string;
+    };
+    participant: {
+      identity: string;
+      identity_type: "phone" | "whatsapp_user";
+      name: string | null;
+    };
+    reaction: string;
+  };
   /** `group.recovered` (live; typed from: example). Un grupo que estaba bloqueado volvió a operar. */
   "group.recovered": {
     group: {
@@ -437,7 +533,7 @@ export interface WebhookEventDataMap {
       phone: string;
     };
   };
-  /** `message.status_changed` (planned, pending of the spec; typed from: schema). Cambió el estado de entrega de un mensaje 1:1 enviado. Un aviso por transición, nunca uno que retroceda. Hay que pedirlo de forma explícita en `events`. */
+  /** `message.status_changed` (live, pending of the spec; typed from: schema). Cambió el estado de entrega de un mensaje que enviaste con la API. Un aviso por transición, nunca uno que retroceda; `queued` no se avisa. Hay que pedirlo de forma explícita en `events`. */
   "message.status_changed": {
     /** El `id` del mensaje en el historial del contacto. */
     message_id: number;
@@ -447,10 +543,7 @@ export interface WebhookEventDataMap {
     status: "sent" | "delivered" | "read" | "failed";
     previous_status: "sent" | "delivered" | "read" | "failed" | null;
     /** Solo cuando `status` es `failed`. */
-    error?: {
-      code: number | null;
-      title: string | null;
-    };
+    error?: components["schemas"]["PendingMessageError"];
     occurred_at: string;
     /** La `client_reference` que mandaste en el envío, o `null`. */
     client_reference: string | null;
@@ -573,5 +666,23 @@ export interface WebhookEventDataMap {
   "webhook.test": {
     subscription: string;
     sent_at: string;
+  };
+  /** `whatsapp_form.completed` (live, pending of the spec; typed from: schema). Un contacto completó un formulario que le enviaste. */
+  "whatsapp_form.completed": {
+    form: {
+      /** El formulario (`family_id`). */
+      id: number;
+      name: string;
+      version_id: number;
+    };
+    message_id: number | null;
+    contact_id: number | null;
+    device_id: number | null;
+    answers: ({
+      key: string;
+      label: string | null;
+      value: boolean | number | string | string[] | null;
+    })[];
+    occurred_at: string;
   };
 }

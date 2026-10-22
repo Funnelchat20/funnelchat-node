@@ -7,6 +7,7 @@ import {
 } from './core/errors.js';
 import { PagePromise } from './core/pagination.js';
 import { APIPromise, type APIResponse, requestIdOf } from './core/api-promise.js';
+import { NOT_RETRYABLE_CODES } from './core/error-codes.js';
 import { isRetryable, isSendRequest, retryDelayMs } from './core/retry.js';
 import type {
   ApiPath,
@@ -24,6 +25,7 @@ import { Contacts } from './resources/contacts.js';
 import { Conversations } from './resources/conversations.js';
 import { CustomFields } from './resources/custom-fields.js';
 import { Devices } from './resources/devices.js';
+import { Forms } from './resources/forms.js';
 import { Groups } from './resources/groups.js';
 import { Messages } from './resources/messages.js';
 import { Tags } from './resources/tags.js';
@@ -84,6 +86,8 @@ export class Funnelchat {
   readonly contacts: Contacts;
   readonly conversations: Conversations;
   readonly messages: Messages;
+  /** WhatsApp forms: build, publish, read the answers. Send one with `messages.sendForm`. */
+  readonly forms: Forms;
   readonly templates: Templates;
   readonly tags: Tags;
   readonly customFields: CustomFields;
@@ -121,6 +125,7 @@ export class Funnelchat {
     this.contacts = new Contacts(this);
     this.conversations = new Conversations(this);
     this.messages = new Messages(this);
+    this.forms = new Forms(this);
     this.templates = new Templates(this);
     this.tags = new Tags(this);
     this.customFields = new CustomFields(this);
@@ -199,7 +204,7 @@ export class Funnelchat {
       if (response.ok) return { data: parsed, response, requestId: requestIdOf(response.headers) };
 
       const error = APIError.from({ status: response.status, body: parsed, headers: response.headers, method: verb, url: errorUrl });
-      if (canRetry && isRetryable(verb, response.status)) {
+      if (canRetry && isRetryable(verb, response.status) && !NOT_RETRYABLE_CODES.has(error.code ?? '')) {
         const delay = retryDelayMs(attempt, error.retryAfter);
         if (delay !== null) {
           await sleep(delay, options.signal);

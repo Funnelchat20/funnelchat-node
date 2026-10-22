@@ -1,19 +1,23 @@
 {
   "x-fc-pending": {
     "title": "Pendiente de la especificación",
-    "description": "Rutas, campos y eventos que la API ya tiene (o tiene en una rama sin mergear) pero que la instantánea de spec/funnelchat.json todavía no trae. scripts/generate.mjs los suma a la especificación antes de generar los tipos, solo mientras la instantánea no los tenga: cuando una instantánea nueva los trae, la generación usa la de la instantánea y avisa qué entradas de este archivo ya se pueden borrar.",
+    "description": "Rutas, campos y eventos que la API en producción ya tiene pero que la instantánea de spec/funnelchat.json todavía no trae. scripts/generate.mjs los suma a la especificación antes de generar los tipos, solo mientras la instantánea no los tenga: cuando una instantánea nueva los trae, la generación usa la de la instantánea y avisa qué entradas de este archivo ya se pueden borrar.",
     "rules": {
       "paths": "Una operación (método + ruta) se agrega solo si la instantánea no la tiene.",
       "operationPatches": "Un parche agrega propiedades al cuerpo de una operación de la instantánea solo mientras esa operación cumple la condición de `while`.",
       "webhooks": "Un evento se agrega si la instantánea no lo tiene, o lo reemplaza mientras cumple la condición de `x-fc-replace-while`.",
       "responsePatches": "Un parche reemplaza las respuestas de una operación de la instantánea (todas las 2xx, y las otras que traiga por código) solo mientras esa operación cumple la condición de `while`.",
-      "components.schemas": "Los esquemas de esta capa empiezan con `Pending` para no chocar con los de la instantánea."
+      "components.schemas": "Los esquemas de esta capa empiezan con `Pending` para no chocar con los de la instantánea.",
+      "schemaPatches": "Un parche agrega propiedades a un esquema de la instantánea, cada una solo mientras el esquema no la tenga."
     },
     "sources": {
-      "accounts-webhooks": "accounts origin/main @ c34cba2c (2026-10-16): back/routes/api/webhooks.php, Http/Controllers/WebhookSubscription*Controller.php, Http/Requests/*WebhookSubscriptionRequest.php, Http/Resources/WebhookSubscription*Resource.php, Catalogs/Areas/*Events.php. En producción desde el 13-10 (accounts #978).",
-      "conversations-c2": "conversations feat/armar-funnelchat-f1 @ eadef46c (PR #2284, SIN MERGEAR): envío con clave (contrato 1014, C2) y client_reference.",
-      "conversations-c1": "conversations feat/armar-funnelchat-f1 @ eadef46c (PR #2284, SIN MERGEAR): forma de data de message.status_changed (contrato 1014, C1).",
-      "conversations-send-result": "conversations feat/envio-devuelve-id @ d3ac33994 (2026-10-16, rama LOCAL, SIN PR; sale de feat/armar-funnelchat-f1 @ eadef46c): lo que responde un envío con clave, el mensaje registrado con `status: queued` (back/app/Modules/Message/Support/ApiKeySendResponse.php, ApiKeySendResponseSurface.php, PublicMessageStatus.php, Http/Resources/PublicMessageResource.php y Shared/PublicApi/Docs/ApiKeySendResponsesOperationExtension.php). También `GET /api/v1/contacts/{contact}/messages/{message}` (Http/Controllers/ShowMessageController.php, routes/api/messages.php). La forma puede cambiar."
+      "accounts-webhooks": "accounts v1.4.24 (300cc843, en producción el 22-10): back/routes/api/webhooks.php:87-111, back/config/platform-gate.php:244-299 (rutas abiertas a claves y permisos webhooks:*), Http/Requests/*WebhookSubscriptionRequest.php, Http/Resources/WebhookSubscription*Resource.php, Services/WebhookPermissionRules.php y Catalogs/Areas/*Events.php.",
+      "accounts-devices": "accounts v1.4.24 (300cc843, en producción el 22-10): back/app/Modules/Device/Http/Resources/DeviceResource.php:65-123 y back/app/Modules/Device/Support/DeviceCapabilities.php:82-194.",
+      "conversations-send": "conversations v1.18.10 (a580a3d0, en producción el 22-10): el envío con clave (back/app/Modules/Message/Services/ApiSendGuard.php, Support/ApiKeySendResponse.php, Support/ClientReference.php, Support/SendFileType.php, Http/Resources/PublicMessageResource.php, Support/PublicMessageStatus.php) y GET contacts/{contact}/messages/{message} (Http/Controllers/ShowMessageController.php).",
+      "conversations-status": "conversations v1.18.10 (a580a3d0, en producción el 22-10): data de message.status_changed (back/app/Modules/Webhook/Payloads/MessageStatusChangedPayload.php:161-189).",
+      "conversations-forms": "conversations v1.18.10 (a580a3d0, en producción el 22-10): formularios de WhatsApp (back/routes/api/whatsapp-forms.php, WhatsappForm/Http/Controllers/WhatsappFormController.php, WhatsappFormSendController.php, Http/Resources/WhatsappFormResource.php, Webhook/Payloads/WhatsappFormCompletedPayload.php:118-136).",
+      "communities-group-actions": "communities v2.34.52 (6f32f0b4, en producción el 22-10): acciones de grupo por API y solicitudes de unión (back/app/Modules/GroupManagement/routes.php:314-350, Controllers/Api/V2/ApiGroupActionController.php, Requests/ApiGroupActions/*, Resources/ApiGroupAction*Resource.php, Shared/Catalog/ApiRouteCatalog.php:398-414). Apagadas por defecto (API_GROUP_ACTIONS_ENABLED): mientras tanto responden 403 route_not_available.",
+      "communities-events": "communities v2.34.52 (6f32f0b4, en producción el 22-10): data de los eventos de grupo (back/app/Modules/Shared/Support/PlatformEvents/PlatformEventCatalog.php:250-309 y Services/*EventPublisher.php), relevados por el catálogo unificado de accounts v1.4.24 (300cc843, en producción el 22-10)."
     }
   },
   "components": {
@@ -23,7 +27,7 @@
         "minLength": 1,
         "maxLength": 64,
         "pattern": "^[\\x21-\\x7E]{1,64}$",
-        "description": "Tu referencia para correlacionar el envío con el historial y con `message.status_changed`: de 1 a 64 caracteres ASCII visibles, sin espacios. No es única ni está autenticada; no pongas datos personales. Pendiente de la especificación (conversations PR #2284, sin mergear)."
+        "description": "Tu referencia para correlacionar el envío con el historial y con `message.status_changed`: de 1 a 64 caracteres ASCII visibles, sin espacios. No es única ni está autenticada; no pongas datos personales."
       },
       "PendingWebhookSubscriptionFilters": {
         "type": "object",
@@ -145,7 +149,7 @@
       },
       "PendingPublicMessage": {
         "type": "object",
-        "description": "Un mensaje como lo ve una clave: siempre estas diez claves. Pendiente de la especificación (conversations feat/envio-devuelve-id @ d3ac33994, sin PR): la forma puede cambiar.",
+        "description": "Un mensaje como lo ve una clave: siempre estas diez claves. Es lo que responde un envío y `GET /api/v1/contacts/{contact}/messages/{message}`.",
         "properties": {
           "id": { "type": "integer", "description": "El id del mensaje en el historial del contacto: el mismo `message_id` de `message.status_changed`." },
           "contact_id": { "type": ["integer", "null"] },
@@ -155,18 +159,11 @@
           "status": {
             "type": ["string", "null"],
             "enum": ["queued", "sent", "delivered", "read", "failed", null],
-            "description": "Un envío recién aceptado está `queued`. `null` cuando el mensaje no tiene estado de entrega (recibido, nota) o no se sabe."
+            "description": "Un envío recién aceptado está `queued` (aceptado no es enviado); después pasa a `sent`, `delivered`, `read` o `failed`. `null` cuando el mensaje no tiene estado de entrega (recibido, nota) o no se sabe."
           },
           "error": {
             "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "code": { "type": ["integer", "null"] },
-                  "title": { "type": ["string", "null"] }
-                },
-                "required": ["code", "title"]
-              },
+              { "$ref": "#/components/schemas/PendingMessageError" },
               { "type": "null" }
             ],
             "description": "Solo cuando `status` es `failed`."
@@ -177,31 +174,14 @@
         },
         "required": ["id", "contact_id", "device_id", "direction", "type", "status", "error", "client_reference", "created_at", "updated_at"]
       },
-      "PendingQueuedContactCard": {
-        "type": "object",
-        "description": "Una tarjeta de contacto después de la primera: las mismas claves del mensaje, sin id. Pendiente de la especificación (conversations feat/envio-devuelve-id @ d3ac33994, sin PR).",
-        "properties": {
-          "id": { "type": "null" },
-          "contact_id": { "type": ["integer", "null"] },
-          "device_id": { "type": ["integer", "null"] },
-          "direction": { "type": "string", "enum": ["outbound"] },
-          "type": { "type": "string", "enum": ["contact"] },
-          "status": { "type": "string", "enum": ["queued", "failed"] },
-          "error": { "type": ["string", "null"] },
-          "client_reference": { "type": ["string", "null"] },
-          "created_at": { "type": ["string", "null"] },
-          "updated_at": { "type": ["string", "null"] }
-        },
-        "required": ["id", "contact_id", "device_id", "direction", "type", "status", "error", "client_reference", "created_at", "updated_at"]
-      },
       "PendingForwardResult": {
         "type": "object",
-        "description": "El resultado de un reenvío para un destino, con su mensaje. Pendiente de la especificación (conversations feat/envio-devuelve-id @ d3ac33994, sin PR).",
+        "description": "El resultado de un reenvío para un destino, con su mensaje (`null` si no se registró nada para ese destino).",
         "properties": {
           "contact_id": { "type": "integer" },
           "mode": { "type": "string", "enum": ["internal", "native"] },
           "status": { "type": "string", "enum": ["queued", "blocked"] },
-          "reason": { "type": ["string", "null"] },
+          "reason": { "type": ["string", "null"], "description": "Por qué se bloqueó: `device_unavailable`, `not_sent`, `target_not_found`, `mac_lockout_24h` o `mac_limit_reached`." },
           "message": {
             "anyOf": [
               { "$ref": "#/components/schemas/PendingPublicMessage" },
@@ -217,6 +197,167 @@
           "message": { "type": "string" }
         },
         "required": ["message"]
+      },
+      "PendingMessageError": {
+        "type": "object",
+        "description": "Por qué falló. Cuando lo frenó Funnelchat, `code` es `null` y `reason` dice el motivo; cuando falló en WhatsApp, `code` y `title` son los del proveedor y `reason` es `null`.",
+        "properties": {
+          "code": { "type": ["integer", "null"] },
+          "title": { "type": ["string", "null"], "maxLength": 128 },
+          "reason": {
+            "type": ["string", "null"],
+            "enum": ["device_unavailable", "insufficient_balance", "window_closed", "recipient_unreachable", "template_not_found", "template_unresolved_placeholder", "not_queued", "not_sent", null]
+          }
+        },
+        "required": ["code", "title", "reason"]
+      },
+      "PendingSendResult": {
+        "type": "object",
+        "description": "El mensaje que quedó registrado: `status: queued` y su `id`, el mismo `message_id` de `message.status_changed`.",
+        "properties": {
+          "message": { "$ref": "#/components/schemas/PendingPublicMessage" }
+        },
+        "required": ["message"]
+      },
+      "PendingFileType": {
+        "type": ["string", "null"],
+        "enum": ["image", "video", "audio", "document", "sticker", null],
+        "description": "El tipo del archivo de `file`. Hace falta cuando la URL no termina en una extensión conocida (una URL firmada o sin extensión); si viene, gana sobre la extensión. Sin él, una URL sin extensión conocida responde `422 errors.file_type` y una extensión no soportada `415`."
+      },
+      "PendingFileName": {
+        "type": ["string", "null"],
+        "minLength": 1,
+        "maxLength": 255,
+        "description": "El nombre con que llega el documento. Con `file_type: document` y una URL sin extensión conocida es obligatorio y tiene que tener extensión (`422 errors.file_name`)."
+      },
+      "PendingFormLintIssue": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string" },
+          "severity": { "type": "string" },
+          "screenId": { "type": ["string", "null"] },
+          "itemId": { "type": ["string", "null"] },
+          "message": { "type": "string" }
+        },
+        "required": ["code", "severity", "message"]
+      },
+      "PendingFormNumber": {
+        "type": "object",
+        "description": "Un número en el que el formulario está (o se está) publicando.",
+        "properties": {
+          "device_id": { "type": ["integer", "null"] },
+          "primary": { "type": "boolean" },
+          "status": { "type": "string", "enum": ["draft", "publishing", "published", "failed"] },
+          "error": { "type": ["string", "null"] }
+        },
+        "required": ["device_id", "primary", "status", "error"]
+      },
+      "PendingForm": {
+        "type": "object",
+        "description": "Una versión de un formulario. `id` es la versión; `family_id` es el formulario, el `form_id` que usás para enviarlo y el `form.id` de `whatsapp_form.completed`.",
+        "properties": {
+          "id": { "type": "integer", "description": "La versión." },
+          "family_id": { "type": "integer", "description": "El formulario (todas sus versiones)." },
+          "name": { "type": "string", "description": "El nombre en Meta (con el sufijo `__vN`)." },
+          "label": { "type": "string", "description": "El nombre para mostrar." },
+          "category": { "type": ["string", "null"] },
+          "status": { "type": "string", "enum": ["draft", "published", "deprecated"] },
+          "version": { "type": "integer" },
+          "definition": { "description": "La definición del formulario (pantallas y campos). Solo en el detalle." },
+          "fields": { "description": "Solo en el detalle." },
+          "mapping": { "description": "Solo en el detalle." },
+          "tag_rules": { "description": "Solo en el detalle." },
+          "has_endpoint": { "type": "boolean" },
+          "first_screen": { "type": ["string", "null"] },
+          "first_screen_dynamic": { "type": ["boolean", "null"] },
+          "lint_errors_count": { "type": ["integer", "null"] },
+          "draft_id": { "type": "integer", "description": "Solo en el listado: el borrador de la familia, si no es esta fila." },
+          "draft_version": { "type": "integer" },
+          "sends": { "type": "integer", "description": "Solo en el listado." },
+          "responses": { "type": "integer", "description": "Solo en el listado." },
+          "meta_flow_id": { "type": ["string", "null"] },
+          "flow_json": { "description": "Solo en el detalle." },
+          "validation_errors": { "description": "Solo en el detalle." },
+          "published_at": { "type": ["string", "null"], "format": "date-time" },
+          "updated_at": { "type": ["string", "null"], "format": "date-time" }
+        },
+        "required": ["id", "family_id", "name", "label", "status", "version"]
+      },
+      "PendingGroupActionAccepted": {
+        "type": "object",
+        "description": "La acción quedó en cola. Seguila con `GET /api/v1/groups/actions/{action}` o con los eventos `group_action.completed` y `group_action.failed`.",
+        "properties": {
+          "action_id": { "type": "string", "format": "uuid" },
+          "status": { "type": "string", "enum": ["queued"] }
+        },
+        "required": ["action_id", "status"]
+      },
+      "PendingGroupParticipantResult": {
+        "type": "object",
+        "properties": {
+          "identity": { "type": "string", "description": "El teléfono en dígitos, sin `+`, o un `…@lid`." },
+          "identity_type": { "type": "string", "enum": ["phone", "whatsapp_user"] },
+          "status": { "type": "string", "enum": ["added", "invited", "removed", "promoted", "demoted", "approved", "rejected", "failed"] },
+          "reason": { "type": ["string", "null"] }
+        },
+        "required": ["identity", "identity_type", "status", "reason"]
+      },
+      "PendingGroupAction": {
+        "type": "object",
+        "properties": {
+          "action_id": { "type": "string", "format": "uuid" },
+          "type": { "type": "string" },
+          "status": { "type": "string", "enum": ["queued", "running", "completed", "failed"] },
+          "device_id": { "type": ["integer", "null"] },
+          "group": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "uid": { "type": "string" },
+                  "name": { "type": ["string", "null"] }
+                },
+                "required": ["uid", "name"]
+              },
+              { "type": "null" }
+            ]
+          },
+          "result": {
+            "description": "`null` mientras está abierta. Con teléfonos: `{participants: [...]}`; al crear: `{group, invite_link}`; al renovar el enlace: `{invite_link}`; al enviar: `{message: {uid}}`; el resto `{}`.",
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "participants": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/PendingGroupParticipantResult" }
+                  },
+                  "invite_link": { "type": "string" },
+                  "group": {
+                    "type": "object",
+                    "properties": {
+                      "uid": { "type": "string" },
+                      "name": { "type": ["string", "null"] }
+                    }
+                  },
+                  "message": {
+                    "type": "object",
+                    "properties": {
+                      "uid": { "type": "string" }
+                    }
+                  }
+                }
+              },
+              { "type": "null" }
+            ]
+          },
+          "reason": { "type": ["string", "null"] },
+          "created_at": { "type": ["string", "null"], "format": "date-time" },
+          "started_at": { "type": ["string", "null"], "format": "date-time" },
+          "completed_at": { "type": ["string", "null"], "format": "date-time" },
+          "failed_at": { "type": ["string", "null"], "format": "date-time" }
+        },
+        "required": ["action_id", "type", "status", "device_id", "group", "result", "reason", "created_at", "started_at", "completed_at", "failed_at"]
       }
     }
   },
@@ -225,11 +366,11 @@
       "get": {
         "operationId": "pendingMessage.show",
         "summary": "Ver un mensaje por id",
-        "description": "Un mensaje de tu cuenta por el id que te dio el envío o un webhook (`message_id` de `message.status_changed`). Aceptado no es entregado: `status` es `queued`, `sent`, `delivered`, `read` o `failed` en los que enviaste, y `null` en los recibidos, las notas y los de resultado desconocido. Responde 404 si el mensaje no existe o no es de ese contacto.\n\n**Pendiente de la especificación** (conversations feat/envio-devuelve-id @ d3ac33994, rama local sin PR): la forma puede cambiar.",
+        "description": "Un mensaje por el `id` que te dio un envío o un webhook (`message_id` de `message.status_changed`). Aceptado no es entregado: `status` pasa de `queued` a `sent`, `delivered`, `read` o `failed`.",
         "tags": ["Message"],
         "x-fc-domain": "conversations",
         "x-fc-permission": "conversations:read",
-        "x-fc-pending": "conversations-send-result",
+        "x-fc-pending": "conversations-send",
         "parameters": [
           {
             "name": "contact",
@@ -268,10 +409,10 @@
       "get": {
         "operationId": "pendingWebhookSubscription.index",
         "summary": "Listar las suscripciones de webhook",
-        "description": "Todas las suscripciones de la cuenta (como máximo 50), también las que crearon otras integraciones. Solo el titular de la cuenta.\n\n**Pendiente de la especificación** (accounts origin/main @ c34cba2c).",
+        "description": "Todas las suscripciones de la cuenta (como máximo 50), también las que crearon otras integraciones. Solo el titular de la cuenta.",
         "tags": ["Webhooks"],
         "x-fc-domain": "accounts",
-        "x-fc-permission": "accounts:read",
+        "x-fc-permission": "webhooks:read",
         "x-fc-pending": "accounts-webhooks",
         "responses": {
           "200": {
@@ -290,10 +431,10 @@
       "post": {
         "operationId": "pendingWebhookSubscription.store",
         "summary": "Crear una suscripción de webhook",
-        "description": "Devuelve el `secret` una sola vez. Tope: 50 suscripciones por cuenta (la siguiente responde 422).\n\n**Pendiente de la especificación** (accounts origin/main @ c34cba2c).",
+        "description": "Devuelve el `secret` una sola vez. Tope: 50 suscripciones por cuenta (la siguiente responde 422).",
         "tags": ["Webhooks"],
         "x-fc-domain": "accounts",
-        "x-fc-permission": "accounts:write",
+        "x-fc-permission": "webhooks:write",
         "x-fc-pending": "accounts-webhooks",
         "requestBody": {
           "required": true,
@@ -327,10 +468,10 @@
       "get": {
         "operationId": "pendingWebhookSubscription.show",
         "summary": "Ver una suscripción de webhook",
-        "description": "No trae el secreto. Si lo perdiste, rotalo.\n\n**Pendiente de la especificación** (accounts origin/main @ c34cba2c).",
+        "description": "No trae el secreto. Si lo perdiste, rotalo.",
         "tags": ["Webhooks"],
         "x-fc-domain": "accounts",
-        "x-fc-permission": "accounts:read",
+        "x-fc-permission": "webhooks:read",
         "x-fc-pending": "accounts-webhooks",
         "parameters": [
           {
@@ -354,10 +495,10 @@
       "put": {
         "operationId": "pendingWebhookSubscription.update",
         "summary": "Cambiar una suscripción de webhook",
-        "description": "Reemplaza `url`, `events`, `description` y `filters`; `status` es opcional (`active` o `paused`). El secreto no cambia.\n\n**Pendiente de la especificación** (accounts origin/main @ c34cba2c).",
+        "description": "Reemplaza `url`, `events`, `description` y `filters`; `status` es opcional (`active` o `paused`). El secreto no cambia.",
         "tags": ["Webhooks"],
         "x-fc-domain": "accounts",
-        "x-fc-permission": "accounts:write",
+        "x-fc-permission": "webhooks:write",
         "x-fc-pending": "accounts-webhooks",
         "parameters": [
           {
@@ -389,10 +530,10 @@
       "delete": {
         "operationId": "pendingWebhookSubscription.destroy",
         "summary": "Eliminar una suscripción de webhook",
-        "description": "Borra la suscripción con su historial de entregas.\n\n**Pendiente de la especificación** (accounts origin/main @ c34cba2c).",
+        "description": "Borra la suscripción con su historial de entregas.",
         "tags": ["Webhooks"],
         "x-fc-domain": "accounts",
-        "x-fc-permission": "accounts:write",
+        "x-fc-permission": "webhooks:write",
         "x-fc-pending": "accounts-webhooks",
         "parameters": [
           {
@@ -411,10 +552,10 @@
       "post": {
         "operationId": "pendingWebhookSubscription.rotateSecret",
         "summary": "Generar un secreto nuevo",
-        "description": "Devuelve el secreto nuevo una sola vez; el anterior deja de valer de inmediato.\n\n**Pendiente de la especificación** (accounts origin/main @ c34cba2c).",
+        "description": "Un secreto nuevo, que se muestra una sola vez; el anterior deja de valer.\n\n**No está abierta a claves de API:** con una clave responde `403 route_not_available`. Rotá el secreto desde el panel.",
         "tags": ["Webhooks"],
         "x-fc-domain": "accounts",
-        "x-fc-permission": "accounts:write",
+        "x-fc-permission": "webhooks:write",
         "x-fc-pending": "accounts-webhooks",
         "parameters": [
           {
@@ -433,17 +574,18 @@
               }
             }
           }
-        }
+        },
+        "x-fc-key-access": "closed"
       }
     },
     "/api/v1/webhooks/{id}/test": {
       "post": {
         "operationId": "pendingWebhookSubscription.test",
         "summary": "Enviar ahora un evento de prueba",
-        "description": "Una entrega firmada de `webhook.test`, sin reintentos. Queda en el historial.\n\n**Pendiente de la especificación** (accounts origin/main @ c34cba2c).",
+        "description": "Una entrega firmada de `webhook.test`, sin reintentos. Queda en el historial.",
         "tags": ["Webhooks"],
         "x-fc-domain": "accounts",
-        "x-fc-permission": "accounts:write",
+        "x-fc-permission": "webhooks:write",
         "x-fc-pending": "accounts-webhooks",
         "parameters": [
           {
@@ -469,10 +611,10 @@
       "get": {
         "operationId": "pendingWebhookSubscription.deliveries",
         "summary": "Ver el historial de entregas",
-        "description": "Un registro por intento, lo más reciente primero. Pagina con `page` y `per_page` (25 por defecto, 100 como máximo).\n\n**Pendiente de la especificación** (accounts origin/main @ c34cba2c).",
+        "description": "Un registro por intento, lo más reciente primero. Pagina con `page` y `per_page` (25 por defecto, 100 como máximo).",
         "tags": ["Webhooks"],
         "x-fc-domain": "accounts",
-        "x-fc-permission": "accounts:read",
+        "x-fc-permission": "webhooks:read",
         "x-fc-pending": "accounts-webhooks",
         "parameters": [
           {
@@ -541,6 +683,1708 @@
           }
         }
       }
+    },
+    "/api/v1/forms": {
+      "get": {
+        "operationId": "pendingForms.list",
+        "summary": "Listar formularios",
+        "tags": ["Formularios"],
+        "x-fc-domain": "conversations",
+        "x-fc-permission": "conversations:read",
+        "x-fc-pending": "conversations-forms",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "maxLength": 191 }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["draft", "published", "deprecated"] }
+          },
+          {
+            "name": "device_id",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100 },
+            "description": "Por defecto 25."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PendingForm" }
+                    },
+                    "links": { "type": "object" },
+                    "meta": { "type": "object" }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "pendingForms.create",
+        "summary": "Crear un formulario desde una plantilla",
+        "tags": ["Formularios"],
+        "x-fc-domain": "conversations",
+        "x-fc-permission": "conversations:write",
+        "x-fc-pending": "conversations-forms",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "device_id": { "type": "integer", "minimum": 1, "description": "El número principal." },
+                  "device_ids": {
+                    "type": "array",
+                    "maxItems": 50,
+                    "items": { "type": "integer" },
+                    "description": "Otros números donde publicarlo."
+                  },
+                  "template_key": { "type": "string", "description": "Una `key` de `GET /api/v1/forms/templates`." }
+                },
+                "required": ["device_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Creado como borrador.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/PendingForm" },
+                    "lint": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PendingFormLintIssue" }
+                    },
+                    "numbers": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PendingFormNumber" }
+                    }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/templates": {
+      "get": {
+        "operationId": "pendingForms.templates",
+        "summary": "Plantillas para empezar un formulario",
+        "tags": ["Formularios"],
+        "x-fc-domain": "conversations",
+        "x-fc-permission": "conversations:read",
+        "x-fc-pending": "conversations-forms",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "key": { "type": "string" },
+                          "title": { "type": "string" },
+                          "description": { "type": ["string", "null"] },
+                          "category": { "type": ["string", "null"] }
+                        },
+                        "required": ["key", "title"]
+                      }
+                    }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/{id}": {
+      "get": {
+        "operationId": "pendingForms.retrieve",
+        "summary": "Una versión de un formulario",
+        "tags": ["Formularios"],
+        "x-fc-domain": "conversations",
+        "x-fc-permission": "conversations:read",
+        "x-fc-pending": "conversations-forms",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "La versión del formulario."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/PendingForm" },
+                    "lint": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PendingFormLintIssue" }
+                    },
+                    "versions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer" },
+                          "version": { "type": "integer" },
+                          "status": { "type": "string" },
+                          "published_at": { "type": ["string", "null"] }
+                        }
+                      }
+                    },
+                    "numbers": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PendingFormNumber" }
+                    }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "pendingForms.update",
+        "summary": "Guardar la definición de un borrador",
+        "tags": ["Formularios"],
+        "x-fc-domain": "conversations",
+        "x-fc-permission": "conversations:write",
+        "x-fc-pending": "conversations-forms",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "La versión del formulario."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "maxLength": 120 },
+                  "definition": { "type": "object", "description": "Pantallas y campos del formulario." },
+                  "expected_updated_at": { "type": ["string", "null"], "description": "El `updated_at` que leíste: si cambió desde entonces responde `409 STALE`." }
+                },
+                "required": ["definition"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/PendingForm" },
+                    "lint": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PendingFormLintIssue" }
+                    }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "pendingForms.delete",
+        "summary": "Borrar un borrador",
+        "tags": ["Formularios"],
+        "x-fc-domain": "conversations",
+        "x-fc-permission": "conversations:write",
+        "x-fc-pending": "conversations-forms",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "La versión del formulario."
+          }
+        ],
+        "responses": {
+          "204": { "description": "Borrado. Una versión publicada responde `409 PUBLISHED`." }
+        }
+      }
+    },
+    "/api/v1/forms/{id}/versions": {
+      "post": {
+        "operationId": "pendingForms.createVersion",
+        "summary": "Abrir una versión nueva (borrador) de un formulario publicado",
+        "tags": ["Formularios"],
+        "x-fc-domain": "conversations",
+        "x-fc-permission": "conversations:write",
+        "x-fc-pending": "conversations-forms",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "La versión del formulario."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ya había un borrador: es ese (`created: false`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/PendingForm" },
+                    "lint": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PendingFormLintIssue" }
+                    },
+                    "created": { "type": "boolean" },
+                    "numbers": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PendingFormNumber" }
+                    }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Borrador nuevo (`created: true`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/PendingForm" },
+                    "lint": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PendingFormLintIssue" }
+                    },
+                    "created": { "type": "boolean" },
+                    "numbers": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PendingFormNumber" }
+                    }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/{id}/sync": {
+      "post": {
+        "operationId": "pendingForms.sync",
+        "summary": "Subir el borrador a Meta sin publicarlo",
+        "tags": ["Formularios"],
+        "x-fc-domain": "conversations",
+        "x-fc-permission": "conversations:write",
+        "x-fc-pending": "conversations-forms",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "La versión del formulario."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/PendingForm" },
+                    "lint": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PendingFormLintIssue" }
+                    },
+                    "numbers": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PendingFormNumber" }
+                    }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/{id}/publish": {
+      "post": {
+        "operationId": "pendingForms.publish",
+        "summary": "Publicar en Meta",
+        "tags": ["Formularios"],
+        "x-fc-domain": "conversations",
+        "x-fc-permission": "conversations:write",
+        "x-fc-pending": "conversations-forms",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "La versión del formulario."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Publicado. Si Meta lo rechaza: `502 META` con `meta_code` y `lint`; si no pasa la validación: `422 LINT`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/PendingForm" },
+                    "lint": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PendingFormLintIssue" }
+                    },
+                    "numbers": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PendingFormNumber" }
+                    }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/{id}/numbers": {
+      "get": {
+        "operationId": "pendingForms.numbers",
+        "summary": "Los números del formulario",
+        "tags": ["Formularios"],
+        "x-fc-domain": "conversations",
+        "x-fc-permission": "conversations:read",
+        "x-fc-pending": "conversations-forms",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "La versión del formulario."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "numbers": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PendingFormNumber" }
+                    }
+                  },
+                  "required": ["numbers"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "pendingForms.addNumber",
+        "summary": "Publicarlo también en otro número",
+        "tags": ["Formularios"],
+        "x-fc-domain": "conversations",
+        "x-fc-permission": "conversations:write",
+        "x-fc-pending": "conversations-forms",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "La versión del formulario."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "device_id": { "type": "integer" }
+                },
+                "required": ["device_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "numbers": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PendingFormNumber" }
+                    }
+                  },
+                  "required": ["numbers"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/{id}/numbers/{deviceId}": {
+      "delete": {
+        "operationId": "pendingForms.removeNumber",
+        "summary": "Sacarlo de un número",
+        "tags": ["Formularios"],
+        "x-fc-domain": "conversations",
+        "x-fc-permission": "conversations:write",
+        "x-fc-pending": "conversations-forms",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "La versión del formulario."
+          },
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El número principal no se puede sacar: `422 PRIMARY_NUMBER`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "numbers": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PendingFormNumber" }
+                    }
+                  },
+                  "required": ["numbers"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/{id}/numbers/retry": {
+      "post": {
+        "operationId": "pendingForms.retryNumbers",
+        "summary": "Reintentar los números que fallaron",
+        "tags": ["Formularios"],
+        "x-fc-domain": "conversations",
+        "x-fc-permission": "conversations:write",
+        "x-fc-pending": "conversations-forms",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "La versión del formulario."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "numbers": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/PendingFormNumber" }
+                    }
+                  },
+                  "required": ["numbers"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/families/{familyId}/definition": {
+      "get": {
+        "operationId": "pendingForms.definition",
+        "summary": "La definición vigente de un formulario",
+        "tags": ["Formularios"],
+        "x-fc-domain": "conversations",
+        "x-fc-permission": "conversations:read",
+        "x-fc-pending": "conversations-forms",
+        "parameters": [
+          {
+            "name": "familyId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "El formulario (`family_id`)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "family_id": { "type": "integer" },
+                            "form_id": { "type": "integer" },
+                            "name": { "type": "string" },
+                            "status": { "type": "string" },
+                            "version": { "type": "integer" },
+                            "definition": {}
+                          }
+                        },
+                        { "type": "null" }
+                      ]
+                    }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/families/{familyId}/versions": {
+      "get": {
+        "operationId": "pendingForms.versions",
+        "summary": "Las versiones de un formulario",
+        "tags": ["Formularios"],
+        "x-fc-domain": "conversations",
+        "x-fc-permission": "conversations:read",
+        "x-fc-pending": "conversations-forms",
+        "parameters": [
+          {
+            "name": "familyId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "El formulario (`family_id`)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer" },
+                          "version": { "type": "integer" },
+                          "name": { "type": "string" },
+                          "status": { "type": "string" },
+                          "is_current": { "type": "boolean" },
+                          "published_at": { "type": ["string", "null"] },
+                          "deprecated_at": { "type": ["string", "null"] },
+                          "meta_flow_id": { "type": ["string", "null"] },
+                          "retained_reason": { "type": ["string", "null"] },
+                          "responses": { "type": "integer" },
+                          "templates": {}
+                        }
+                      }
+                    }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/families/{familyId}/responses": {
+      "get": {
+        "operationId": "pendingForms.responses",
+        "summary": "Las respuestas de un formulario",
+        "tags": ["Formularios"],
+        "x-fc-domain": "conversations",
+        "x-fc-permission": "conversations:read",
+        "x-fc-pending": "conversations-forms",
+        "parameters": [
+          {
+            "name": "familyId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "El formulario (`family_id`)."
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "version_id",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "origin",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "type": "object" }
+                    },
+                    "columns": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/families/{familyId}/responses/{runId}": {
+      "get": {
+        "operationId": "pendingForms.response",
+        "summary": "Una respuesta",
+        "tags": ["Formularios"],
+        "x-fc-domain": "conversations",
+        "x-fc-permission": "conversations:read",
+        "x-fc-pending": "conversations-forms",
+        "parameters": [
+          {
+            "name": "familyId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "El formulario (`family_id`)."
+          },
+          {
+            "name": "runId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {}
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forms/families/{familyId}/metrics": {
+      "get": {
+        "operationId": "pendingForms.metrics",
+        "summary": "El embudo de un formulario: enviados, abiertos, completados",
+        "tags": ["Formularios"],
+        "x-fc-domain": "conversations",
+        "x-fc-permission": "conversations:read",
+        "x-fc-pending": "conversations-forms",
+        "parameters": [
+          {
+            "name": "familyId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "El formulario (`family_id`)."
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "version_id",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {}
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contacts/{contact}/message/form": {
+      "post": {
+        "operationId": "pendingForms.send",
+        "summary": "Enviar un formulario a un contacto",
+        "tags": ["Mensajes"],
+        "x-fc-domain": "conversations",
+        "x-fc-permission": "conversations:send",
+        "x-fc-pending": "conversations-forms",
+        "description": "Manda un formulario publicado en el número. Es un envío: sigue las reglas de WhatsApp (ventana de 24 horas, ritmo, frenos contra spam) y responde el mensaje en cola. Errores propios: `404 form_not_found`, `422 form_not_published`, `422 form_not_on_number`, `422 number_not_eligible`, `422 recipient_unreachable`.",
+        "parameters": [
+          {
+            "name": "contact",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "form_id": { "type": "integer", "minimum": 1, "description": "El formulario (`family_id`)." },
+                  "device_id": { "type": "integer", "minimum": 1 },
+                  "text": { "type": "string", "minLength": 1, "maxLength": 1024, "description": "El texto del mensaje. Por defecto, el nombre del formulario." },
+                  "button_text": { "type": "string", "minLength": 1, "maxLength": 30, "description": "El texto del botón, sin emojis. Por defecto «Abrir»." },
+                  "client_reference": { "$ref": "#/components/schemas/PendingClientReference" }
+                },
+                "required": ["form_id", "device_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "El formulario quedó registrado como mensaje (`type: whatsapp_form`, `status: queued`).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingSendResult" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups": {
+      "post": {
+        "operationId": "pendingGroups.create",
+        "summary": "Crear un grupo",
+        "tags": ["Grupos"],
+        "x-fc-domain": "communities",
+        "x-fc-permission": "communities:operate",
+        "x-fc-pending": "communities-group-actions",
+        "description": "Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.\n\nCon un número QR, `participants` es obligatorio; con uno oficial no se acepta (los invitás después).",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "device_id": { "type": "integer", "description": "El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo." },
+                  "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+                  "description": { "type": ["string", "null"], "maxLength": 2048 },
+                  "participants": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "items": { "type": "string", "maxLength": 32 },
+                    "description": "Solo con un número QR. Sin el número que ejecuta."
+                  },
+                  "join_approval_required": { "type": "boolean", "description": "Solo con un número oficial." }
+                },
+                "required": ["device_id", "name"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "En cola.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingGroupActionAccepted" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/actions/{action}": {
+      "get": {
+        "operationId": "pendingGroups.action",
+        "summary": "Una acción de grupo",
+        "tags": ["Grupos"],
+        "x-fc-domain": "communities",
+        "x-fc-permission": "communities:read",
+        "x-fc-pending": "communities-group-actions",
+        "parameters": [
+          {
+            "name": "action",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "El `action_id` que devolvió la acción."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/PendingGroupAction" }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group}/participants": {
+      "post": {
+        "operationId": "pendingGroups.addParticipants",
+        "summary": "Agregar participantes",
+        "tags": ["Grupos"],
+        "x-fc-domain": "communities",
+        "x-fc-permission": "communities:operate",
+        "x-fc-pending": "communities-group-actions",
+        "description": "Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.\n\nCon un número oficial los invita (`invited`).",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "El uid de WhatsApp del grupo (`…@g.us`)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "device_id": { "type": "integer", "description": "El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo." },
+                  "phones": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "items": { "type": "string", "maxLength": 32 },
+                    "description": "Teléfonos con código de país. Se normalizan y se quitan los repetidos; después no pueden ser más de 20 (`422 max_phones`)."
+                  }
+                },
+                "required": ["device_id", "phones"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "En cola.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingGroupActionAccepted" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group}/participants/remove": {
+      "post": {
+        "operationId": "pendingGroups.removeParticipants",
+        "summary": "Sacar participantes",
+        "tags": ["Grupos"],
+        "x-fc-domain": "communities",
+        "x-fc-permission": "communities:operate",
+        "x-fc-pending": "communities-group-actions",
+        "description": "Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "El uid de WhatsApp del grupo (`…@g.us`)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "device_id": { "type": "integer", "description": "El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo." },
+                  "phones": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "items": { "type": "string", "maxLength": 32 },
+                    "description": "Teléfonos con código de país. Se normalizan y se quitan los repetidos; después no pueden ser más de 20 (`422 max_phones`)."
+                  }
+                },
+                "required": ["device_id", "phones"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "En cola.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingGroupActionAccepted" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group}/admins": {
+      "post": {
+        "operationId": "pendingGroups.promoteAdmins",
+        "summary": "Hacer admins",
+        "tags": ["Grupos"],
+        "x-fc-domain": "communities",
+        "x-fc-permission": "communities:operate",
+        "x-fc-pending": "communities-group-actions",
+        "description": "Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.\n\nSolo números QR. Cada teléfono tiene que ser del grupo.",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "El uid de WhatsApp del grupo (`…@g.us`)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "device_id": { "type": "integer", "description": "El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo." },
+                  "phones": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "items": { "type": "string", "maxLength": 32 },
+                    "description": "Teléfonos con código de país. Se normalizan y se quitan los repetidos; después no pueden ser más de 20 (`422 max_phones`)."
+                  }
+                },
+                "required": ["device_id", "phones"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "En cola.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingGroupActionAccepted" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group}/admins/remove": {
+      "post": {
+        "operationId": "pendingGroups.demoteAdmins",
+        "summary": "Quitar admins",
+        "tags": ["Grupos"],
+        "x-fc-domain": "communities",
+        "x-fc-permission": "communities:operate",
+        "x-fc-pending": "communities-group-actions",
+        "description": "Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.\n\nSolo números QR.",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "El uid de WhatsApp del grupo (`…@g.us`)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "device_id": { "type": "integer", "description": "El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo." },
+                  "phones": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "items": { "type": "string", "maxLength": 32 },
+                    "description": "Teléfonos con código de país. Se normalizan y se quitan los repetidos; después no pueden ser más de 20 (`422 max_phones`)."
+                  }
+                },
+                "required": ["device_id", "phones"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "En cola.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingGroupActionAccepted" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group}/name": {
+      "put": {
+        "operationId": "pendingGroups.updateName",
+        "summary": "Cambiar el nombre",
+        "tags": ["Grupos"],
+        "x-fc-domain": "communities",
+        "x-fc-permission": "communities:operate",
+        "x-fc-pending": "communities-group-actions",
+        "description": "Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "El uid de WhatsApp del grupo (`…@g.us`)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "device_id": { "type": "integer", "description": "El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo." },
+                  "name": { "type": "string", "minLength": 1, "maxLength": 100 }
+                },
+                "required": ["device_id", "name"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "En cola.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingGroupActionAccepted" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group}/description": {
+      "put": {
+        "operationId": "pendingGroups.updateDescription",
+        "summary": "Cambiar la descripción",
+        "tags": ["Grupos"],
+        "x-fc-domain": "communities",
+        "x-fc-permission": "communities:operate",
+        "x-fc-pending": "communities-group-actions",
+        "description": "Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.\n\n`null` o vacía la borra (no con un número oficial).",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "El uid de WhatsApp del grupo (`…@g.us`)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "device_id": { "type": "integer", "description": "El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo." },
+                  "description": { "type": ["string", "null"], "maxLength": 2048 }
+                },
+                "required": ["device_id", "description"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "En cola.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingGroupActionAccepted" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group}/photo": {
+      "put": {
+        "operationId": "pendingGroups.updatePhoto",
+        "summary": "Cambiar la foto",
+        "tags": ["Grupos"],
+        "x-fc-domain": "communities",
+        "x-fc-permission": "communities:operate",
+        "x-fc-pending": "communities-group-actions",
+        "description": "Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.\n\nSolo números QR. `photo_url`: una URL `https` pública a un JPG o PNG.",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "El uid de WhatsApp del grupo (`…@g.us`)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "device_id": { "type": "integer", "description": "El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo." },
+                  "photo_url": { "type": "string", "maxLength": 2048 }
+                },
+                "required": ["device_id", "photo_url"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "En cola.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingGroupActionAccepted" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group}/settings": {
+      "put": {
+        "operationId": "pendingGroups.updateSettings",
+        "summary": "Cambiar quién puede escribir",
+        "tags": ["Grupos"],
+        "x-fc-domain": "communities",
+        "x-fc-permission": "communities:operate",
+        "x-fc-pending": "communities-group-actions",
+        "description": "Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.\n\nSolo números QR.",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "El uid de WhatsApp del grupo (`…@g.us`)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "device_id": { "type": "integer", "description": "El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo." },
+                  "members_can_send_messages": { "type": "boolean" }
+                },
+                "required": ["device_id", "members_can_send_messages"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "En cola.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingGroupActionAccepted" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group}/invite-link/renew": {
+      "post": {
+        "operationId": "pendingGroups.renewInviteLink",
+        "summary": "Renovar el enlace de invitación",
+        "tags": ["Grupos"],
+        "x-fc-domain": "communities",
+        "x-fc-permission": "communities:operate",
+        "x-fc-pending": "communities-group-actions",
+        "description": "Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.\n\nEl enlace nuevo llega en `result.invite_link`.",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "El uid de WhatsApp del grupo (`…@g.us`)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "device_id": { "type": "integer", "description": "El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo." }
+                },
+                "required": ["device_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "En cola.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingGroupActionAccepted" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group}/invite-link/live": {
+      "get": {
+        "operationId": "pendingGroups.inviteLink",
+        "summary": "El enlace de invitación, leído en vivo",
+        "tags": ["Grupos"],
+        "x-fc-domain": "communities",
+        "x-fc-permission": "communities:read",
+        "x-fc-pending": "communities-group-actions",
+        "description": "Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.\n\nSe guarda 30 segundos por grupo y número. Si WhatsApp falla: `502 provider_error`.",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "El uid de WhatsApp del grupo (`…@g.us`)."
+          },
+          {
+            "name": "device_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "invite_link": { "type": "string" }
+                      },
+                      "required": ["invite_link"]
+                    }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group}/messages": {
+      "post": {
+        "operationId": "pendingGroups.sendMessage",
+        "summary": "Enviar un mensaje a un grupo",
+        "tags": ["Grupos"],
+        "x-fc-domain": "communities",
+        "x-fc-permission": "communities:send",
+        "x-fc-pending": "communities-group-actions",
+        "description": "Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.\n\nEl id de WhatsApp del mensaje llega en `result.message.uid` de la acción.",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "El uid de WhatsApp del grupo (`…@g.us`)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "device_id": { "type": "integer", "description": "El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo." },
+                  "type": { "type": "string", "enum": ["text", "image", "video", "audio", "document"] },
+                  "text": { "type": "string", "minLength": 1, "maxLength": 4096, "description": "Solo con `type: text`." },
+                  "media_url": { "type": "string", "maxLength": 255, "description": "Una URL `https` con la extensión del tipo. Solo con archivos." },
+                  "caption": { "type": ["string", "null"], "maxLength": 1024, "description": "Solo imagen o video." },
+                  "file_name": { "type": ["string", "null"], "maxLength": 255, "description": "Solo documento." }
+                },
+                "required": ["device_id", "type"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "En cola.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingGroupActionAccepted" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group}/join-requests": {
+      "get": {
+        "operationId": "pendingGroups.joinRequests",
+        "summary": "Las solicitudes de unión",
+        "tags": ["Grupos"],
+        "x-fc-domain": "communities",
+        "x-fc-permission": "communities:read",
+        "x-fc-pending": "communities-group-actions",
+        "description": "Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.\n\nSolo grupos de números oficiales; hasta 100, en el orden de WhatsApp.",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "El uid de WhatsApp del grupo (`…@g.us`)."
+          },
+          {
+            "name": "device_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "participant": {
+                            "type": "object",
+                            "properties": {
+                              "identity": { "type": "string" },
+                              "identity_type": { "type": "string", "enum": ["phone", "whatsapp_user"] },
+                              "name": { "type": ["string", "null"] }
+                            },
+                            "required": ["identity", "identity_type", "name"]
+                          },
+                          "requested_at": { "type": ["string", "null"], "format": "date-time" }
+                        },
+                        "required": ["participant", "requested_at"]
+                      }
+                    }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group}/join-requests/approve": {
+      "post": {
+        "operationId": "pendingGroups.approveJoinRequests",
+        "summary": "Aprobar solicitudes de unión",
+        "tags": ["Grupos"],
+        "x-fc-domain": "communities",
+        "x-fc-permission": "communities:operate",
+        "x-fc-pending": "communities-group-actions",
+        "description": "Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.\n\nSolo números oficiales, y solo si `capabilities.groups.join_requests` es `list_and_decide`.",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "El uid de WhatsApp del grupo (`…@g.us`)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "device_id": { "type": "integer", "description": "El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo." },
+                  "phones": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "items": { "type": "string", "maxLength": 32 },
+                    "description": "Teléfonos con código de país. Se normalizan y se quitan los repetidos; después no pueden ser más de 20 (`422 max_phones`)."
+                  }
+                },
+                "required": ["device_id", "phones"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "En cola.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingGroupActionAccepted" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/{group}/join-requests/reject": {
+      "post": {
+        "operationId": "pendingGroups.rejectJoinRequests",
+        "summary": "Rechazar solicitudes de unión",
+        "tags": ["Grupos"],
+        "x-fc-domain": "communities",
+        "x-fc-permission": "communities:operate",
+        "x-fc-pending": "communities-group-actions",
+        "description": "Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.\n\nSolo números oficiales, y solo si `capabilities.groups.join_requests` es `list_and_decide`.",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "El uid de WhatsApp del grupo (`…@g.us`)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "device_id": { "type": "integer", "description": "El número de tu cuenta que ejecuta la acción: tiene que ser admin del grupo." },
+                  "phones": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "items": { "type": "string", "maxLength": 32 },
+                    "description": "Teléfonos con código de país. Se normalizan y se quitan los repetidos; después no pueden ser más de 20 (`422 max_phones`)."
+                  }
+                },
+                "required": ["device_id", "phones"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "En cola.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingGroupActionAccepted" }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "operationPatches": [
@@ -548,25 +2392,29 @@
       "method": "post",
       "path": "/api/v1/contacts/{contact}/message",
       "while": { "x-portal-v0": "send_pending" },
-      "x-fc-pending": "conversations-c2",
+      "x-fc-pending": "conversations-send",
       "requestBodyProperties": {
-        "client_reference": { "$ref": "#/components/schemas/PendingClientReference" }
+        "client_reference": { "$ref": "#/components/schemas/PendingClientReference" },
+        "file_type": { "$ref": "#/components/schemas/PendingFileType" },
+        "file_name": { "$ref": "#/components/schemas/PendingFileName" }
       }
     },
     {
       "method": "post",
       "path": "/api/v1/message/send-message",
       "while": { "x-portal-v0": "send_pending" },
-      "x-fc-pending": "conversations-c2",
+      "x-fc-pending": "conversations-send",
       "requestBodyProperties": {
-        "client_reference": { "$ref": "#/components/schemas/PendingClientReference" }
+        "client_reference": { "$ref": "#/components/schemas/PendingClientReference" },
+        "file_type": { "$ref": "#/components/schemas/PendingFileType" },
+        "file_name": { "$ref": "#/components/schemas/PendingFileName" }
       }
     },
     {
       "method": "post",
       "path": "/api/v1/devices/{device}/templates/{template}/send-template",
       "while": { "x-portal-v0": "send_pending" },
-      "x-fc-pending": "conversations-c2",
+      "x-fc-pending": "conversations-send",
       "requestBodyProperties": {
         "client_reference": { "$ref": "#/components/schemas/PendingClientReference" }
       }
@@ -575,7 +2423,7 @@
       "method": "post",
       "path": "/api/v1/contacts/{contact}/message/contact-card",
       "while": { "x-portal-v0": "send_pending" },
-      "x-fc-pending": "conversations-c2",
+      "x-fc-pending": "conversations-send",
       "requestBodyProperties": {
         "client_reference": { "$ref": "#/components/schemas/PendingClientReference" }
       }
@@ -584,10 +2432,86 @@
       "method": "post",
       "path": "/api/v1/contacts/{contact}/messages/{message}/forward",
       "while": { "x-portal-v0": "send_pending" },
-      "x-fc-pending": "conversations-c2",
+      "x-fc-pending": "conversations-send",
       "requestBodyProperties": {
         "client_reference": { "$ref": "#/components/schemas/PendingClientReference" }
       }
+    }
+  ],
+  "schemaPatches": [
+    {
+      "schema": "DeviceResource",
+      "x-fc-pending": "accounts-devices",
+      "properties": {
+        "number_key": { "type": ["string", "null"] },
+        "number_key_confirmed": { "type": "boolean" },
+        "is_coexistence": { "type": "boolean", "description": "El número usa la app de WhatsApp Business y la Cloud API a la vez." },
+        "slot_state": { "type": "string", "enum": ["free", "reserved", "pending", "held"] },
+        "pool_suspended": { "type": "boolean" },
+        "pool_suspension_reason": { "type": ["string", "null"], "enum": ["over_pool", "payment_lapse", null] },
+        "pool_keep": { "type": "boolean" },
+        "qr_allowed": { "type": "boolean" },
+        "can_change_to_meta": { "type": "boolean" },
+        "capabilities": {
+          "type": "object",
+          "description": "Lo que el número puede hacer por la API, según su proveedor (QR o WhatsApp Cloud) y lo que tu cuenta tiene habilitado. Consultalo antes de ofrecer una función: un envío que el número no soporta responde `422 provider_unsupported`.",
+          "properties": {
+            "messages": {
+              "type": "object",
+              "description": "Tipos de mensaje que acepta el número.",
+              "properties": {
+                "text": { "type": "boolean" },
+                "media": { "type": "boolean" },
+                "buttons": { "type": "boolean" },
+                "lists": { "type": "boolean" },
+                "templates": { "type": "boolean" },
+                "location": { "type": "boolean" },
+                "voice_note": { "type": "boolean" },
+                "polls": { "type": "boolean" },
+                "events": { "type": "boolean" },
+                "contact_card": { "type": "boolean" },
+                "reactions": { "type": "boolean" }
+              },
+              "required": ["text", "media", "buttons", "lists", "templates", "location", "voice_note", "polls", "events", "contact_card", "reactions"]
+            },
+            "groups": {
+              "type": "object",
+              "description": "Acciones de grupo disponibles por este número. Todo `false` cuando el número no tiene grupos.",
+              "properties": {
+                "create": { "type": "boolean" },
+                "add_participants": {
+                  "description": "`direct`: los agrega; `invite`: les manda el enlace de invitación; `false`: no se puede.",
+                  "anyOf": [
+                    { "type": "string", "enum": ["direct", "invite"] },
+                    { "type": "boolean", "const": false }
+                  ]
+                },
+                "remove_participants": { "type": "boolean" },
+                "admins": { "type": "boolean" },
+                "photo": { "type": "boolean" },
+                "settings": { "type": "boolean" },
+                "invite_link": { "type": "boolean" },
+                "send": { "type": "boolean" },
+                "join_requests": {
+                  "description": "`list`: solo listar las solicitudes de unión; `list_and_decide`: también aprobarlas o rechazarlas; `false`: no se puede.",
+                  "anyOf": [
+                    { "type": "string", "enum": ["list", "list_and_decide"] },
+                    { "type": "boolean", "const": false }
+                  ]
+                }
+              },
+              "required": ["create", "add_participants", "remove_participants", "admins", "photo", "settings", "invite_link", "send", "join_requests"]
+            },
+            "statuses": {
+              "type": "array",
+              "description": "Los estados que llegan por `message.status_changed` para los mensajes de este número.",
+              "items": { "type": "string", "enum": ["sent", "delivered", "read", "failed"] }
+            }
+          },
+          "required": ["messages", "groups", "statuses"]
+        }
+      },
+      "required": ["capabilities"]
     }
   ],
   "responsePatches": [
@@ -595,38 +2519,43 @@
       "method": "post",
       "path": "/api/v1/contacts/{contact}/message",
       "while": { "x-portal-v0": "send_pending" },
-      "x-fc-pending": "conversations-send-result",
+      "x-fc-pending": "conversations-send",
       "responses": {
         "200": {
-          "description": "El mensaje quedó registrado (`status: queued`) y sale desde la cola. `message` es `null` si no se pudo leer de vuelta.",
+          "description": "El mensaje quedó registrado (`status: queued`) y sale desde la cola.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PendingSendResult" }
+            }
+          }
+        },
+        "415": {
+          "description": "La extensión del archivo no está soportada y no mandaste `file_type`.",
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "message": {
-                    "anyOf": [
-                      { "$ref": "#/components/schemas/PendingPublicMessage" },
-                      { "type": "null" }
-                    ]
+                  "error": { "type": "string" },
+                  "supported_file_types": {
+                    "type": "array",
+                    "items": { "type": "string" }
                   }
-                },
-                "required": ["message"]
+                }
               }
             }
           }
-        },
-        "204": { "description": "Hasta que se despliegue conversations feat/envio-devuelve-id: sin cuerpo." }
+        }
       }
     },
     {
       "method": "post",
       "path": "/api/v1/contacts/{contact}/message/contact-card",
       "while": { "x-portal-v0": "send_pending" },
-      "x-fc-pending": "conversations-send-result",
+      "x-fc-pending": "conversations-send",
       "responses": {
         "200": {
-          "description": "Una entrada por tarjeta, en orden: la primera es el mensaje (o `null` si no se pudo leer), las demás una marca `queued` o `failed` sin id.",
+          "description": "Un mensaje por tarjeta, en el orden de `contact_card_ids`: `queued`, o `failed` (`not_queued`) si no se pudo encolar.",
           "content": {
             "application/json": {
               "schema": {
@@ -634,28 +2563,21 @@
                 "properties": {
                   "messages": {
                     "type": "array",
-                    "items": {
-                      "anyOf": [
-                        { "$ref": "#/components/schemas/PendingPublicMessage" },
-                        { "$ref": "#/components/schemas/PendingQueuedContactCard" },
-                        { "type": "null" }
-                      ]
-                    }
+                    "items": { "$ref": "#/components/schemas/PendingPublicMessage" }
                   }
                 },
                 "required": ["messages"]
               }
             }
           }
-        },
-        "204": { "description": "Hasta que se despliegue conversations feat/envio-devuelve-id: sin cuerpo." }
+        }
       }
     },
     {
       "method": "post",
       "path": "/api/v1/contacts/{contact}/messages/{message}/forward",
       "while": { "x-portal-v0": "send_pending" },
-      "x-fc-pending": "conversations-send-result",
+      "x-fc-pending": "conversations-send",
       "responses": {
         "200": {
           "description": "Un ítem por destino, en el orden pedido, cada uno con su `message` (o `null`: en cola sin registrar todavía, bloqueado, o no se pudo leer).",
@@ -674,24 +2596,29 @@
       "method": "post",
       "path": "/api/v1/message/send-message",
       "while": { "x-portal-v0": "send_pending" },
-      "x-fc-pending": "conversations-send-result",
+      "x-fc-pending": "conversations-send",
       "responses": {
         "200": {
-          "description": "El mensaje registrado, y `error` si el envío directo falló.",
+          "description": "El mensaje quedó registrado (`status: queued`) y sale desde la cola.",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PendingSendResult" }
+            }
+          }
+        },
+        "415": {
+          "description": "La extensión del archivo no está soportada y no mandaste `file_type`.",
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "message": {
-                    "anyOf": [
-                      { "$ref": "#/components/schemas/PendingPublicMessage" },
-                      { "type": "null" }
-                    ]
-                  },
-                  "error": { "type": ["string", "null"] }
-                },
-                "required": ["message", "error"]
+                  "error": { "type": "string" },
+                  "supported_file_types": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                }
               }
             }
           }
@@ -702,48 +2629,32 @@
       "method": "post",
       "path": "/api/v1/devices/{device}/templates/{template}/send-template",
       "while": { "x-portal-v0": "send_pending" },
-      "x-fc-pending": "conversations-send-result",
+      "x-fc-pending": "conversations-send",
       "responses": {
         "200": {
-          "description": "La plantilla quedó registrada como mensaje.",
+          "description": "La plantilla quedó registrada como mensaje (`status: queued`).",
           "content": {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "message": {
-                    "anyOf": [
-                      { "$ref": "#/components/schemas/PendingPublicMessage" },
-                      { "type": "null" }
-                    ]
-                  }
-                },
-                "required": ["message"]
-              }
+              "schema": { "$ref": "#/components/schemas/PendingSendResult" }
             }
           }
         },
-        "502": {
-          "description": "Meta rechazó la plantilla. El cuerpo llega en `APIError.body`.",
+        "422": {
+          "description": "`template_unresolved_placeholder`: una variable apunta a un campo que no existe (`placeholders`, hasta 20, y `count`); `recipient_mismatch`; o una regla de envío.",
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "properties": {
                   "error": { "type": "string" },
-                  "error_code": { "type": ["string", "null"] },
+                  "message": { "type": "string" },
                   "placeholders": {
                     "type": "array",
                     "items": { "type": "string" }
                   },
-                  "message": {
-                    "anyOf": [
-                      { "$ref": "#/components/schemas/PendingPublicMessage" },
-                      { "type": "null" }
-                    ]
-                  }
+                  "count": { "type": "integer" }
                 },
-                "required": ["error", "error_code", "placeholders", "message"]
+                "required": ["error", "message"]
               }
             }
           }
@@ -755,10 +2666,10 @@
     "message.status_changed": {
       "post": {
         "summary": "message.status_changed",
-        "description": "Cambió el estado de entrega de un mensaje 1:1 enviado. Un aviso por transición, nunca uno que retroceda. Hay que pedirlo de forma explícita en `events`.",
-        "x-fc-status": "planned",
+        "description": "Cambió el estado de entrega de un mensaje que enviaste con la API. Un aviso por transición, nunca uno que retroceda; `queued` no se avisa. Hay que pedirlo de forma explícita en `events`.",
+        "x-fc-status": "live",
         "x-fc-domain": "conversations",
-        "x-fc-pending": "conversations-c1",
+        "x-fc-pending": "conversations-status",
         "x-fc-replace-while": { "x-fc-status": "planned" },
         "requestBody": {
           "content": {
@@ -774,15 +2685,7 @@
                       "device_id": { "type": ["integer", "null"], "description": "El número de tu cuenta que envió el mensaje." },
                       "status": { "type": "string", "enum": ["sent", "delivered", "read", "failed"] },
                       "previous_status": { "type": ["string", "null"], "enum": ["sent", "delivered", "read", "failed", null] },
-                      "error": {
-                        "type": "object",
-                        "description": "Solo cuando `status` es `failed`.",
-                        "properties": {
-                          "code": { "type": ["integer", "null"] },
-                          "title": { "type": ["string", "null"] }
-                        },
-                        "required": ["code", "title"]
-                      },
+                      "error": { "$ref": "#/components/schemas/PendingMessageError", "description": "Solo cuando `status` es `failed`." },
                       "occurred_at": { "type": "string", "format": "date-time" },
                       "client_reference": { "type": ["string", "null"], "description": "La `client_reference` que mandaste en el envío, o `null`." }
                     },
@@ -1140,21 +3043,79 @@
     "group_action.failed": {
       "post": {
         "summary": "group_action.failed",
-        "description": "Una acción automática sobre un grupo falló.",
+        "description": "Falló una acción sobre un grupo: una de una campaña (`action.uuid` es `null`) o una pedida por la API (`action.uuid` es el `action_id`). Las acciones con teléfonos no lo emiten: terminan con `group_action.completed` y el resultado de cada uno.",
         "x-fc-status": "live",
         "x-fc-domain": "communities",
-        "x-fc-pending": "accounts-webhooks",
+        "x-fc-pending": "communities-events",
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": { "type": "object" },
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "campaign": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "uuid": { "type": "string" },
+                              "name": { "type": ["string", "null"] }
+                            },
+                            "required": ["uuid", "name"]
+                          },
+                          { "type": "null" }
+                        ]
+                      },
+                      "pipeline": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "uuid": { "type": "string" },
+                              "name": { "type": ["string", "null"] }
+                            },
+                            "required": ["uuid", "name"]
+                          },
+                          { "type": "null" }
+                        ]
+                      },
+                      "group": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "uid": { "type": "string" },
+                              "name": { "type": ["string", "null"] }
+                            },
+                            "required": ["uid", "name"]
+                          },
+                          { "type": "null" }
+                        ]
+                      },
+                      "action": {
+                        "type": "object",
+                        "properties": {
+                          "uuid": { "type": ["string", "null"], "description": "El `action_id` de una acción pedida por la API; `null` en las de una campaña." },
+                          "type": { "type": "string" }
+                        },
+                        "required": ["uuid", "type"]
+                      },
+                      "reason": { "type": "string" }
+                    },
+                    "required": ["campaign", "pipeline", "group", "action", "reason"]
+                  }
+                }
+              },
               "example": {
                 "data": {
-                  "campaign": { "uuid": "xK9mQz", "name": "Campaña de ejemplo" },
-                  "pipeline": { "uuid": "bN7vLs", "name": "Pipeline de ejemplo" },
-                  "group": { "uid": "120363000000000000@g.us", "name": "Grupo de ejemplo" },
-                  "action": { "type": "tipo_de_ejemplo" },
-                  "reason": "motivo_de_ejemplo"
+                  "campaign": null,
+                  "pipeline": null,
+                  "group": { "uid": "120363000000000001@g.us", "name": "Grupo de ejemplo" },
+                  "action": { "uuid": "9b2f0a8e-1c3d-4e5f-8a7b-6c5d4e3f2a10", "type": "update_name" },
+                  "reason": "device_not_group_admin"
                 }
               }
             }
@@ -1226,6 +3187,389 @@
                   "campaign": { "uuid": "xK9mQz", "name": "Campaña de ejemplo" },
                   "trigger": "participants_limit",
                   "participants": 1024
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "whatsapp_form.completed": {
+      "post": {
+        "summary": "whatsapp_form.completed",
+        "description": "Un contacto completó un formulario que le enviaste.",
+        "x-fc-status": "live",
+        "x-fc-domain": "conversations",
+        "x-fc-pending": "conversations-forms",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "form": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer", "description": "El formulario (`family_id`)." },
+                          "name": { "type": "string" },
+                          "version_id": { "type": "integer" }
+                        },
+                        "required": ["id", "name", "version_id"]
+                      },
+                      "message_id": { "type": ["integer", "null"] },
+                      "contact_id": { "type": ["integer", "null"] },
+                      "device_id": { "type": ["integer", "null"] },
+                      "answers": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "key": { "type": "string" },
+                            "label": { "type": ["string", "null"] },
+                            "value": {
+                              "anyOf": [
+                                { "type": "boolean" },
+                                { "type": "number" },
+                                { "type": "string" },
+                                {
+                                  "type": "array",
+                                  "items": { "type": "string" }
+                                },
+                                { "type": "null" }
+                              ]
+                            }
+                          },
+                          "required": ["key", "label", "value"]
+                        }
+                      },
+                      "occurred_at": { "type": "string", "format": "date-time" }
+                    },
+                    "required": ["form", "message_id", "contact_id", "device_id", "answers", "occurred_at"]
+                  }
+                }
+              },
+              "example": {
+                "data": {
+                  "form": { "id": 12, "name": "Encuesta de ejemplo", "version_id": 34 },
+                  "message_id": 1002,
+                  "contact_id": 2001,
+                  "device_id": 3,
+                  "answers": [
+                    { "key": "nombre", "label": "Tu nombre", "value": "Contacto de ejemplo" }
+                  ],
+                  "occurred_at": "2026-10-22T12:00:00Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "group_action.completed": {
+      "post": {
+        "summary": "group_action.completed",
+        "description": "Terminó una acción de grupo pedida por la API. `action.uuid` es el `action_id` que te devolvió.",
+        "x-fc-status": "live",
+        "x-fc-domain": "communities",
+        "x-fc-pending": "communities-events",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "type": "object",
+                        "properties": {
+                          "uuid": { "type": "string" },
+                          "type": { "type": "string" }
+                        },
+                        "required": ["uuid", "type"]
+                      },
+                      "group": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "uid": { "type": "string" },
+                              "name": { "type": ["string", "null"] }
+                            },
+                            "required": ["uid", "name"]
+                          },
+                          { "type": "null" }
+                        ]
+                      },
+                      "campaign": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "uuid": { "type": "string" },
+                              "name": { "type": "string" }
+                            }
+                          },
+                          { "type": "null" }
+                        ]
+                      },
+                      "result": {
+                        "type": "object",
+                        "description": "Con teléfonos: `participants`; al crear o renovar el enlace: `invite_link`; al enviar: `message.uid`; el resto, vacío.",
+                        "properties": {
+                          "participants": {
+                            "type": "array",
+                            "items": { "$ref": "#/components/schemas/PendingGroupParticipantResult" }
+                          },
+                          "invite_link": { "type": "string" },
+                          "message": {
+                            "type": "object",
+                            "properties": {
+                              "uid": { "type": "string" }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "required": ["action", "group", "campaign", "result"]
+                  }
+                }
+              },
+              "example": {
+                "data": {
+                  "action": { "uuid": "9b2f0a8e-1c3d-4e5f-8a7b-6c5d4e3f2a10", "type": "add_participants" },
+                  "group": { "uid": "120363000000000001@g.us", "name": "Grupo de ejemplo" },
+                  "campaign": null,
+                  "result": {
+                    "participants": [
+                      { "identity": "5491100000000", "identity_type": "phone", "status": "added", "reason": null }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "group.message_received": {
+      "post": {
+        "summary": "group.message_received",
+        "description": "Alguien escribió en un grupo de uno de tus números. No se emite para los mensajes de tus propios números.",
+        "x-fc-status": "live",
+        "x-fc-domain": "communities",
+        "x-fc-pending": "communities-events",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "group": {
+                        "type": "object",
+                        "properties": {
+                          "uid": { "type": "string" },
+                          "name": { "type": ["string", "null"] }
+                        },
+                        "required": ["uid", "name"]
+                      },
+                      "message": {
+                        "type": "object",
+                        "properties": {
+                          "uid": { "type": "string" },
+                          "type": { "type": "string" },
+                          "text": { "type": ["string", "null"], "description": "Solo con `type: text`." },
+                          "caption": { "type": ["string", "null"] },
+                          "media_url": { "type": ["string", "null"] },
+                          "mime_type": { "type": ["string", "null"] },
+                          "file_name": { "type": ["string", "null"] },
+                          "quoted_uid": { "type": ["string", "null"] }
+                        },
+                        "required": ["uid", "type", "text", "caption", "media_url", "mime_type", "file_name", "quoted_uid"]
+                      },
+                      "participant": {
+                        "type": "object",
+                        "properties": {
+                          "identity": { "type": "string" },
+                          "identity_type": { "type": "string", "enum": ["phone", "whatsapp_user"] },
+                          "name": { "type": ["string", "null"] }
+                        },
+                        "required": ["identity", "identity_type", "name"]
+                      }
+                    },
+                    "required": ["group", "message", "participant"]
+                  }
+                }
+              },
+              "example": {
+                "data": {
+                  "group": { "uid": "120363000000000001@g.us", "name": "Grupo de ejemplo" },
+                  "message": { "uid": "3EB0C0FFEE0000000001", "type": "text", "text": "Hola a todos", "caption": null, "media_url": null, "mime_type": null, "file_name": null, "quoted_uid": null },
+                  "participant": { "identity": "5491100000000", "identity_type": "phone", "name": null }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "group.reaction_added": {
+      "post": {
+        "summary": "group.reaction_added",
+        "description": "Alguien reaccionó a un mensaje de un grupo.",
+        "x-fc-status": "live",
+        "x-fc-domain": "communities",
+        "x-fc-pending": "communities-events",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "group": {
+                        "type": "object",
+                        "properties": {
+                          "uid": { "type": "string" },
+                          "name": { "type": ["string", "null"] }
+                        },
+                        "required": ["uid", "name"]
+                      },
+                      "message": {
+                        "type": "object",
+                        "properties": {
+                          "uid": { "type": "string" }
+                        },
+                        "required": ["uid"]
+                      },
+                      "participant": {
+                        "type": "object",
+                        "properties": {
+                          "identity": { "type": "string" },
+                          "identity_type": { "type": "string", "enum": ["phone", "whatsapp_user"] },
+                          "name": { "type": ["string", "null"] }
+                        },
+                        "required": ["identity", "identity_type", "name"]
+                      },
+                      "reaction": { "type": "string" }
+                    },
+                    "required": ["group", "message", "participant", "reaction"]
+                  }
+                }
+              },
+              "example": {
+                "data": {
+                  "group": { "uid": "120363000000000001@g.us", "name": "Grupo de ejemplo" },
+                  "message": { "uid": "3EB0C0FFEE0000000001" },
+                  "participant": { "identity": "5491100000000", "identity_type": "phone", "name": null },
+                  "reaction": "👍"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "group_join_request.created": {
+      "post": {
+        "summary": "group_join_request.created",
+        "description": "Alguien pidió unirse a un grupo que requiere aprobación.",
+        "x-fc-status": "live",
+        "x-fc-domain": "communities",
+        "x-fc-pending": "communities-events",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "group": {
+                        "type": "object",
+                        "properties": {
+                          "uid": { "type": "string" },
+                          "name": { "type": ["string", "null"] }
+                        },
+                        "required": ["uid", "name"]
+                      },
+                      "participant": {
+                        "type": "object",
+                        "properties": {
+                          "identity": { "type": "string" },
+                          "identity_type": { "type": "string", "enum": ["phone", "whatsapp_user"] },
+                          "name": { "type": ["string", "null"] }
+                        },
+                        "required": ["identity", "identity_type", "name"]
+                      }
+                    },
+                    "required": ["group", "participant"]
+                  }
+                }
+              },
+              "example": {
+                "data": {
+                  "group": { "uid": "120363000000000001@g.us", "name": "Grupo de ejemplo" },
+                  "participant": { "identity": "5491100000000", "identity_type": "phone", "name": null }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "group_join_request.revoked": {
+      "post": {
+        "summary": "group_join_request.revoked",
+        "description": "Alguien retiró su pedido para unirse a un grupo.",
+        "x-fc-status": "live",
+        "x-fc-domain": "communities",
+        "x-fc-pending": "communities-events",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "group": {
+                        "type": "object",
+                        "properties": {
+                          "uid": { "type": "string" },
+                          "name": { "type": ["string", "null"] }
+                        },
+                        "required": ["uid", "name"]
+                      },
+                      "participant": {
+                        "type": "object",
+                        "properties": {
+                          "identity": { "type": "string" },
+                          "identity_type": { "type": "string", "enum": ["phone", "whatsapp_user"] },
+                          "name": { "type": ["string", "null"] }
+                        },
+                        "required": ["identity", "identity_type", "name"]
+                      }
+                    },
+                    "required": ["group", "participant"]
+                  }
+                }
+              },
+              "example": {
+                "data": {
+                  "group": { "uid": "120363000000000001@g.us", "name": "Grupo de ejemplo" },
+                  "participant": { "identity": "5491100000000", "identity_type": "phone", "name": null }
                 }
               }
             }

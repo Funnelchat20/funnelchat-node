@@ -39,9 +39,10 @@ export class Templates extends Resource {
    * (the way to write to a contact outside the 24-hour window). `phone` and `contact_id` are
    * required; `template_variables.body` fills the body variables in order.
    *
-   * Resolves to `{ message }`, the registered message. A template Meta rejected is a `502` whose
-   * body (`error`, `error_code`, `placeholders`, `message`) is in `APIError.body`. Pending of the
-   * spec (conversations `feat/envio-devuelve-id` @ d3ac33994, a local branch): it may change.
+   * Resolves to `{ message }`, the registered message with `status: 'queued'`. A variable that
+   * points to a field that does not exist is a `422 template_unresolved_placeholder` with
+   * `placeholders` and `count` in `APIError.body`; a template this account cannot send,
+   * `404 template_not_found`. Like every send, it is never retried automatically.
    */
   send(device: DeviceId, template: SendTemplateId, body: Body<SendPath, 'POST'>, options?: RequestOptions) {
     return this.client.request('POST', '/api/v1/devices/{device}/templates/{template}/send-template', {

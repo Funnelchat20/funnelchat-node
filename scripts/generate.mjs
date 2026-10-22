@@ -9,13 +9,15 @@
  *
  * Steps:
  *   1. (with --spec) copy the spec and write spec/procedencia.json (repository, branch, commit, sha256).
- *   2. Merge spec/pending.json (the "pending of the spec" layer) into the snapshot. Every pending entry
- *      is applied only while the snapshot lacks it; the report lists the entries a new snapshot made
+ *   2. Merge spec/pending.json (the "pending of the spec" layer) into the snapshot: paths, operation
+ *      and response patches, schema patches (properties added to a component schema) and webhooks.
+ *      Every pending entry is applied only while the snapshot lacks it; the report lists the entries a new snapshot made
  *      obsolete so they can be deleted from spec/pending.json.
  *   3. src/generated/openapi.ts  — openapi-typescript over the merged spec (paths, components, webhooks).
  *   4. src/generated/routes.ts   — every operation: method, path, domain, permission, pending flag.
  *   5. src/generated/events.ts   — the webhook event catalog and the `data` type of each event (from its
- *                                  schema, or inferred from its example when the schema is not explicit).
+ *                                  schema when it lists properties and `required`, otherwise inferred from
+ *                                  its example).
  *
  * Nothing in src/generated/ is edited by hand.
  */
@@ -172,6 +174,27 @@ function mergePending(spec, pending) {
       schema.properties[prop] ??= propSchema;
     }
     op['x-fc-pending'] = patch['x-fc-pending'];
+    report.applied.push(label);
+  }
+
+  // Schema patches add properties to a component schema, each one only while the schema lacks it.
+  for (const patch of pending.schemaPatches ?? []) {
+    const label = `esquema ${patch.schema} (parche: ${Object.keys(patch.properties ?? {}).join(', ')})`;
+    const schema = merged.components.schemas[patch.schema];
+    if (!schema) {
+      report.missing.push(label);
+      continue;
+    }
+    schema.properties ??= {};
+    const missing = Object.keys(patch.properties ?? {}).filter((prop) => !(prop in schema.properties));
+    if (missing.length === 0) {
+      report.superseded.push(label);
+      continue;
+    }
+    for (const prop of missing) schema.properties[prop] = patch.properties[prop];
+    const required = (patch.required ?? []).filter((prop) => missing.includes(prop));
+    if (required.length) schema.required = [...new Set([...(schema.required ?? []), ...required])];
+    schema['x-fc-pending'] ??= patch['x-fc-pending'];
     report.applied.push(label);
   }
 
@@ -400,7 +423,13 @@ function generateEvents(merged, specHash) {
   const dataLines = entries.map((e) => {
     let type;
     let source;
-    if (e.dataExample !== null && typeof e.dataExample === 'object') {
+    // A schema that lists its properties and which are required describes every case; an example
+    // shows only one (keys it lacks would turn optional, keys it has required), so the schema wins.
+    const explicit = Boolean(e.dataSchema?.properties && Array.isArray(e.dataSchema.required));
+    if (explicit) {
+      type = schemaToTs(e.dataSchema, 1);
+      source = 'schema';
+    } else if (e.dataExample !== null && typeof e.dataExample === 'object') {
       type = exampleToTs(e.dataExample, e.dataSchema, 1);
       source = e.dataSchema ? 'example + schema' : 'example';
     } else if (e.dataSchema) {

@@ -2,7 +2,7 @@
  * Compile-time checks of the typed API (run by `npm run typecheck`; at runtime they are no-ops).
  */
 import { describe, expect, expectTypeOf, it } from 'vitest';
-import type { Funnelchat, Page, WebhookEvent, WebhookEventOf, WebhookEventType, components } from '../src/index.js';
+import type { APIError, APIPromise, Funnelchat, KnownErrorCode, Page, WebhookEvent, WebhookEventOf, WebhookEventType, components } from '../src/index.js';
 
 type PublicMessage = components['schemas']['PendingPublicMessage'];
 
@@ -34,16 +34,29 @@ function typeChecks(client: Funnelchat) {
     expectTypeOf(client.webhooks.create).parameter(0).toHaveProperty('events');
     expectTypeOf<Awaited<ReturnType<typeof client.webhooks.create>>>().toHaveProperty('secret');
     expectTypeOf<Awaited<ReturnType<typeof client.tags.list>>>().toMatchTypeOf<Page<unknown>>();
-    // Sends resolve to the registered message (pending of the spec), or null while the API answers 204.
-    expectTypeOf<NonNullable<Awaited<ReturnType<typeof client.messages.send>>>>().toEqualTypeOf<{ message: PublicMessage | null }>();
-    // While the API answers 204 (documented in the pending layer), the type admits null.
-    expectTypeOf<null>().toMatchTypeOf<Awaited<ReturnType<typeof client.messages.send>>>();
-    expectTypeOf<null>().toMatchTypeOf<Awaited<ReturnType<typeof client.messages.sendContactCard>>>();
-    expectTypeOf<NonNullable<Awaited<ReturnType<typeof client.messages.sendContactCard>>>>().toHaveProperty('messages');
+    // Every send resolves to the registered message.
+    expectTypeOf<Awaited<ReturnType<typeof client.messages.send>>>().toEqualTypeOf<{ message: PublicMessage }>();
+    expectTypeOf<Awaited<ReturnType<typeof client.messages.sendDirect>>>().toEqualTypeOf<{ message: PublicMessage }>();
+    expectTypeOf<Awaited<ReturnType<typeof client.messages.sendForm>>>().toEqualTypeOf<{ message: PublicMessage }>();
+    expectTypeOf<Awaited<ReturnType<typeof client.messages.sendContactCard>>>().toEqualTypeOf<{ messages: PublicMessage[] }>();
     expectTypeOf<Awaited<ReturnType<typeof client.messages.forward>>>().toMatchTypeOf<{ contact_id: number; message: PublicMessage | null }[]>();
-    expectTypeOf<Awaited<ReturnType<typeof client.templates.send>>>().toEqualTypeOf<{ message: PublicMessage | null }>();
+    expectTypeOf<Awaited<ReturnType<typeof client.templates.send>>>().toEqualTypeOf<{ message: PublicMessage }>();
     expectTypeOf<Awaited<ReturnType<typeof client.messages.get>>>().toEqualTypeOf<PublicMessage>();
     expectTypeOf<PublicMessage['status']>().toEqualTypeOf<'queued' | 'sent' | 'delivered' | 'read' | 'failed' | null>();
+    expectTypeOf<NonNullable<PublicMessage['error']>['reason']>().toMatchTypeOf<string | null>();
+    // A file by URL: file_type and file_name.
+    expectTypeOf(client.messages.send).parameter(1).toHaveProperty('file_type');
+    expectTypeOf(client.messages.send).parameter(1).toHaveProperty('file_name');
+    expectTypeOf<NonNullable<Parameters<typeof client.messages.send>[1]['file_type']>>().toEqualTypeOf<'image' | 'video' | 'audio' | 'document' | 'sticker'>();
+    // Each call returns an APIPromise: withResponse() brings the X-Request-Id.
+    expectTypeOf(client.contacts.retrieve(1)).toMatchTypeOf<APIPromise<unknown>>();
+    expectTypeOf<Awaited<ReturnType<ReturnType<typeof client.messages.get>['withResponse']>>['requestId']>().toEqualTypeOf<string | undefined>();
+    // The capabilities of a number.
+    expectTypeOf<Awaited<ReturnType<typeof client.devices.retrieve>>['capabilities']['groups']['add_participants']>().toEqualTypeOf<'direct' | 'invite' | false>();
+    // Group actions answer 202 with the action id.
+    expectTypeOf<Awaited<ReturnType<typeof client.groups.addParticipants>>>().toEqualTypeOf<{ action_id: string; status: 'queued' }>();
+    expectTypeOf<Awaited<ReturnType<typeof client.groups.action>>['data']['status']>().toEqualTypeOf<'queued' | 'running' | 'completed' | 'failed'>();
+    expectTypeOf(client.forms.create).parameter(0).toHaveProperty('template_key');
     // A route whose spec documents no body still returns whatever the API answers.
     expectTypeOf<Awaited<ReturnType<typeof client.webhooks.delete>>>().toBeUnknown();
   }
@@ -60,10 +73,29 @@ function typeChecks(client: Funnelchat) {
       }
       if (event.type === 'message.received') {
         expectTypeOf(event.data.contact.phone).toEqualTypeOf<string>();
-        expectTypeOf(event.data.device_id).toEqualTypeOf<number | null | undefined>();
+        expectTypeOf(event.data.device_id).toEqualTypeOf<number | null>();
+      }
+      if (event.type === 'whatsapp_form.completed') {
+        expectTypeOf(event.data.form.id).toEqualTypeOf<number>();
+        expectTypeOf(event.data.answers[0]!.value).toEqualTypeOf<boolean | number | string | string[] | null>();
+      }
+      if (event.type === 'group_action.completed') {
+        expectTypeOf(event.data.action.uuid).toEqualTypeOf<string>();
+      }
+      if (event.type === 'group.message_received') {
+        expectTypeOf(event.data.participant.identity_type).toEqualTypeOf<'phone' | 'whatsapp_user'>();
       }
     };
     void handle;
     expectTypeOf<WebhookEventOf<'device.connected'>['data']['device']['id']>().toEqualTypeOf<number>();
+    expectTypeOf<'group.reaction_added'>().toMatchTypeOf<WebhookEventType>();
+    expectTypeOf<'group_join_request.created'>().toMatchTypeOf<WebhookEventType>();
+  }
+
+  {
+    // The known error codes autocomplete, and any other string is still accepted.
+    expectTypeOf<'mac_lockout_24h'>().toMatchTypeOf<KnownErrorCode>();
+    expectTypeOf<'origin_unreachable'>().toMatchTypeOf<KnownErrorCode>();
+    expectTypeOf<'something_new'>().toMatchTypeOf<NonNullable<APIError['code']>>();
   }
 }

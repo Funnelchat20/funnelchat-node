@@ -49,12 +49,13 @@ const placeholder = /\{[^}]+\}/g;
 const escape = (text: string) => text.replace(/[.*+?^$()|[\]\\]/g, '\\$&');
 
 /**
- * The send operations of the spec (permission `conversations:send`) that are a `POST`: they
- * deliver a WhatsApp message and are not idempotent, so they are never retried automatically.
- * Built from the generated route table, so a regeneration keeps the list current.
+ * The send operations of the spec (a `POST` with a `*:send` permission: `conversations:send` or
+ * `communities:send`): they deliver a WhatsApp message and are not idempotent, so they are never
+ * retried automatically. Built from the generated route table, so a regeneration keeps the list
+ * current.
  */
 const SEND_POST_PATTERNS: readonly RegExp[] = routes
-  .filter((route) => route.method === 'POST' && route.permission === 'conversations:send')
+  .filter((route) => route.method === 'POST' && route.permission?.endsWith(':send'))
   .map((route) => new RegExp(`^${route.path.split(placeholder).map(escape).join('[^/]+')}/?$`));
 
 /** Whether `method` + `pathname` (already interpolated, without query) is a non-idempotent send. */
