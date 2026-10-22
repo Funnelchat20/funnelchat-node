@@ -49,7 +49,7 @@ export function checkSignature(rawBody: unknown, signatureHeader: unknown, secre
   if (body === null) {
     return fail(
       'invalid_body',
-      'El cuerpo tiene que ser el crudo (string, Buffer o Uint8Array), tal como llegó. Si usás Express, leelo con express.raw({ type: "application/json" }) y no con express.json().',
+      'El cuerpo tiene que ser el crudo (string, Buffer o Uint8Array), tal como llegó. Si usas Express, léelo con express.raw({ type: "application/json" }) y no con express.json().',
     );
   }
   if (typeof signatureHeader !== 'string' || signatureHeader === '') {

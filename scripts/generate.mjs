@@ -133,7 +133,7 @@ function mergePending(spec, pending) {
 
   for (const [name, schema] of Object.entries(pending.components?.schemas ?? {})) {
     if (merged.components.schemas[name]) {
-      throw new Error(`spec/pending.json: el esquema ${name} ya existe en la instantánea; renombralo.`);
+      throw new Error(`spec/pending.json: el esquema ${name} ya existe en la instantánea; renómbralo.`);
     }
     merged.components.schemas[name] = schema;
   }
@@ -479,7 +479,7 @@ async function main() {
     if (args.check) throw new Error('--check y --spec no se combinan');
     importSpec(args.spec);
   }
-  if (!existsSync(SPEC_FILE)) throw new Error('Falta spec/funnelchat.json: corré `npm run generate -- --spec <archivo>`.');
+  if (!existsSync(SPEC_FILE)) throw new Error('Falta spec/funnelchat.json: corre `npm run generate -- --spec <archivo>`.');
 
   const bytes = readFileSync(SPEC_FILE);
   const specHash = sha256(bytes);
@@ -516,7 +516,7 @@ async function main() {
       return !existsSync(file) || readFileSync(file, 'utf8') !== content;
     });
     if (stale.length) {
-      console.error(`src/generated está desactualizado (${stale.map(([n]) => n).join(', ')}): corré \`npm run generate\`.`);
+      console.error(`src/generated está desactualizado (${stale.map(([n]) => n).join(', ')}): corre \`npm run generate\`.`);
       process.exit(1);
     }
     console.log('src/generated está al día.');

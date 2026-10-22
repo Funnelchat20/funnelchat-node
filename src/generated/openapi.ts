@@ -2379,7 +2379,7 @@ export interface paths {
          * Crear un grupo
          * @description Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.
          *
-         *     Con un número QR, `participants` es obligatorio; con uno oficial no se acepta (los invitás después).
+         *     Con un número QR, `participants` es obligatorio; con uno oficial no se acepta (los invitas después).
          */
         post: operations["pendingGroups.create"];
         delete?: never;
@@ -4476,7 +4476,7 @@ export interface paths {
         };
         /**
          * Ver una suscripción de webhook
-         * @description No trae el secreto. Si lo perdiste, rotalo.
+         * @description No trae el secreto. Si lo perdiste, rótalo.
          */
         get: operations["pendingWebhookSubscription.show"];
         /**
@@ -4508,7 +4508,7 @@ export interface paths {
          * Generar un secreto nuevo
          * @description Un secreto nuevo, que se muestra una sola vez; el anterior deja de valer.
          *
-         *     **No está abierta a claves de API:** con una clave responde `403 route_not_available`. Rotá el secreto desde el panel.
+         *     **No está abierta a claves de API:** con una clave responde `403 route_not_available`. Rota el secreto desde el panel.
          */
         post: operations["pendingWebhookSubscription.rotateSecret"];
         delete?: never;
@@ -8715,7 +8715,7 @@ export interface components {
             pool_keep?: boolean;
             qr_allowed?: boolean;
             can_change_to_meta?: boolean;
-            /** @description Lo que el número puede hacer por la API, según su proveedor (QR o WhatsApp Cloud) y lo que tu cuenta tiene habilitado. Consultalo antes de ofrecer una función: un envío que el número no soporta responde `422 provider_unsupported`. */
+            /** @description Lo que el número puede hacer por la API, según su proveedor (QR o WhatsApp Cloud) y lo que tu cuenta tiene habilitado. Consúltalo antes de ofrecer una función: un envío que el número no soporta responde `422 provider_unsupported`. */
             capabilities: {
                 /** @description Tipos de mensaje que acepta el número. */
                 messages: {
@@ -9728,7 +9728,7 @@ export interface components {
         PendingWebhookSubscription: {
             /**
              * Format: uuid
-             * @description Identificador de la suscripción. Guardalo al crearla: es lo que identifica la tuya.
+             * @description Identificador de la suscripción. Guárdalo al crearla: es lo que identifica la tuya.
              */
             id: string;
             url: string;
@@ -9759,7 +9759,7 @@ export interface components {
             } | null;
         };
         PendingWebhookSubscriptionWithSecret: components["schemas"]["PendingWebhookSubscription"] & {
-            /** @description El secreto completo para verificar la firma. Se muestra una sola vez: guardalo. */
+            /** @description El secreto completo para verificar la firma. Se muestra una sola vez: guárdalo. */
             secret: string;
             secret_notice: string;
         };
@@ -9792,7 +9792,7 @@ export interface components {
             /** Format: date-time */
             attempted_at: string | null;
         };
-        /** @description Resultado de la entrega de prueba (`webhook.test`). Responde 200 aunque tu servidor falle: mirá `succeeded`. */
+        /** @description Resultado de la entrega de prueba (`webhook.test`). Responde 200 aunque tu servidor falle: mira `succeeded`. */
         PendingWebhookSubscriptionTestResult: {
             succeeded: boolean;
             response_status: number | null;
@@ -9870,7 +9870,7 @@ export interface components {
             status: "draft" | "publishing" | "published" | "failed";
             error: string | null;
         };
-        /** @description Una versión de un formulario. `id` es la versión; `family_id` es el formulario, el `form_id` que usás para enviarlo y el `form.id` de `whatsapp_form.completed`. */
+        /** @description Una versión de un formulario. `id` es la versión; `family_id` es el formulario, el `form_id` que usas para enviarlo y el `form.id` de `whatsapp_form.completed`. */
         PendingForm: {
             /** @description La versión. */
             id: number;
@@ -9913,7 +9913,7 @@ export interface components {
             /** Format: date-time */
             updated_at?: string | null;
         };
-        /** @description La acción quedó en cola. Seguila con `GET /api/v1/groups/actions/{action}` o con los eventos `group_action.completed` y `group_action.failed`. */
+        /** @description La acción quedó en cola. Síguela con `GET /api/v1/groups/actions/{action}` o con los eventos `group_action.completed` y `group_action.failed`. */
         PendingGroupActionAccepted: {
             /** Format: uuid */
             action_id: string;

@@ -59,8 +59,8 @@ describe('typed errors', () => {
   });
 
   it('exposes retryAfter of a 429', async () => {
-    const error = await errorFor({ status: 429, body: { error: 'rate_limited', message: 'Esperá.' }, headers: { 'retry-after': '12' } });
-    expect(error).toMatchObject({ status: 429, code: 'rate_limited', message: 'Esperá.', retryAfter: 12 });
+    const error = await errorFor({ status: 429, body: { error: 'rate_limited', message: 'Espera.' }, headers: { 'retry-after': '12' } });
+    expect(error).toMatchObject({ status: 429, code: 'rate_limited', message: 'Espera.', retryAfter: 12 });
   });
 
   it('keeps the field errors of a Laravel 422 (no code)', async () => {

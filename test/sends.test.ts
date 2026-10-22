@@ -54,12 +54,12 @@ describe('sends return what the API answers', () => {
   });
 
   it('a URL without a known extension and no file_type is a 422 on errors.file_type', async () => {
-    const { fetch } = mockFetch({ status: 422, body: { message: 'Indicá file_type.', errors: { file_type: ['Indicá file_type.'] } } });
+    const { fetch } = mockFetch({ status: 422, body: { message: 'Indica file_type.', errors: { file_type: ['Indica file_type.'] } } });
     const error = (await client(fetch)
       .messages.send(2001, { device_id: 3, phone: '5491100000000', file: 'https://files.example.com/download?sig=abc' })
       .catch((e: unknown) => e)) as APIError;
     expect(error).toBeInstanceOf(UnprocessableEntityError);
-    expect(error.errors?.file_type).toEqual(['Indicá file_type.']);
+    expect(error.errors?.file_type).toEqual(['Indica file_type.']);
   });
 
   it('messages.sendDirect posts to send-message and resolves to { message }', async () => {

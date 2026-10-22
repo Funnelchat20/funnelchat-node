@@ -44,7 +44,7 @@
         "type": "object",
         "description": "Una suscripción de webhook unificada. Nunca trae el secreto.",
         "properties": {
-          "id": { "type": "string", "format": "uuid", "description": "Identificador de la suscripción. Guardalo al crearla: es lo que identifica la tuya." },
+          "id": { "type": "string", "format": "uuid", "description": "Identificador de la suscripción. Guárdalo al crearla: es lo que identifica la tuya." },
           "url": { "type": "string" },
           "description": { "type": ["string", "null"] },
           "events": {
@@ -79,7 +79,7 @@
           {
             "type": "object",
             "properties": {
-              "secret": { "type": "string", "description": "El secreto completo para verificar la firma. Se muestra una sola vez: guardalo." },
+              "secret": { "type": "string", "description": "El secreto completo para verificar la firma. Se muestra una sola vez: guárdalo." },
               "secret_notice": { "type": "string" }
             },
             "required": ["secret", "secret_notice"]
@@ -137,7 +137,7 @@
       },
       "PendingWebhookSubscriptionTestResult": {
         "type": "object",
-        "description": "Resultado de la entrega de prueba (`webhook.test`). Responde 200 aunque tu servidor falle: mirá `succeeded`.",
+        "description": "Resultado de la entrega de prueba (`webhook.test`). Responde 200 aunque tu servidor falle: mira `succeeded`.",
         "properties": {
           "succeeded": { "type": "boolean" },
           "response_status": { "type": ["integer", "null"] },
@@ -254,7 +254,7 @@
       },
       "PendingForm": {
         "type": "object",
-        "description": "Una versión de un formulario. `id` es la versión; `family_id` es el formulario, el `form_id` que usás para enviarlo y el `form.id` de `whatsapp_form.completed`.",
+        "description": "Una versión de un formulario. `id` es la versión; `family_id` es el formulario, el `form_id` que usas para enviarlo y el `form.id` de `whatsapp_form.completed`.",
         "properties": {
           "id": { "type": "integer", "description": "La versión." },
           "family_id": { "type": "integer", "description": "El formulario (todas sus versiones)." },
@@ -285,7 +285,7 @@
       },
       "PendingGroupActionAccepted": {
         "type": "object",
-        "description": "La acción quedó en cola. Seguila con `GET /api/v1/groups/actions/{action}` o con los eventos `group_action.completed` y `group_action.failed`.",
+        "description": "La acción quedó en cola. Síguela con `GET /api/v1/groups/actions/{action}` o con los eventos `group_action.completed` y `group_action.failed`.",
         "properties": {
           "action_id": { "type": "string", "format": "uuid" },
           "status": { "type": "string", "enum": ["queued"] }
@@ -468,7 +468,7 @@
       "get": {
         "operationId": "pendingWebhookSubscription.show",
         "summary": "Ver una suscripción de webhook",
-        "description": "No trae el secreto. Si lo perdiste, rotalo.",
+        "description": "No trae el secreto. Si lo perdiste, rótalo.",
         "tags": ["Webhooks"],
         "x-fc-domain": "accounts",
         "x-fc-permission": "webhooks:read",
@@ -552,7 +552,7 @@
       "post": {
         "operationId": "pendingWebhookSubscription.rotateSecret",
         "summary": "Generar un secreto nuevo",
-        "description": "Un secreto nuevo, que se muestra una sola vez; el anterior deja de valer.\n\n**No está abierta a claves de API:** con una clave responde `403 route_not_available`. Rotá el secreto desde el panel.",
+        "description": "Un secreto nuevo, que se muestra una sola vez; el anterior deja de valer.\n\n**No está abierta a claves de API:** con una clave responde `403 route_not_available`. Rota el secreto desde el panel.",
         "tags": ["Webhooks"],
         "x-fc-domain": "accounts",
         "x-fc-permission": "webhooks:write",
@@ -1626,7 +1626,7 @@
         "x-fc-domain": "communities",
         "x-fc-permission": "communities:operate",
         "x-fc-pending": "communities-group-actions",
-        "description": "Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.\n\nCon un número QR, `participants` es obligatorio; con uno oficial no se acepta (los invitás después).",
+        "description": "Las acciones de grupo están **apagadas por defecto**: mientras no estén habilitadas, la ruta responde `403 route_not_available`. Lo que permite cada número está en `capabilities.groups` de `GET /api/v1/devices/{device}`; lo que no, responde `422 provider_unsupported`.\n\nCon un número QR, `participants` es obligatorio; con uno oficial no se acepta (los invitas después).",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -2454,7 +2454,7 @@
         "can_change_to_meta": { "type": "boolean" },
         "capabilities": {
           "type": "object",
-          "description": "Lo que el número puede hacer por la API, según su proveedor (QR o WhatsApp Cloud) y lo que tu cuenta tiene habilitado. Consultalo antes de ofrecer una función: un envío que el número no soporta responde `422 provider_unsupported`.",
+          "description": "Lo que el número puede hacer por la API, según su proveedor (QR o WhatsApp Cloud) y lo que tu cuenta tiene habilitado. Consúltalo antes de ofrecer una función: un envío que el número no soporta responde `422 provider_unsupported`.",
           "properties": {
             "messages": {
               "type": "object",
