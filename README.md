@@ -348,7 +348,7 @@ FUNNELCHAT_SANDBOX_URL=http://127.0.0.1:4010 npm run test:e2e   # against a runn
 
 The SDK runs on Node 18 or later; the development tools (vitest 4, eslint 9) need Node 20 or later.
 
-To release, push a `vX.Y.Z` tag on `main` matching the `version` in `package.json`; GitHub Actions (`.github/workflows/publish.yml`) publishes it to npm with provenance.
+To release, push a `vX.Y.Z` tag on `main` matching the `version` in `package.json`; GitHub Actions publishes it through npm Trusted Publishing (`.github/workflows/publish.yml`), with provenance.
 
 Everything generated comes from one script:
 
