@@ -17,7 +17,7 @@
       "conversations-status": "conversations v1.18.10 (a580a3d0, in production on 22-10): data of message.status_changed (back/app/Modules/Webhook/Payloads/MessageStatusChangedPayload.php:161-189).",
       "conversations-forms": "conversations v1.18.10 (a580a3d0, in production on 22-10): WhatsApp forms (back/routes/api/whatsapp-forms.php, WhatsappForm/Http/Controllers/WhatsappFormController.php, WhatsappFormSendController.php, Http/Resources/WhatsappFormResource.php, Webhook/Payloads/WhatsappFormCompletedPayload.php:118-136).",
       "communities-events": "communities v2.34.52 (6f32f0b4, in production on 22-10): data of the group events (back/app/Modules/Shared/Support/PlatformEvents/PlatformEventCatalog.php:250-309 and Services/*EventPublisher.php), relayed by the unified catalog of accounts v1.4.24 (300cc843, in production on 22-10).",
-      "accounts-number-signup": "Contract 1022-alta-de-numeros v0.1 (23-10-2026): sections A1 and A3 with the \"Enmienda v0.1\", which describes accounts feat/alta-de-numeros-api 52d49b319 (part 1) and marks what part 2 adds. NOT in production yet; its OpenAPI will replace these entries. Checked against 52d49b319 (not run): back/app/Modules/Device/Http/Resources/ConnectLinkResource.php, DeviceResource.php:134-135 and Webhook/Services/DeviceWebhookEmitter.php:243-335. The fields the events add are optional here: production does not send them until the deploy. The base payload of device.connected and device.disconnected (device id, name, number and the timestamp) is the one of accounts v1.4.24 (300cc843, in production on 22-10)."
+      "accounts-number-signup": "Contract 1022-alta-de-numeros v0.2 (23-10-2026): sections A1 and A3 with the \"Enmienda v0.1\" (accounts feat/alta-de-numeros-api 52d49b319, part 1) and the \"Enmienda v0.2\" (8852b3fad, part 2). NOT in production yet; its OpenAPI will replace these entries. Checked against 52d49b319 (not run): back/app/Modules/Device/Http/Resources/ConnectLinkResource.php, DeviceResource.php:134-135 and Webhook/Services/DeviceWebhookEmitter.php:243-335. The fields the events add are optional here: production does not send them until the deploy. The base payload of device.connected and device.disconnected (device id, name, number and the timestamp) is the one of accounts v1.4.24 (300cc843, in production on 22-10)."
     }
   },
   "components": {
@@ -320,7 +320,12 @@
         "properties": {
           "id": { "type": "integer" },
           "type": { "type": "string", "enum": ["meta", "qr"] },
-          "status": { "$ref": "#/components/schemas/PendingConnectLinkStatus" },
+          "status": {
+            "allOf": [
+              { "$ref": "#/components/schemas/PendingConnectLinkStatus" }
+            ],
+            "description": "A Meta link stays `pending` after a failure of Facebook or Meta, so your customer can try again on the page; the fifth failed attempt turns it `failed` (`facebook_auth_failed` or `meta_error`). `quota_exceeded`, `trial_number_blocked` and `number_not_owned` close it at the first attempt."
+          },
           "url": { "type": ["string", "null"], "description": "The page to send your customer to. It carries the token, so it comes only in the response of `POST connect-links`." },
           "expires_at": { "type": "string", "format": "date-time" },
           "allowed_connection_types": {
@@ -380,7 +385,10 @@
                 "maxItems": 2,
                 "uniqueItems": true
               },
-              "provision_us_number": { "type": "boolean", "description": "Offers a US number of the pool (3 per account, 1 on trial accounts, held 15 minutes). `false` by default." },
+              "provision_us_number": {
+                "type": "boolean",
+                "description": "Offers a US number of the pool (3 per account, 1 on trial accounts, held 15 minutes). `false` by default. A pool number is always dedicated: it needs `dedicated` in `allowed_connection_types` and does not go with `device_id`; otherwise `422 invalid_request`."
+              },
               "device_id": { "type": "integer", "description": "Reconnects this number instead of creating one; takes no new slot. `type` must match how the number connects." },
               "external_reference": { "$ref": "#/components/schemas/PendingExternalReference" },
               "return_url": {
@@ -1827,7 +1835,7 @@
         "x-fc-pending": "accounts-number-signup",
         "operationId": "pendingConnectLink.store",
         "summary": "Create a connect link",
-        "description": "A single-use page where your customer connects a number: by QR code, or an official one through the Meta sign-up. The number is created when the page finishes. The quota is checked now (except on a reconnection) and again at the end, with the rejections of `POST devices`. At most 20 open links per account (`429 too_many_open_links`); `type: \"meta\"` while the official sign-up is off answers `503 meta_connect_disabled`.",
+        "description": "A single-use page where your customer connects a number: by QR code, or an official one through the Meta sign-up. The number is created when the page finishes. The quota is checked now (except on a reconnection) and again at the end, with the rejections of `POST devices`. `provision_us_number` needs `dedicated` in `allowed_connection_types` and no `device_id` (`422 invalid_request`). At most 20 open links per account (`429 too_many_open_links`); `type: \"meta\"` while the official sign-up is off answers `503 meta_connect_disabled`.",
         "x-fc-permission": "accounts:operate",
         "parameters": [
           {
@@ -2250,7 +2258,7 @@
                     "properties": {
                       "device": { "$ref": "#/components/schemas/PendingWebhookDevice" },
                       "connected_at": { "type": "string", "format": "date-time" },
-                      "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
+                      "connect_link_id": { "type": ["integer", "null"], "description": "The connect link of this connection, or `null` when it did not come from a link." }
                     },
                     "required": ["device", "connected_at"]
                   }

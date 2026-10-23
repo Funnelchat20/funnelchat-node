@@ -240,7 +240,7 @@ export interface WebhookEventDataMap {
   "device.connected": {
     device: components["schemas"]["PendingWebhookDevice"];
     connected_at: string;
-    /** The connect link that last connected the number, or `null`. */
+    /** The connect link of this connection, or `null` when it did not come from a link. */
     connect_link_id?: number | null;
   };
   /** `device.deleted` (planned, pending of the spec; typed from: schema). A number of the account was deleted: its slot of the plan is free again. */

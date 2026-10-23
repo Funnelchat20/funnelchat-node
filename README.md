@@ -168,7 +168,9 @@ const { data: link } = await funnelchat.connectLinks.create(
 console.log(link.url); // https://api.funnelchat.com/connect/… — it carries the token and is shown only now
 ```
 
-- `provision_us_number: true` (only `meta`) also offers a US number of the pool. `device_id` reconnects a number you already have, without taking a new slot; `same_number_as` (only `qr`) adds QR to a number in coexistence.
+- `provision_us_number: true` (only `meta`) also offers a US number of the pool. A pool number is always dedicated: it needs `dedicated` in `allowed_connection_types` and does not go with `device_id`; otherwise the API answers `422 invalid_request` (the SDK does not check it for you).
+- `device_id` reconnects a number you already have, without taking a new slot; `same_number_as` (only `qr`) adds QR to a number in coexistence.
+- A Meta link tolerates retries: after a failure of Facebook or Meta it stays `pending`, so your customer can try again on the page; the fifth failed attempt turns it `failed` with `facebook_auth_failed` or `meta_error`. `quota_exceeded`, `trial_number_blocked` and `number_not_owned` close it at the first attempt.
 - You learn the result three ways: the `device.connected` webhook (with `connect_link_id` and `external_reference`), the `return_url` (`?connect_link_id=…&status=completed|failed&device_id=…&error_code=…`), or reading the link:
 
 ```ts
@@ -214,7 +216,7 @@ for await (const number of funnelchat.devices.list({ external_reference: 'custom
 | `device.health_changed` | `device`, `previous_state`, `state` (`available`, `limited`, `blocked`, `unknown`), `changed_at`, `connect_link_id`. Official numbers, only when the state changes. |
 
 - `device` is `{ id, name, number, connection, external_reference }`, where `connection` is `qr`, `coexistence`, `dedicated` or `null`.
-- `connect_link_id` is the connect link that last connected the number, or `null`.
+- `connect_link_id`: in `device.connected`, the connect link of that connection; in the other three, the link that last connected the number. `null` when it did not come from a link.
 - What these events add to the ones production sends today (`connection`, `external_reference`, `connect_link_id` and `reason`) is optional in the types: it is missing until the API that serves it is deployed. Handle `undefined`.
 
 **When it is refused** (`NUMBER_ERROR_CODES` and `IDEMPOTENCY_ERROR_CODES`):

@@ -4846,7 +4846,7 @@ export interface paths {
         put?: never;
         /**
          * Create a connect link
-         * @description A single-use page where your customer connects a number: by QR code, or an official one through the Meta sign-up. The number is created when the page finishes. The quota is checked now (except on a reconnection) and again at the end, with the rejections of `POST devices`. At most 20 open links per account (`429 too_many_open_links`); `type: "meta"` while the official sign-up is off answers `503 meta_connect_disabled`.
+         * @description A single-use page where your customer connects a number: by QR code, or an official one through the Meta sign-up. The number is created when the page finishes. The quota is checked now (except on a reconnection) and again at the end, with the rejections of `POST devices`. `provision_us_number` needs `dedicated` in `allowed_connection_types` and no `device_id` (`422 invalid_request`). At most 20 open links per account (`429 too_many_open_links`); `type: "meta"` while the official sign-up is off answers `503 meta_connect_disabled`.
          */
         post: operations["pendingConnectLink.store"];
         delete?: never;
@@ -6141,7 +6141,7 @@ export interface webhooks {
                             device: components["schemas"]["PendingWebhookDevice"];
                             /** Format: date-time */
                             connected_at: string;
-                            /** @description The connect link that last connected the number, or `null`. */
+                            /** @description The connect link of this connection, or `null` when it did not come from a link. */
                             connect_link_id?: number | null;
                         };
                     };
@@ -9699,6 +9699,7 @@ export interface components {
             id: number;
             /** @enum {string} */
             type: "meta" | "qr";
+            /** @description A Meta link stays `pending` after a failure of Facebook or Meta, so your customer can try again on the page; the fifth failed attempt turns it `failed` (`facebook_auth_failed` or `meta_error`). `quota_exceeded`, `trial_number_blocked` and `number_not_owned` close it at the first attempt. */
             status: components["schemas"]["PendingConnectLinkStatus"];
             /** @description The page to send your customer to. It carries the token, so it comes only in the response of `POST connect-links`. */
             url?: string | null;
@@ -9725,7 +9726,7 @@ export interface components {
             type: "meta";
             /** @description With both, your customer chooses on the page. */
             allowed_connection_types: components["schemas"]["PendingConnectLinkConnectionType"][];
-            /** @description Offers a US number of the pool (3 per account, 1 on trial accounts, held 15 minutes). `false` by default. */
+            /** @description Offers a US number of the pool (3 per account, 1 on trial accounts, held 15 minutes). `false` by default. A pool number is always dedicated: it needs `dedicated` in `allowed_connection_types` and does not go with `device_id`; otherwise `422 invalid_request`. */
             provision_us_number?: boolean;
             /** @description Reconnects this number instead of creating one; takes no new slot. `type` must match how the number connects. */
             device_id?: number;

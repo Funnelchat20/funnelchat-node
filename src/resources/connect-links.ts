@@ -11,7 +11,7 @@ type LinkId = PathParams<'/api/v1/connect-links/{link}', 'GET'>['link'];
  *
  * Reading needs `accounts:read`; creating and revoking, `accounts:operate`. The result arrives three
  * ways: the `device.connected` webhook (with `connect_link_id` and `external_reference`), the
- * `return_url`, or `get`.
+ * `return_url`, or `get`. The other `device.*` events carry the link that last connected the number.
  *
  * Errors of their own (`APIError.code`): the rejections of `devices.create`, `429
  * too_many_open_links` (20 open links per account), `503 meta_connect_disabled`, `422
@@ -22,6 +22,11 @@ export class ConnectLinks extends Resource {
   /**
    * `POST /api/v1/connect-links`. `url` is the page to send your customer to: it carries the token
    * and comes only in this response.
+   *
+   * `provision_us_number` (a US number of the pool, always dedicated) needs `dedicated` in
+   * `allowed_connection_types` and does not go with `device_id`: otherwise `422 invalid_request`.
+   * A Meta link stays `pending` after a failure of Facebook or Meta, so your customer can try again;
+   * the fifth failed attempt turns it `failed`.
    */
   create(body: Body<'/api/v1/connect-links', 'POST'>, options?: IdempotentRequestOptions) {
     return this.client.request('POST', '/api/v1/connect-links', { ...this.idempotent(options), body });
