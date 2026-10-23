@@ -241,7 +241,7 @@ export interface WebhookEventDataMap {
     device: components["schemas"]["PendingWebhookDevice"];
     connected_at: string;
     /** The connect link it came from, or `null`. */
-    connect_link_id: number | null;
+    connect_link_id: string | null;
   };
   /** `device.deleted` (planned, pending of the spec; typed from: schema). A number of the account was deleted: its slot of the plan is free again. */
   "device.deleted": {

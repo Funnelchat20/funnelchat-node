@@ -33,18 +33,18 @@ describe('numbers and connect links', () => {
     await funnelchat.devices.qr(9);
     await funnelchat.devices.update(9, { external_reference: 'customer-82' });
     await funnelchat.connectLinks.create({ type: 'meta', allowed_connection_types: ['coexistence'] });
-    await funnelchat.connectLinks.get(31);
+    await funnelchat.connectLinks.get('9f1c2a7e-0d4b-4c1e-9a55-3b2f0e8d6c11');
     await funnelchat.connectLinks.list({ status: 'pending', external_reference: 'customer-81' });
-    const revoked = await funnelchat.connectLinks.revoke(31);
+    const revoked = await funnelchat.connectLinks.revoke('9f1c2a7e-0d4b-4c1e-9a55-3b2f0e8d6c11');
     expect(calls.map((c) => `${c.method} ${c.url.replace(BASE, '')}`)).toEqual([
       'GET /devices?external_reference=customer-81',
       'POST /devices',
       'GET /devices/9/qr',
       'PUT /devices/9',
       'POST /connect-links',
-      'GET /connect-links/31',
+      'GET /connect-links/9f1c2a7e-0d4b-4c1e-9a55-3b2f0e8d6c11',
       'GET /connect-links?status=pending&external_reference=customer-81',
-      'DELETE /connect-links/31',
+      'DELETE /connect-links/9f1c2a7e-0d4b-4c1e-9a55-3b2f0e8d6c11',
     ]);
     expect(JSON.parse(calls[1]?.body ?? '')).toEqual({ connection: 'qr', alias: 'Sales', external_reference: 'customer-81' });
     expect(revoked).toBeNull();
@@ -85,13 +85,13 @@ describe('numbers and connect links', () => {
       data: {
         device: { id: 9, name: 'Sales', number: '5491100000000', connection: 'qr', external_reference: 'customer-81' },
         connected_at: '2026-10-23T12:00:00Z',
-        connect_link_id: 31,
+        connect_link_id: '9f1c2a7e-0d4b-4c1e-9a55-3b2f0e8d6c11',
       },
     });
     const raw = Buffer.from(body, 'utf8');
     const event = constructEvent(raw, sign(raw, SECRET, Math.floor(Date.now() / 1000)), SECRET);
     if (event.type !== 'device.connected') throw new Error(event.type);
-    expect(event.data.connect_link_id).toBe(31);
+    expect(event.data.connect_link_id).toBe('9f1c2a7e-0d4b-4c1e-9a55-3b2f0e8d6c11');
     expect(event.data.device.external_reference).toBe('customer-81');
   });
 });

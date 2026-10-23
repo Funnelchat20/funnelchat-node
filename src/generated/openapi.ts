@@ -6142,7 +6142,7 @@ export interface webhooks {
                             /** Format: date-time */
                             connected_at: string;
                             /** @description The connect link it came from, or `null`. */
-                            connect_link_id: number | null;
+                            connect_link_id: string | null;
                         };
                     };
                 };
@@ -9690,7 +9690,8 @@ export interface components {
         /** @enum {string} */
         PendingConnectLinkConnectionType: "coexistence" | "dedicated";
         PendingConnectLink: {
-            id: number;
+            /** @description Opaque: compare it as text. */
+            id: string;
             /** @enum {string} */
             type: "meta" | "qr";
             status: components["schemas"]["PendingConnectLinkStatus"];
@@ -20023,7 +20024,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                link: number;
+                link: string;
             };
             cookie?: never;
         };
@@ -20047,7 +20048,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                link: number;
+                link: string;
             };
             cookie?: never;
         };

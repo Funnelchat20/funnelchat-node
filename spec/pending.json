@@ -318,7 +318,7 @@
       "PendingConnectLink": {
         "type": "object",
         "properties": {
-          "id": { "type": "integer" },
+          "id": { "type": "string", "description": "Opaque: compare it as text." },
           "type": { "type": "string", "enum": ["meta", "qr"] },
           "status": { "$ref": "#/components/schemas/PendingConnectLinkStatus" },
           "url": { "type": ["string", "null"], "description": "The page to send your customer to. It carries the token, so it comes only in the response of `POST connect-links`." },
@@ -1870,7 +1870,7 @@
             "name": "link",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer" }
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -1903,7 +1903,7 @@
             "name": "link",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer" }
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -2244,7 +2244,7 @@
                     "properties": {
                       "device": { "$ref": "#/components/schemas/PendingWebhookDevice" },
                       "connected_at": { "type": "string", "format": "date-time" },
-                      "connect_link_id": { "type": ["integer", "null"], "description": "The connect link it came from, or `null`." }
+                      "connect_link_id": { "type": ["string", "null"], "description": "The connect link it came from, or `null`." }
                     },
                     "required": ["device", "connected_at", "connect_link_id"]
                   }
