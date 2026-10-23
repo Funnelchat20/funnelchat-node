@@ -136,6 +136,33 @@ describe.skipIf(!SANDBOX_URL)('numbers against the sandbox', () => {
     expect(connected.data.device.connection).toBe('coexistence');
   });
 
+  it('a Meta link survives failures of Meta until the fifth, which ends it failed', async () => {
+    const { data: link } = await funnelchat.connectLinks.create({ type: 'meta', allowed_connection_types: ['coexistence'] });
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      await fetch(`${link.url}/complete?outcome=failed&error_code=meta_error`, { method: 'POST', redirect: 'manual', headers: { Accept: 'application/json' } });
+      const { data } = await funnelchat.connectLinks.get(link.id);
+      if (attempt < 5) expect(data).toMatchObject({ status: 'pending', error_code: null });
+      else expect(data).toMatchObject({ status: 'failed', error_code: 'meta_error' });
+    }
+  });
+
+  it('a pool number must be dedicated and cannot reconnect: 422 invalid_request', async () => {
+    const coexistence = (await funnelchat.connectLinks
+      .create({ type: 'meta', allowed_connection_types: ['coexistence'], provision_us_number: true })
+      .catch((e: unknown) => e)) as APIError;
+    expect(coexistence).toBeInstanceOf(UnprocessableEntityError);
+    expect(coexistence.code).toBe('invalid_request');
+    expect(coexistence.errors).toBeDefined();
+
+    const reconnect = (await funnelchat.connectLinks
+      .create({ type: 'meta', allowed_connection_types: ['dedicated'], provision_us_number: true, device_id: SEED.officialDevice })
+      .catch((e: unknown) => e)) as APIError;
+    expect(reconnect.code).toBe('invalid_request');
+
+    const { data: pool } = await funnelchat.connectLinks.create({ type: 'meta', allowed_connection_types: ['dedicated'], provision_us_number: true });
+    expect(pool.provision_us_number).toBe(true);
+  });
+
   it('a pending link is revoked once, and is listed by its status', async () => {
     const { data: link } = await funnelchat.connectLinks.create({ type: 'qr', external_reference: 'customer-83' });
     const pending = await funnelchat.connectLinks.list({ status: 'pending', external_reference: 'customer-83' });
