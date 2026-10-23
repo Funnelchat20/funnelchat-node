@@ -1,7 +1,7 @@
 /**
  * End to end against funnelchat-sandbox: creating a QR number with an idempotency key, its QR and
  * the external_reference filter; connect links by QR and by Meta through the sandbox's test page,
- * which connects at once (or fails); revoking a link; disconnections, health and the quota of the
+ * which does not use the link when opened and connects at once on its button (or fails); revoking a link; disconnections, health and the quota of the
  * plan through the sandbox's control routes; and the signed `device.*` webhooks verified by the SDK.
  *
  *   FUNNELCHAT_SANDBOX_URL=http://127.0.0.1:4010 npm run test:e2e
@@ -34,13 +34,18 @@ describe.skipIf(!SANDBOX_URL)('numbers against the sandbox', () => {
 
   beforeEach(async () => {
     await control('POST', '/reset');
+    receiver.clear();
     const subscription = await funnelchat.webhooks.create({ url: receiver.url, events: DEVICE_EVENTS, description: 'e2e funnelchat-node numbers' });
     receiver.setSecret(subscription.secret);
   });
 
-  /** Opens the test page of a link the way a customer would, without a key, and returns where it sends them. */
-  async function openPage(url: string, query = ''): Promise<URL | null> {
-    const response = await fetch(`${url}${query}`, { redirect: 'manual' });
+  /**
+   * Opens the test page of a link the way a customer would, without a key, then presses its button
+   * (`start`, or `complete` for the end of the Meta sign-up), and returns where it sends them.
+   */
+  async function openPage(url: string, query = '', step: 'start' | 'complete' = 'start'): Promise<URL | null> {
+    expect((await fetch(url, { redirect: 'manual' })).status).toBe(200);
+    const response = await fetch(`${url}/${step}${query}`, { method: 'POST', redirect: 'manual' });
     const location = response.headers.get('location');
     return location ? new URL(location) : null;
   }
@@ -66,6 +71,12 @@ describe.skipIf(!SANDBOX_URL)('numbers against the sandbox', () => {
     for await (const number of funnelchat.devices.list({ external_reference: 'customer-81' })) ids.push(number.id);
     expect(ids).toEqual([device.id]);
 
+    // At most one QR number waiting to be scanned: another create points at it.
+    const pending = (await funnelchat.devices.create({ connection: 'qr' }).catch((e: unknown) => e)) as APIError;
+    expect(pending).toBeInstanceOf(ConflictError);
+    expect(pending.code).toBe('pending_number_exists');
+    expect(pending.body).toMatchObject({ device_id: device.id });
+
     await control('POST', `/devices/${device.id}/connect`);
     const connected = (await receiver.waitFor(
       (event) => event.type === 'device.connected' && event.data.device.id === device.id,
@@ -73,7 +84,7 @@ describe.skipIf(!SANDBOX_URL)('numbers against the sandbox', () => {
     expect(connected.data.device).toMatchObject({ connection: 'qr', external_reference: 'customer-81' });
     expect(connected.data.connect_link_id).toBeNull();
 
-    await funnelchat.request('DELETE', '/api/v1/devices/{device}', { path: { device: device.id } });
+    await funnelchat.devices.delete(device.id);
     const deleted = (await receiver.waitFor(
       (event) => event.type === 'device.deleted' && event.data.device.id === device.id,
     )) as WebhookEventOf<'device.deleted'>;
@@ -89,6 +100,10 @@ describe.skipIf(!SANDBOX_URL)('numbers against the sandbox', () => {
     expect(link).toMatchObject({ type: 'qr', status: 'pending', device_id: null, external_reference: 'customer-82' });
     expect(link.url).toMatch(/\/connect\/[A-Za-z0-9_-]+$/);
 
+    // Opening the page (a messenger's preview, for example) does not use the link.
+    await fetch(link.url, { redirect: 'manual' });
+    expect((await funnelchat.connectLinks.get(link.id)).data.status).toBe('pending');
+
     const back = await openPage(link.url);
     expect(back?.origin + (back?.pathname ?? '')).toBe('https://example.com/done');
     expect(back?.searchParams.get('status')).toBe('completed');
@@ -103,11 +118,18 @@ describe.skipIf(!SANDBOX_URL)('numbers against the sandbox', () => {
       (event) => event.type === 'device.connected' && event.data.connect_link_id === link.id,
     )) as WebhookEventOf<'device.connected'>;
     expect(connected.data.device).toMatchObject({ id: done.device_id, connection: 'qr', external_reference: 'customer-82' });
+
+    // Every device event carries the link that last connected the number.
+    await funnelchat.devices.delete(done.device_id!);
+    const deleted = (await receiver.waitFor(
+      (event) => event.type === 'device.deleted' && event.data.device.id === done.device_id,
+    )) as WebhookEventOf<'device.deleted'>;
+    expect(deleted.data.connect_link_id).toBe(link.id);
   });
 
   it('a Meta link lets the customer choose coexistence', async () => {
     const { data: link } = await funnelchat.connectLinks.create({ type: 'meta', allowed_connection_types: ['coexistence', 'dedicated'] });
-    await openPage(link.url, '?connection=coexistence');
+    await openPage(link.url, '?connection=coexistence', 'complete');
     const connected = (await receiver.waitFor(
       (event) => event.type === 'device.connected' && event.data.connect_link_id === link.id,
     )) as WebhookEventOf<'device.connected'>;
@@ -134,12 +156,13 @@ describe.skipIf(!SANDBOX_URL)('numbers against the sandbox', () => {
     expect(failed).toMatchObject({ status: 'failed', error_code: 'qr_timeout' });
   });
 
-  it('an official number that disconnects says why, and its health changes only once per state', async () => {
-    await control('POST', `/devices/${SEED.officialDevice}/disconnect`, { reason: 'shadow_ban_protection' });
+  it('an official number disconnected from the panel says why, and its health changes only once per state', async () => {
+    await control('POST', `/devices/${SEED.officialDevice}/disconnect`, { reason: 'disconnected_by_user' });
     const disconnected = (await receiver.waitFor(
       (event) => event.type === 'device.disconnected' && event.data.device.id === SEED.officialDevice,
     )) as WebhookEventOf<'device.disconnected'>;
-    expect(disconnected.data.reason).toBe('shadow_ban_protection');
+    expect(disconnected.data.reason).toBe('disconnected_by_user');
+    expect(disconnected.data).toHaveProperty('connect_link_id');
     expect(['coexistence', 'dedicated']).toContain(disconnected.data.device.connection);
 
     await control('POST', `/devices/${SEED.officialDevice}/health`, { state: 'limited' });

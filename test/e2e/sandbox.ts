@@ -40,6 +40,8 @@ export interface Receiver {
   waitFor(match: (event: WebhookEvent) => boolean, timeoutMs?: number): Promise<WebhookEvent>;
   /** Deliveries whose signature did not verify. */
   readonly rejected: string[];
+  /** Forgets the events received so far: after a sandbox reset, ids repeat. */
+  clear(): void;
   close(): Promise<void>;
 }
 
@@ -73,6 +75,10 @@ export async function startReceiver(): Promise<Receiver> {
       secret = value;
     },
     rejected,
+    clear: () => {
+      events.length = 0;
+      rejected.length = 0;
+    },
     waitFor(match: (event: WebhookEvent) => boolean, timeoutMs = 15_000): Promise<WebhookEvent> {
       return new Promise((resolve, reject) => {
         const check = () => {
