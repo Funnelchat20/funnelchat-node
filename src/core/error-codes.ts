@@ -6,8 +6,8 @@
  * (src/index.ts); conversations v1.18.10 (Message/Services/ApiSendGuard.php,
  * Message/Support/ApiKeySendResponse.php, WhatsappForm/Support/FormSendPreflight.php). The spec
  * does not document most of them yet; when it does, this list can be generated. The codes of
- * creating and connecting numbers come from contract 1022-alta-de-numeros v0 (22-10-2026), not from
- * production yet.
+ * creating and connecting numbers come from contract 1022-alta-de-numeros v0.1 (23-10-2026, with
+ * its amendment from accounts feat/alta-de-numeros-api 52d49b319), not from production yet.
  */
 
 /** Errors of the API entry and of the key gate, on any route. */
@@ -74,28 +74,60 @@ export const SEND_ERROR_CODES = {
 } as const;
 
 /**
- * Rejections of creating a number (`devices.create`) or a connect link (`connectLinks.create`):
- * nothing was created. The first four are the quota of the plan, the same as in the panel.
+ * Rejections of creating a number (`devices.create`), asking for its QR (`devices.qr`) or creating,
+ * reading or revoking a connect link: nothing was created. The quota of the plan is the same as in
+ * the panel. A code that comes with two statuses has the one of the create here; the other is noted.
  */
 export const NUMBER_ERROR_CODES = {
   /** 403: the plan of the account does not include numbers. */
   numbers_not_included: 403,
-  /** 403: the account already uses every number of its plan. */
+  /** 403: the account already uses every number of its plan (`limit`, `used`, `pending_device_ids` in the body). */
   number_limit_reached: 403,
-  /** 422: QR can only be added to an official number that is in coexistence. */
+  /** 403: the account cannot connect numbers now. */
+  connect_not_allowed: 403,
+  /** 403: `devices.qr` of a number whose payment is due. */
+  payment_required: 403,
+  /**
+   * 409: the account already has a QR number waiting to be scanned (at most one): its `device_id`
+   * comes in the body. Show that one's QR, or delete it, instead of creating another.
+   */
+  pending_number_exists: 409,
+  /** 422 (409 on `devices.qr`): QR can only be added to an official number that is in coexistence. */
   qr_requires_coexistence: 422,
   /** 422: the number already has that connection method; the body brings its `device_id`. */
   method_already_present: 422,
+  /** 422: `same_number_as` or `device_id` is not a number of the account that can take it. */
+  invalid_reference_device: 422,
+  /** 422: a connect link with `device_id` of a number that connects another way than `type`. */
+  connection_type_mismatch: 422,
+  /** 422 (409 on `devices.qr`): the number is suspended because the plan has fewer numbers than the account uses. */
+  number_suspended_by_plan: 422,
+  /** 422: the body is not valid; `errors` says which fields. */
+  invalid_request: 422,
+  /** 409: `devices.qr` of a trial number that is blocked. */
+  trial_number_blocked: 409,
+  /** 409: `devices.qr` of a number that is turned off. */
+  device_inactive: 409,
+  /** 409: `devices.qr` when no more QR sessions can be started now. */
+  provisioning_quota_exceeded: 409,
+  /** 409: revoking a connect link that is no longer `pending`. */
+  link_not_pending: 409,
   /** 429: the account has 20 connect links open. Revoke some, or wait for them to end. Not worth retrying. */
   too_many_open_links: 429,
+  /** 500 (502 on `devices.qr`): the WhatsApp provider failed. */
+  provider_error: 500,
   /** 503: official numbers (`type: 'meta'`) cannot be connected by link yet. QR links work. Not worth retrying. */
   meta_connect_disabled: 503,
+  /** 403: the connect page was opened with an API key or a session. The page is for your customer, without credentials. */
+  credentials_not_allowed: 403,
 } as const;
 
 /** Rejections of a create sent with `idempotencyKey`. */
 export const IDEMPOTENCY_ERROR_CODES = {
   /** 422: the key was already used with another body. Use a new key for a new resource. */
   idempotency_key_mismatch: 422,
+  /** 422: the key is not 1 to 255 characters. */
+  invalid_idempotency_key: 422,
   /** 409: the first call with that key, or another operation on the number, is still running. Read the state, or repeat it later. */
   operation_in_progress: 409,
 } as const;
@@ -116,10 +148,18 @@ export function isSendRuleError(code: string | undefined): code is SendErrorCode
   return has(SEND_ERROR_CODES, code);
 }
 
-const QUOTA_CODES: ReadonlySet<string> = new Set(['numbers_not_included', 'number_limit_reached', 'qr_requires_coexistence', 'method_already_present']);
+const QUOTA_CODES: ReadonlySet<string> = new Set([
+  'numbers_not_included',
+  'number_limit_reached',
+  'pending_number_exists',
+  'qr_requires_coexistence',
+  'method_already_present',
+]);
 
 /** Whether an `APIError.code` is a rejection by the number quota of the plan (the same as the panel's). */
-export function isNumberQuotaError(code: string | undefined): code is 'numbers_not_included' | 'number_limit_reached' | 'qr_requires_coexistence' | 'method_already_present' {
+export function isNumberQuotaError(
+  code: string | undefined,
+): code is 'numbers_not_included' | 'number_limit_reached' | 'pending_number_exists' | 'qr_requires_coexistence' | 'method_already_present' {
   return code !== undefined && QUOTA_CODES.has(code);
 }
 

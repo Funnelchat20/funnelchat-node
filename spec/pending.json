@@ -17,7 +17,7 @@
       "conversations-status": "conversations v1.18.10 (a580a3d0, in production on 22-10): data of message.status_changed (back/app/Modules/Webhook/Payloads/MessageStatusChangedPayload.php:161-189).",
       "conversations-forms": "conversations v1.18.10 (a580a3d0, in production on 22-10): WhatsApp forms (back/routes/api/whatsapp-forms.php, WhatsappForm/Http/Controllers/WhatsappFormController.php, WhatsappFormSendController.php, Http/Resources/WhatsappFormResource.php, Webhook/Payloads/WhatsappFormCompletedPayload.php:118-136).",
       "communities-events": "communities v2.34.52 (6f32f0b4, in production on 22-10): data of the group events (back/app/Modules/Shared/Support/PlatformEvents/PlatformEventCatalog.php:250-309 and Services/*EventPublisher.php), relayed by the unified catalog of accounts v1.4.24 (300cc843, in production on 22-10).",
-      "accounts-number-signup": "Contract 1022-alta-de-numeros v0 (22-10-2026, sections A1 and A3; decisions Q1-Q26 of the same day): creating numbers by QR, connect links, Idempotency-Key, external_reference and the device.* events. NOT in production yet: accounts builds it on feat/alta-de-numeros-api and its OpenAPI will replace these entries. Typed from the contract, not from code. The base payload of device.connected and device.disconnected (device id, name, number and the timestamp) is the one of accounts v1.4.24 (300cc843, in production on 22-10)."
+      "accounts-number-signup": "Contract 1022-alta-de-numeros v0.1 (23-10-2026): sections A1 and A3 with the \"Enmienda v0.1\", which describes accounts feat/alta-de-numeros-api 52d49b319 (part 1) and marks what part 2 adds. NOT in production yet; its OpenAPI will replace these entries. Checked against 52d49b319 (not run): back/app/Modules/Device/Http/Resources/ConnectLinkResource.php, DeviceResource.php:134-135 and Webhook/Services/DeviceWebhookEmitter.php:243-335. The fields the events add are optional here: production does not send them until the deploy. The base payload of device.connected and device.disconnected (device id, name, number and the timestamp) is the one of accounts v1.4.24 (300cc843, in production on 22-10)."
     }
   },
   "components": {
@@ -284,9 +284,9 @@
         "required": ["id", "family_id", "name", "label", "status", "version"]
       },
       "PendingDeviceConnection": {
-        "type": "string",
-        "enum": ["qr", "coexistence", "dedicated"],
-        "description": "`qr`: connected by scanning a QR code (not official). `coexistence`: WhatsApp Cloud API together with the WhatsApp Business app. `dedicated`: WhatsApp Cloud API only."
+        "type": ["string", "null"],
+        "enum": ["qr", "coexistence", "dedicated", null],
+        "description": "`qr`: connected by scanning a QR code (not official). `coexistence`: WhatsApp Cloud API together with the WhatsApp Business app. `dedicated`: WhatsApp Cloud API only. `null` when it cannot be told yet."
       },
       "PendingExternalReference": { "type": ["string", "null"], "maxLength": 255, "description": "Your own reference for the number (for example the id of your customer). Free text, not unique." },
       "PendingDeviceCreate": {
@@ -304,7 +304,7 @@
         "properties": {
           "connected": { "type": "boolean" },
           "qr_code": { "type": ["string", "null"], "description": "A PNG image as a data URI, or `null` when the number is already connected." },
-          "expires_in": { "type": "integer", "description": "Seconds after which to ask for it again." }
+          "expires_in": { "type": "integer", "description": "Seconds after which to ask for it again: 20 with a QR, 3 while the session starts, 0 once connected." }
         },
         "required": ["connected", "qr_code", "expires_in"]
       },
@@ -318,7 +318,7 @@
       "PendingConnectLink": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "description": "Opaque: compare it as text." },
+          "id": { "type": "integer" },
           "type": { "type": "string", "enum": ["meta", "qr"] },
           "status": { "$ref": "#/components/schemas/PendingConnectLinkStatus" },
           "url": { "type": ["string", "null"], "description": "The page to send your customer to. It carries the token, so it comes only in the response of `POST connect-links`." },
@@ -328,10 +328,13 @@
             "items": { "$ref": "#/components/schemas/PendingConnectLinkConnectionType" }
           },
           "provision_us_number": { "type": "boolean" },
-          "device_id": { "type": ["integer", "null"], "description": "The number the link created or reconnects; `null` until it completes, unless it is a reconnection." },
+          "device_id": { "type": ["integer", "null"], "description": "The number the link reconnects, or the one it created once `completed`; `null` otherwise." },
           "external_reference": { "$ref": "#/components/schemas/PendingExternalReference" },
           "return_url": { "type": ["string", "null"] },
-          "error_code": { "$ref": "#/components/schemas/PendingConnectLinkErrorCode" },
+          "error_code": {
+            "$ref": "#/components/schemas/PendingConnectLinkErrorCode",
+            "description": "Why the link did not complete (`link_expired` when it expired, `revoked` when revoked), or `null`."
+          },
           "created_at": { "type": "string", "format": "date-time" },
           "completed_at": { "type": ["string", "null"], "format": "date-time" }
         },
@@ -373,7 +376,9 @@
                 "type": "array",
                 "minItems": 1,
                 "items": { "$ref": "#/components/schemas/PendingConnectLinkConnectionType" },
-                "description": "With both, your customer chooses on the page."
+                "description": "With both, your customer chooses on the page.",
+                "maxItems": 2,
+                "uniqueItems": true
               },
               "provision_us_number": { "type": "boolean", "description": "Offers a US number of the pool (3 per account, 1 on trial accounts, held 15 minutes). `false` by default." },
               "device_id": { "type": "integer", "description": "Reconnects this number instead of creating one; takes no new slot. `type` must match how the number connects." },
@@ -381,7 +386,8 @@
               "return_url": {
                 "type": "string",
                 "format": "uri",
-                "description": "Only `https`. When the page finishes it redirects there with `connect_link_id`, `status`, `device_id` and `error_code`."
+                "description": "Only `https`. When the page finishes it redirects there with `connect_link_id`, `status`, `device_id` and `error_code`.",
+                "maxLength": 2048
               },
               "expires_in_minutes": { "type": "integer", "minimum": 30, "maximum": 10080, "description": "1440 (24 hours) by default." }
             },
@@ -398,7 +404,8 @@
               "return_url": {
                 "type": "string",
                 "format": "uri",
-                "description": "Only `https`. When the page finishes it redirects there with `connect_link_id`, `status`, `device_id` and `error_code`."
+                "description": "Only `https`. When the page finishes it redirects there with `connect_link_id`, `status`, `device_id` and `error_code`.",
+                "maxLength": 2048
               },
               "expires_in_minutes": { "type": "integer", "minimum": 30, "maximum": 10080, "description": "1440 (24 hours) by default." }
             },
@@ -415,7 +422,7 @@
           "connection": { "$ref": "#/components/schemas/PendingDeviceConnection" },
           "external_reference": { "$ref": "#/components/schemas/PendingExternalReference" }
         },
-        "required": ["id", "name", "number", "connection", "external_reference"]
+        "required": ["id", "name", "number"]
       }
     }
   },
@@ -1683,15 +1690,15 @@
         "x-fc-pending": "accounts-number-signup",
         "operationId": "pendingDevice.store",
         "summary": "Create a number connected by QR code",
-        "description": "Same path and same rejections as the panel: `403 numbers_not_included`, `403 number_limit_reached`, `422 qr_requires_coexistence`, `422 method_already_present` (with `device_id`), `409 operation_in_progress`. The provider is chosen by the system. Then ask for the QR with `GET devices/{device}/qr`.",
+        "description": "Same path and same rejections as the panel: `403 numbers_not_included`, `403 number_limit_reached`, `409 pending_number_exists` (the account already has a QR number waiting to be scanned: its `device_id` comes in the body), `422 qr_requires_coexistence`, `422 method_already_present` (with `device_id`), `409 operation_in_progress`. The provider is chosen by the system. Then ask for the QR with `GET devices/{device}/qr`.",
         "x-fc-permission": "accounts:operate",
         "parameters": [
           {
             "name": "Idempotency-Key",
             "in": "header",
             "required": false,
-            "schema": { "type": "string", "maxLength": 255 },
-            "description": "Kept 24 hours per account. The same key with the same body answers the same response without creating another resource; with another body, `422 idempotency_key_mismatch`; while the first call runs, `409 operation_in_progress`."
+            "schema": { "type": "string", "maxLength": 255, "minLength": 1 },
+            "description": "Kept 24 hours per account and resource. Only a 2xx is replayed, with `Idempotent-Replayed: true`; a rejection is evaluated again. The same key with another body: `422 idempotency_key_mismatch`; while the first call runs: `409 operation_in_progress`; a malformed key: `422 invalid_idempotency_key`."
           }
         ],
         "requestBody": {
@@ -1763,7 +1770,7 @@
         "x-fc-pending": "accounts-number-signup",
         "operationId": "pendingConnectLink.index",
         "summary": "List connect links",
-        "description": "Without the token: `url` is not shown again.",
+        "description": "Without the token: `url` is not shown again. Newest first.",
         "x-fc-permission": "accounts:read",
         "parameters": [
           {
@@ -1870,7 +1877,7 @@
             "name": "link",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": { "type": "integer" }
           }
         ],
         "responses": {
@@ -1896,14 +1903,14 @@
         "x-fc-pending": "accounts-number-signup",
         "operationId": "pendingConnectLink.destroy",
         "summary": "Revoke a connect link",
-        "description": "Only a `pending` link: any other answers `409`.",
+        "description": "Only a `pending` link: any other answers `409 link_not_pending`.",
         "x-fc-permission": "accounts:operate",
         "parameters": [
           {
             "name": "link",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": { "type": "integer" }
           }
         ],
         "responses": {
@@ -2038,8 +2045,7 @@
       "properties": {
         "connection": { "$ref": "#/components/schemas/PendingDeviceConnection" },
         "external_reference": { "$ref": "#/components/schemas/PendingExternalReference" }
-      },
-      "required": ["connection", "external_reference"]
+      }
     }
   ],
   "responsePatches": [
@@ -2244,9 +2250,9 @@
                     "properties": {
                       "device": { "$ref": "#/components/schemas/PendingWebhookDevice" },
                       "connected_at": { "type": "string", "format": "date-time" },
-                      "connect_link_id": { "type": ["string", "null"], "description": "The connect link it came from, or `null`." }
+                      "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
                     },
-                    "required": ["device", "connected_at", "connect_link_id"]
+                    "required": ["device", "connected_at"]
                   }
                 }
               }
@@ -2258,7 +2264,7 @@
     "device.disconnected": {
       "post": {
         "summary": "device.disconnected",
-        "description": "One of the numbers of the account disconnected and can no longer send or receive: a QR session that closed, or an official number that failed its re-registration or was protected from a shadow ban.",
+        "description": "One of the numbers of the account disconnected and can no longer send or receive: a QR session that closed or was protected from a shadow ban, an official number that failed its re-registration, or one disconnected from the panel.",
         "x-fc-status": "live",
         "x-fc-domain": "accounts",
         "x-fc-pending": "accounts-number-signup",
@@ -2273,9 +2279,10 @@
                     "properties": {
                       "device": { "$ref": "#/components/schemas/PendingWebhookDevice" },
                       "disconnected_at": { "type": "string", "format": "date-time" },
-                      "reason": { "type": "string", "enum": ["qr_logged_out", "meta_account_not_registered", "shadow_ban_protection", "provider_error", "unknown"] }
+                      "reason": { "type": "string", "enum": ["qr_logged_out", "meta_account_not_registered", "shadow_ban_protection", "provider_error", "unknown", "disconnected_by_user"] },
+                      "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
                     },
-                    "required": ["device", "disconnected_at", "reason"]
+                    "required": ["device", "disconnected_at"]
                   }
                 }
               }
@@ -3020,7 +3027,8 @@
                     "type": "object",
                     "properties": {
                       "device": { "$ref": "#/components/schemas/PendingWebhookDevice" },
-                      "deleted_at": { "type": "string", "format": "date-time" }
+                      "deleted_at": { "type": "string", "format": "date-time" },
+                      "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
                     },
                     "required": ["device", "deleted_at"]
                   }
@@ -3050,7 +3058,8 @@
                       "device": { "$ref": "#/components/schemas/PendingWebhookDevice" },
                       "previous_state": { "type": "string", "enum": ["available", "limited", "blocked", "unknown"] },
                       "state": { "type": "string", "enum": ["available", "limited", "blocked", "unknown"] },
-                      "changed_at": { "type": "string", "format": "date-time" }
+                      "changed_at": { "type": "string", "format": "date-time" },
+                      "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
                     },
                     "required": ["device", "previous_state", "state", "changed_at"]
                   }

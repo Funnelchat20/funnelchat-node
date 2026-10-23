@@ -56,7 +56,7 @@ Every request sends `Authorization: Bearer <key>`, `Accept: application/json` an
 | `funnelchat.tags` | `list`, `create`, `retrieve`, `update`, `delete`, `listContacts`. |
 | `funnelchat.customFields` | `list`, `create`, `retrieve`, `update`, `delete`. |
 | `funnelchat.groups` | Read groups, participants, events and messages. |
-| `funnelchat.devices` | `list` (filter by `external_reference`), `create` (a QR number), `qr`, `retrieve` (with `capabilities`), `update`, `status`, `health`, `me`, `checkPhone`, connection history. |
+| `funnelchat.devices` | `list` (filter by `external_reference`), `create` (a QR number), `qr`, `retrieve` (with `capabilities`), `update`, `delete`, `status`, `health`, `me`, `checkPhone`, connection history. |
 | `funnelchat.connectLinks` | `create`, `get`, `list`, `revoke`: a page where your customer connects a number. See [Connect a number](#connect-a-number). |
 | `funnelchat.webhooks` | Subscriptions (`list`, `create`, `retrieve`, `update`, `delete`, `test`, `listDeliveries`), the catalog (`events`), `verify` and `constructEvent`. |
 
@@ -148,7 +148,7 @@ The answers arrive by the `whatsapp_form.completed` webhook (`answers`: `key`, `
 
 ## Connect a number
 
-> **Not in production yet.** This follows contract 1022-alta-de-numeros (22-10-2026); the API that serves it is being built. See [Pending of the spec](#pending-of-the-spec).
+> **Not in production yet.** This follows contract 1022-alta-de-numeros v0.1 (23-10-2026), written from the API that is being built; it is not deployed. See [Pending of the spec](#pending-of-the-spec).
 
 A number belongs to the account of the key and takes a slot of its plan, as in the panel. Creating numbers, showing their QR code and creating or revoking connect links needs the `accounts:operate` permission; reading links, `accounts:read`. Tag each number with your own `external_reference` (for example the id of your customer): it comes back in the number, in the links and in every `device.*` webhook.
 
@@ -189,43 +189,55 @@ const { data: device } = await funnelchat.devices.create(
 );
 
 const { data: qr } = await funnelchat.devices.qr(device.id);
-// qr.qr_code is a PNG data URI (null once connected); ask again after qr.expires_in seconds.
+// qr.qr_code is a PNG data URI (null once connected); ask again after qr.expires_in seconds
+// (20 with a QR, 3 while the session starts, 0 once connected).
 
 for await (const number of funnelchat.devices.list({ external_reference: 'customer-81' })) {
   console.log(number.id, number.connection, number.connected);
 }
 ```
 
-`external_reference` changes with `devices.update(id, { external_reference })`. Deleting a number (`DELETE /api/v1/devices/{device}`) frees its slot and sends `device.deleted`.
+- An account has at most one QR number waiting to be scanned: creating another answers `409 pending_number_exists`, with that number's `device_id` in `error.body`. Show its QR instead, or delete it.
+- `external_reference` changes with `devices.update(id, { external_reference })`.
+- `devices.delete(id)` deletes a number and frees its slot (`accounts:operate`, irreversible). An official number stops working through Funnelchat but stays registered with Meta; a QR one logs out. It sends `device.deleted`.
+- `devices.list(query, options)` takes the query first, like every list. The signature of 0.1.2, `devices.list(options)`, still works.
 
-**`idempotencyKey`** (both creates) is sent as `Idempotency-Key` and kept 24 hours. The same key with the same body answers the same response without creating another number or link, so after a timeout or a `5xx` you can repeat the call with it. On their own, creates follow the rule of writes (see [Retries](#retries)): they are retried only on a `429` or `503`, which guarantee nothing was created.
+**`idempotencyKey`** (both creates, 1 to 255 characters) is sent as `Idempotency-Key` and kept 24 hours. The same key with the same body answers the same response without creating another number or link, so after a timeout or a `5xx` you can repeat the call with it. Only a success is replayed, with the `Idempotent-Replayed: true` header (see it with `.withResponse()`); a rejection is evaluated again. On their own, creates follow the rule of writes (see [Retries](#retries)): they are retried only on a `429` or `503`, which guarantee nothing was created.
 
 **The webhooks of numbers:**
 
 | Event | `data` |
 |---|---|
-| `device.connected` | `device`, `connected_at`, `connect_link_id` (or `null`). |
-| `device.disconnected` | `device`, `disconnected_at`, `reason`: `qr_logged_out`, `meta_account_not_registered`, `shadow_ban_protection`, `provider_error` or `unknown`. |
-| `device.deleted` | `device`, `deleted_at`. |
-| `device.health_changed` | `device`, `previous_state`, `state` (`available`, `limited`, `blocked`, `unknown`), `changed_at`. Official numbers, only when the state changes. |
+| `device.connected` | `device`, `connected_at`, `connect_link_id`. |
+| `device.disconnected` | `device`, `disconnected_at`, `connect_link_id`, `reason`: `qr_logged_out`, `meta_account_not_registered`, `shadow_ban_protection`, `provider_error`, `disconnected_by_user` or `unknown`. |
+| `device.deleted` | `device`, `deleted_at`, `connect_link_id`. |
+| `device.health_changed` | `device`, `previous_state`, `state` (`available`, `limited`, `blocked`, `unknown`), `changed_at`, `connect_link_id`. Official numbers, only when the state changes. |
 
-`device` is `{ id, name, number, connection, external_reference }`, where `connection` is `qr`, `coexistence` or `dedicated`.
+- `device` is `{ id, name, number, connection, external_reference }`, where `connection` is `qr`, `coexistence`, `dedicated` or `null`.
+- `connect_link_id` is the connect link that last connected the number, or `null`.
+- What these events add to the ones production sends today (`connection`, `external_reference`, `connect_link_id` and `reason`) is optional in the types: it is missing until the API that serves it is deployed. Handle `undefined`.
 
 **When it is refused** (`NUMBER_ERROR_CODES` and `IDEMPOTENCY_ERROR_CODES`):
 
 | Error | What happened |
 |---|---|
 | `403 numbers_not_included` | The plan does not include numbers. |
-| `403 number_limit_reached` | Every number of the plan is in use. |
+| `403 number_limit_reached` | Every number of the plan is in use (`limit`, `used`, `pending_device_ids` in the body). |
+| `409 pending_number_exists` | A QR number is already waiting to be scanned; the body brings its `device_id`. |
 | `422 qr_requires_coexistence` | QR can only be added to an official number in coexistence. |
 | `422 method_already_present` | The number already has that method; the body brings its `device_id`. |
+| `422 invalid_reference_device` | `same_number_as` or `device_id` is not a number of yours that can take it. |
+| `422 connection_type_mismatch` | A link with `device_id` of a number that connects another way than `type`. |
 | `429 too_many_open_links` | 20 connect links are open. Revoke some. |
 | `503 meta_connect_disabled` | Official numbers cannot be connected by link yet; QR links work. |
+| `409 link_not_pending` | Revoking a link that already ended. |
 | `422 idempotency_key_mismatch` | The key was used with another body. |
+| `422 invalid_idempotency_key` | The key is not 1 to 255 characters. |
 | `409 operation_in_progress` | The first call with that key is still running. |
 | `422 provider_unsupported` | `devices.qr` on an official number. |
+| `409` on `devices.qr` | The number cannot connect now: `trial_number_blocked`, `number_suspended_by_plan`, `device_inactive`, `provisioning_quota_exceeded`. |
 
-`isNumberQuotaError(error.code)` tells you whether it was the quota of the plan (the first four). `too_many_open_links` and `meta_connect_disabled` are never retried automatically.
+`NUMBER_ERROR_CODES` lists the rest (`connect_not_allowed`, `payment_required`, `provider_error`…), with their status. `isNumberQuotaError(error.code)` tells you whether it was the quota of the plan (the first five). `too_many_open_links` and `meta_connect_disabled` are never retried automatically.
 
 ## Receive webhooks with Express
 

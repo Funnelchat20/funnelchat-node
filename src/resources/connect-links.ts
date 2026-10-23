@@ -14,7 +14,9 @@ type LinkId = PathParams<'/api/v1/connect-links/{link}', 'GET'>['link'];
  * `return_url`, or `get`.
  *
  * Errors of their own (`APIError.code`): the rejections of `devices.create`, `429
- * too_many_open_links` (20 open links per account) and `503 meta_connect_disabled`.
+ * too_many_open_links` (20 open links per account), `503 meta_connect_disabled`, `422
+ * connection_type_mismatch` (`device_id` of a number that connects another way) and `409
+ * link_not_pending` (revoking a link that already ended).
  */
 export class ConnectLinks extends Resource {
   /**
@@ -30,12 +32,12 @@ export class ConnectLinks extends Resource {
     return this.client.request('GET', '/api/v1/connect-links/{link}', { ...options, path: { link } });
   }
 
-  /** `GET /api/v1/connect-links`, paginated: filter by `status` or `external_reference`. */
+  /** `GET /api/v1/connect-links`, paginated, newest first: filter by `status` or `external_reference`. */
   list(query?: Query<'/api/v1/connect-links'>, options?: RequestOptions) {
     return this.client.paginate('/api/v1/connect-links', { ...options, query });
   }
 
-  /** `DELETE /api/v1/connect-links/{link}`: revokes a `pending` link (any other is `409`). */
+  /** `DELETE /api/v1/connect-links/{link}`: revokes a `pending` link (any other is `409 link_not_pending`). */
   revoke(link: LinkId, options?: RequestOptions) {
     return this.client.request('DELETE', '/api/v1/connect-links/{link}', { ...options, path: { link } });
   }

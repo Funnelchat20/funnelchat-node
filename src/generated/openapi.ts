@@ -3702,7 +3702,7 @@ export interface paths {
         put?: never;
         /**
          * Create a number connected by QR code
-         * @description Same path and same rejections as the panel: `403 numbers_not_included`, `403 number_limit_reached`, `422 qr_requires_coexistence`, `422 method_already_present` (with `device_id`), `409 operation_in_progress`. The provider is chosen by the system. Then ask for the QR with `GET devices/{device}/qr`.
+         * @description Same path and same rejections as the panel: `403 numbers_not_included`, `403 number_limit_reached`, `409 pending_number_exists` (the account already has a QR number waiting to be scanned: its `device_id` comes in the body), `422 qr_requires_coexistence`, `422 method_already_present` (with `device_id`), `409 operation_in_progress`. The provider is chosen by the system. Then ask for the QR with `GET devices/{device}/qr`.
          */
         post: operations["pendingDevice.store"];
         delete?: never;
@@ -4840,7 +4840,7 @@ export interface paths {
         };
         /**
          * List connect links
-         * @description Without the token: `url` is not shown again.
+         * @description Without the token: `url` is not shown again. Newest first.
          */
         get: operations["pendingConnectLink.index"];
         put?: never;
@@ -4868,7 +4868,7 @@ export interface paths {
         post?: never;
         /**
          * Revoke a connect link
-         * @description Only a `pending` link: any other answers `409`.
+         * @description Only a `pending` link: any other answers `409 link_not_pending`.
          */
         delete: operations["pendingConnectLink.destroy"];
         options?: never;
@@ -6141,8 +6141,8 @@ export interface webhooks {
                             device: components["schemas"]["PendingWebhookDevice"];
                             /** Format: date-time */
                             connected_at: string;
-                            /** @description The connect link it came from, or `null`. */
-                            connect_link_id: string | null;
+                            /** @description The connect link that last connected the number, or `null`. */
+                            connect_link_id?: number | null;
                         };
                     };
                 };
@@ -6166,7 +6166,7 @@ export interface webhooks {
         put?: never;
         /**
          * device.disconnected
-         * @description One of the numbers of the account disconnected and can no longer send or receive: a QR session that closed, or an official number that failed its re-registration or was protected from a shadow ban.
+         * @description One of the numbers of the account disconnected and can no longer send or receive: a QR session that closed or was protected from a shadow ban, an official number that failed its re-registration, or one disconnected from the panel.
          */
         post: {
             parameters: {
@@ -6183,7 +6183,9 @@ export interface webhooks {
                             /** Format: date-time */
                             disconnected_at: string;
                             /** @enum {string} */
-                            reason: "qr_logged_out" | "meta_account_not_registered" | "shadow_ban_protection" | "provider_error" | "unknown";
+                            reason?: "qr_logged_out" | "meta_account_not_registered" | "shadow_ban_protection" | "provider_error" | "unknown" | "disconnected_by_user";
+                            /** @description The connect link that last connected the number, or `null`. */
+                            connect_link_id?: number | null;
                         };
                     };
                 };
@@ -7362,6 +7364,8 @@ export interface webhooks {
                             device: components["schemas"]["PendingWebhookDevice"];
                             /** Format: date-time */
                             deleted_at: string;
+                            /** @description The connect link that last connected the number, or `null`. */
+                            connect_link_id?: number | null;
                         };
                     };
                 };
@@ -7405,6 +7409,8 @@ export interface webhooks {
                             state: "available" | "limited" | "blocked" | "unknown";
                             /** Format: date-time */
                             changed_at: string;
+                            /** @description The connect link that last connected the number, or `null`. */
+                            connect_link_id?: number | null;
                         };
                     };
                 };
@@ -8487,8 +8493,8 @@ export interface components {
                 /** @description The statuses `message.status_changed` reports for the messages of this number. */
                 statuses: ("sent" | "delivered" | "read" | "failed")[];
             };
-            connection: components["schemas"]["PendingDeviceConnection"];
-            external_reference: components["schemas"]["PendingExternalReference"];
+            connection?: components["schemas"]["PendingDeviceConnection"];
+            external_reference?: components["schemas"]["PendingExternalReference"];
         };
         /** DisconnectSurveyResource */
         DisconnectSurveyResource: {
@@ -9655,10 +9661,10 @@ export interface components {
             updated_at?: string | null;
         };
         /**
-         * @description `qr`: connected by scanning a QR code (not official). `coexistence`: WhatsApp Cloud API together with the WhatsApp Business app. `dedicated`: WhatsApp Cloud API only.
-         * @enum {string}
+         * @description `qr`: connected by scanning a QR code (not official). `coexistence`: WhatsApp Cloud API together with the WhatsApp Business app. `dedicated`: WhatsApp Cloud API only. `null` when it cannot be told yet.
+         * @enum {string|null}
          */
-        PendingDeviceConnection: "qr" | "coexistence" | "dedicated";
+        PendingDeviceConnection: "qr" | "coexistence" | "dedicated" | null;
         /** @description Your own reference for the number (for example the id of your customer). Free text, not unique. */
         PendingExternalReference: string | null;
         PendingDeviceCreate: {
@@ -9677,7 +9683,7 @@ export interface components {
             connected: boolean;
             /** @description A PNG image as a data URI, or `null` when the number is already connected. */
             qr_code: string | null;
-            /** @description Seconds after which to ask for it again. */
+            /** @description Seconds after which to ask for it again: 20 with a QR, 3 while the session starts, 0 once connected. */
             expires_in: number;
         };
         /** @enum {string} */
@@ -9690,8 +9696,7 @@ export interface components {
         /** @enum {string} */
         PendingConnectLinkConnectionType: "coexistence" | "dedicated";
         PendingConnectLink: {
-            /** @description Opaque: compare it as text. */
-            id: string;
+            id: number;
             /** @enum {string} */
             type: "meta" | "qr";
             status: components["schemas"]["PendingConnectLinkStatus"];
@@ -9701,10 +9706,11 @@ export interface components {
             expires_at: string;
             allowed_connection_types: components["schemas"]["PendingConnectLinkConnectionType"][] | null;
             provision_us_number: boolean;
-            /** @description The number the link created or reconnects; `null` until it completes, unless it is a reconnection. */
+            /** @description The number the link reconnects, or the one it created once `completed`; `null` otherwise. */
             device_id: number | null;
             external_reference: components["schemas"]["PendingExternalReference"];
             return_url: string | null;
+            /** @description Why the link did not complete (`link_expired` when it expired, `revoked` when revoked), or `null`. */
             error_code: components["schemas"]["PendingConnectLinkErrorCode"];
             /** Format: date-time */
             created_at: string;
@@ -9752,8 +9758,8 @@ export interface components {
             name: string | null;
             /** @description Digits only, without `+`. */
             number: string | null;
-            connection: components["schemas"]["PendingDeviceConnection"];
-            external_reference: components["schemas"]["PendingExternalReference"];
+            connection?: components["schemas"]["PendingDeviceConnection"];
+            external_reference?: components["schemas"]["PendingExternalReference"];
         };
     };
     responses: {
@@ -17659,7 +17665,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Kept 24 hours per account. The same key with the same body answers the same response without creating another resource; with another body, `422 idempotency_key_mismatch`; while the first call runs, `409 operation_in_progress`. */
+                /** @description Kept 24 hours per account and resource. Only a 2xx is replayed, with `Idempotent-Replayed: true`; a rejection is evaluated again. The same key with another body: `422 idempotency_key_mismatch`; while the first call runs: `409 operation_in_progress`; a malformed key: `422 invalid_idempotency_key`. */
                 "Idempotency-Key"?: string;
             };
             path?: never;
@@ -20024,7 +20030,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                link: string;
+                link: number;
             };
             cookie?: never;
         };
@@ -20048,7 +20054,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                link: string;
+                link: number;
             };
             cookie?: never;
         };
