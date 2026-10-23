@@ -1,13 +1,22 @@
 /**
  * End to end against funnelchat-sandbox: creating a QR number with an idempotency key, its QR and
  * the external_reference filter; connect links by QR and by Meta through the sandbox's test page,
- * which connects at once; revoking a link; and the signed `device.*` webhooks verified by the SDK.
+ * which connects at once (or fails); revoking a link; disconnections, health and the quota of the
+ * plan through the sandbox's control routes; and the signed `device.*` webhooks verified by the SDK.
  *
  *   FUNNELCHAT_SANDBOX_URL=http://127.0.0.1:4010 npm run test:e2e
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { type APIError, ConflictError, UnprocessableEntityError, type WebhookEventOf } from '../../src/index.js';
-import { type Receiver, SANDBOX_URL, control, sandboxClient, startReceiver } from './sandbox.js';
+import {
+  type APIError,
+  ConflictError,
+  InternalServerError,
+  PermissionDeniedError,
+  UnprocessableEntityError,
+  type WebhookEventOf,
+  isNumberQuotaError,
+} from '../../src/index.js';
+import { type Receiver, SANDBOX_URL, SEED, control, sandboxClient, startReceiver } from './sandbox.js';
 
 const DEVICE_EVENTS = ['device.connected', 'device.disconnected', 'device.deleted', 'device.health_changed'];
 
@@ -114,5 +123,53 @@ describe.skipIf(!SANDBOX_URL)('numbers against the sandbox', () => {
     expect((await funnelchat.connectLinks.get(link.id)).data.status).toBe('revoked');
     const again = await funnelchat.connectLinks.revoke(link.id).catch((e: unknown) => e);
     expect(again).toBeInstanceOf(ConflictError);
+  });
+
+  it('a link that fails on its page says why, by return_url and by get', async () => {
+    const { data: link } = await funnelchat.connectLinks.create({ type: 'qr', return_url: 'https://example.com/done' });
+    const back = await openPage(link.url, '?outcome=failed&error_code=qr_timeout');
+    expect(back?.searchParams.get('status')).toBe('failed');
+    expect(back?.searchParams.get('error_code')).toBe('qr_timeout');
+    const { data: failed } = await funnelchat.connectLinks.get(link.id);
+    expect(failed).toMatchObject({ status: 'failed', error_code: 'qr_timeout' });
+  });
+
+  it('an official number that disconnects says why, and its health changes only once per state', async () => {
+    await control('POST', `/devices/${SEED.officialDevice}/disconnect`, { reason: 'shadow_ban_protection' });
+    const disconnected = (await receiver.waitFor(
+      (event) => event.type === 'device.disconnected' && event.data.device.id === SEED.officialDevice,
+    )) as WebhookEventOf<'device.disconnected'>;
+    expect(disconnected.data.reason).toBe('shadow_ban_protection');
+    expect(['coexistence', 'dedicated']).toContain(disconnected.data.device.connection);
+
+    await control('POST', `/devices/${SEED.officialDevice}/health`, { state: 'limited' });
+    const changed = (await receiver.waitFor(
+      (event) => event.type === 'device.health_changed' && event.data.device.id === SEED.officialDevice,
+    )) as WebhookEventOf<'device.health_changed'>;
+    expect(changed.data.state).toBe('limited');
+    expect(changed.data.previous_state).not.toBe('limited');
+    const same = (await control('POST', `/devices/${SEED.officialDevice}/health`, { state: 'limited' })) as { event: unknown };
+    expect(same.event).toBeNull();
+    expect(receiver.rejected).toEqual([]);
+  });
+
+  it('the quota of the plan and the Meta switch refuse with their codes', async () => {
+    const { in_use: inUse } = (await control('GET', '/numbers')) as { in_use: number };
+    await control('POST', '/numbers', { limit: inUse });
+    const full = (await funnelchat.devices.create({ connection: 'qr' }).catch((e: unknown) => e)) as APIError;
+    expect(full).toBeInstanceOf(PermissionDeniedError);
+    expect(full.code).toBe('number_limit_reached');
+    expect(isNumberQuotaError(full.code)).toBe(true);
+
+    await control('POST', '/numbers', { limit: inUse + 5, included: false });
+    const notIncluded = (await funnelchat.connectLinks.create({ type: 'qr' }).catch((e: unknown) => e)) as APIError;
+    expect(notIncluded.code).toBe('numbers_not_included');
+
+    await control('POST', '/numbers', { included: true, meta_connect: false });
+    const off = (await funnelchat.connectLinks.create({ type: 'meta', allowed_connection_types: ['dedicated'] }).catch((e: unknown) => e)) as APIError;
+    expect(off).toBeInstanceOf(InternalServerError);
+    expect(off).toMatchObject({ status: 503, code: 'meta_connect_disabled' });
+    const qr = await funnelchat.connectLinks.create({ type: 'qr' });
+    expect(qr.data.status).toBe('pending');
   });
 });
