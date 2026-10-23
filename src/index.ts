@@ -28,6 +28,7 @@ export type {
   ApiPath,
   Body,
   HttpMethod,
+  IdempotentRequestOptions,
   ListItem,
   PathParams,
   Query,
@@ -50,8 +51,8 @@ export { routes } from './generated/routes.js';
 export type { RouteInfo } from './generated/routes.js';
 export type { components, operations, paths, webhooks as WebhookSchemas } from './generated/openapi.js';
 
-export { ACCESS_ERROR_CODES, SEND_ERROR_CODES, isSendRuleError } from './core/error-codes.js';
-export type { AccessErrorCode, KnownErrorCode, SendErrorCode } from './core/error-codes.js';
+export { ACCESS_ERROR_CODES, IDEMPOTENCY_ERROR_CODES, NUMBER_ERROR_CODES, SEND_ERROR_CODES, isNumberQuotaError, isSendRuleError } from './core/error-codes.js';
+export type { AccessErrorCode, IdempotencyErrorCode, KnownErrorCode, NumberErrorCode, SendErrorCode } from './core/error-codes.js';
 export type { SendMessageParams } from './resources/messages.js';
 
 export { VERSION } from './version.js';

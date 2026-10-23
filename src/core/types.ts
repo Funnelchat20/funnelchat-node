@@ -86,6 +86,17 @@ export interface RequestOptions {
   signal?: AbortSignal;
 }
 
+/** Options of the creates that take an `Idempotency-Key` (`devices.create`, `connectLinks.create`). */
+export interface IdempotentRequestOptions extends RequestOptions {
+  /**
+   * Sent as the `Idempotency-Key` header (up to 255 characters, kept 24 hours per account). The same
+   * key with the same body answers the same response without creating another resource, so after a
+   * timeout or a `5xx` you can repeat the call with it safely. With another body: `422
+   * idempotency_key_mismatch`; while the first call runs: `409 operation_in_progress`.
+   */
+  idempotencyKey?: string;
+}
+
 type PathPart<P extends ApiPath, M extends HttpMethod> =
   PathParams<P, M> extends undefined ? { path?: undefined } : { path: PathParams<P, M> };
 

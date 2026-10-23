@@ -15,7 +15,7 @@ export interface RouteInfo {
   readonly pending: boolean;
 }
 
-/** Every operation of the spec (258), sorted by path. */
+/** Every operation of the spec (264), sorted by path. */
 export const routes: readonly RouteInfo[] = [
   {"method":"GET","path":"/api/v1/agents","operationId":"user.index","domain":"conversations","permission":"conversations:read","tag":"User","summary":"Listar agentes","pending":false},
   {"method":"GET","path":"/api/v1/agents/{user}","operationId":"user.show","domain":"conversations","permission":"conversations:read","tag":"User","summary":"Ver un agente","pending":false},
@@ -66,6 +66,10 @@ export const routes: readonly RouteInfo[] = [
   {"method":"GET","path":"/api/v1/campaigns/{campaign}/pipelines/{pipeline}","operationId":"campaign.showPipeline","domain":"communities","permission":"communities:read","tag":"Grupos de una campaña y operaciones","summary":"Ver un pipeline","pending":false},
   {"method":"GET","path":"/api/v1/campaigns/{campaign}/webhooks","operationId":"campaignWebhook.index","domain":"communities","permission":"communities:read","tag":"Webhooks de campaña (legado)","summary":"Listar los webhooks de una campaña","pending":false},
   {"method":"GET","path":"/api/v1/campaigns/{campaign}/webhooks/logs","operationId":"campaignWebhook.logs","domain":"communities","permission":"communities:read","tag":"Webhooks de campaña (legado)","summary":"Listar las entregas de los webhooks de una campaña","pending":false},
+  {"method":"GET","path":"/api/v1/connect-links","operationId":"pendingConnectLink.index","domain":"accounts","permission":"accounts:read","tag":"ConnectLink","summary":"List connect links","pending":true},
+  {"method":"POST","path":"/api/v1/connect-links","operationId":"pendingConnectLink.store","domain":"accounts","permission":"accounts:operate","tag":"ConnectLink","summary":"Create a connect link","pending":true},
+  {"method":"DELETE","path":"/api/v1/connect-links/{link}","operationId":"pendingConnectLink.destroy","domain":"accounts","permission":"accounts:operate","tag":"ConnectLink","summary":"Revoke a connect link","pending":true},
+  {"method":"GET","path":"/api/v1/connect-links/{link}","operationId":"pendingConnectLink.show","domain":"accounts","permission":"accounts:read","tag":"ConnectLink","summary":"Read a connect link","pending":true},
   {"method":"PUT","path":"/api/v1/contact-flows/{contactFlowId}/cancel","operationId":"flow.cancelContactFlow","domain":"conversations","permission":"conversations:write","tag":"Flow","summary":"Cancelar un flujo en curso","pending":false},
   {"method":"GET","path":"/api/v1/contact-flows/{contactId}","operationId":"flow.contactFlowHistory","domain":"conversations","permission":"conversations:read","tag":"Flow","summary":"Listar los flujos en curso de un contacto","pending":false},
   {"method":"GET","path":"/api/v1/contacts","operationId":"contact.index","domain":"conversations","permission":"conversations:read","tag":"Contact","summary":"Listar contactos","pending":false},
@@ -115,10 +119,11 @@ export const routes: readonly RouteInfo[] = [
   {"method":"GET","path":"/api/v1/custom-fields/{customField}","operationId":"customField.show","domain":"conversations","permission":"conversations:read","tag":"CustomField","summary":"Ver un campo personalizado","pending":false},
   {"method":"PUT","path":"/api/v1/custom-fields/{customField}","operationId":"customField.update","domain":"conversations","permission":"conversations:write","tag":"CustomField","summary":"Actualizar un campo personalizado","pending":false},
   {"method":"POST","path":"/api/v1/custom-fields/delete","operationId":"customField.destroy","domain":"conversations","permission":"conversations:write","tag":"CustomField","summary":"Eliminar campos personalizados","pending":false},
-  {"method":"GET","path":"/api/v1/devices","operationId":"device.index","domain":"accounts","permission":"accounts:read","tag":"Device","summary":"Listar números","pending":false},
+  {"method":"GET","path":"/api/v1/devices","operationId":"device.index","domain":"accounts","permission":"accounts:read","tag":"Device","summary":"Listar números","pending":true},
+  {"method":"POST","path":"/api/v1/devices","operationId":"pendingDevice.store","domain":"accounts","permission":"accounts:operate","tag":"Device","summary":"Create a number connected by QR code","pending":true},
   {"method":"DELETE","path":"/api/v1/devices/{device}","operationId":"device.destroy","domain":"accounts","permission":"accounts:operate","tag":"Device","summary":"Eliminar un número","pending":false},
   {"method":"GET","path":"/api/v1/devices/{device}","operationId":"device.show","domain":"accounts","permission":"accounts:read","tag":"Device","summary":"Ver un número","pending":false},
-  {"method":"PUT","path":"/api/v1/devices/{device}","operationId":"device.update","domain":"accounts","permission":"accounts:write","tag":"Device","summary":"Actualizar un número","pending":false},
+  {"method":"PUT","path":"/api/v1/devices/{device}","operationId":"device.update","domain":"accounts","permission":"accounts:write","tag":"Device","summary":"Actualizar un número","pending":true},
   {"method":"GET","path":"/api/v1/devices/{device}/ad-groups","operationId":"group.adGroups","domain":"communities","permission":"communities:read","tag":"Grupos","summary":"Listar los grupos de anuncios de un número","pending":false},
   {"method":"POST","path":"/api/v1/devices/{device}/capi/dataset","operationId":"capiConnection.dataset","domain":"accounts","permission":"accounts:write","tag":"CapiConnection","summary":"Configurar el dataset de Conversions API","pending":false},
   {"method":"GET","path":"/api/v1/devices/{device}/capi/test","operationId":"capiConnection.test","domain":"accounts","permission":"accounts:read","tag":"CapiConnection","summary":"Probar la conexión con Conversions API","pending":false},
@@ -142,6 +147,7 @@ export const routes: readonly RouteInfo[] = [
   {"method":"DELETE","path":"/api/v1/devices/{device}/message-queue/all","operationId":"device.clearQueue","domain":"accounts","permission":"accounts:operate","tag":"Device","summary":"Vaciar la cola de mensajes","pending":false},
   {"method":"GET","path":"/api/v1/devices/{device}/message-queue/count","operationId":"device.getQueueCount","domain":"accounts","permission":"accounts:read","tag":"Device","summary":"Contar los mensajes en la cola","pending":false},
   {"method":"GET","path":"/api/v1/devices/{device}/open-conversations","operationId":"device.openConversations","domain":"accounts","permission":"accounts:read","tag":"Device","summary":"Ver qué teléfonos tienen conversación abierta","pending":false},
+  {"method":"GET","path":"/api/v1/devices/{device}/qr","operationId":"pendingDevice.qr","domain":"accounts","permission":"accounts:operate","tag":"Device","summary":"The QR code to connect a number","pending":true},
   {"method":"PUT","path":"/api/v1/devices/{device}/reset","operationId":"device.reset","domain":"accounts","permission":"accounts:operate","tag":"Device","summary":"Reiniciar la sesión de un número","pending":false},
   {"method":"GET","path":"/api/v1/devices/{device}/status","operationId":"device.status","domain":"accounts","permission":"accounts:read","tag":"Device","summary":"Ver el estado de conexión","pending":false},
   {"method":"DELETE","path":"/api/v1/devices/{device}/templates/{template}","operationId":"messageTemplate.delete","domain":"conversations","permission":"conversations:write","tag":"MessageTemplate","summary":"Eliminar una plantilla de un número","pending":false},

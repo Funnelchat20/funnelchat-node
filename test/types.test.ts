@@ -54,6 +54,17 @@ function typeChecks(client: Funnelchat) {
     // The capabilities of a number.
     expectTypeOf<Awaited<ReturnType<typeof client.devices.retrieve>>['capabilities']['statuses']>().toEqualTypeOf<('sent' | 'delivered' | 'read' | 'failed')[]>();
     expectTypeOf(client.forms.create).parameter(0).toHaveProperty('template_key');
+    // Creating and connecting numbers.
+    expectTypeOf<Awaited<ReturnType<typeof client.devices.create>>['data']['connection']>().toEqualTypeOf<'qr' | 'coexistence' | 'dedicated'>();
+    expectTypeOf<Awaited<ReturnType<typeof client.devices.qr>>['data']['qr_code']>().toEqualTypeOf<string | null>();
+    expectTypeOf<Awaited<ReturnType<typeof client.connectLinks.create>>['data']['url']>().toEqualTypeOf<string>();
+    expectTypeOf<Awaited<ReturnType<typeof client.connectLinks.get>>['data']['status']>().toEqualTypeOf<'pending' | 'completed' | 'failed' | 'expired' | 'revoked'>();
+    // @ts-expect-error a meta link needs allowed_connection_types
+    void (() => client.connectLinks.create({ type: 'meta' }));
+    // @ts-expect-error only qr numbers are created directly
+    void (() => client.devices.create({ connection: 'coexistence' }));
+    void (() => client.devices.list({ external_reference: 'customer-81' }));
+    void (() => client.devices.create({ connection: 'qr' }, { idempotencyKey: 'order-8841' }));
     // A route whose spec documents no body still returns whatever the API answers.
     expectTypeOf<Awaited<ReturnType<typeof client.webhooks.delete>>>().toBeUnknown();
   }
@@ -85,6 +96,13 @@ function typeChecks(client: Funnelchat) {
     };
     void handle;
     expectTypeOf<WebhookEventOf<'device.connected'>['data']['device']['id']>().toEqualTypeOf<number>();
+    expectTypeOf<WebhookEventOf<'device.connected'>['data']['connect_link_id']>().toEqualTypeOf<number | null>();
+    expectTypeOf<WebhookEventOf<'device.connected'>['data']['device']['external_reference']>().toEqualTypeOf<string | null>();
+    expectTypeOf<WebhookEventOf<'device.disconnected'>['data']['reason']>().toEqualTypeOf<
+      'qr_logged_out' | 'meta_account_not_registered' | 'shadow_ban_protection' | 'provider_error' | 'unknown'
+    >();
+    expectTypeOf<WebhookEventOf<'device.health_changed'>['data']['state']>().toEqualTypeOf<'available' | 'limited' | 'blocked' | 'unknown'>();
+    expectTypeOf<WebhookEventOf<'device.deleted'>['data']['device']['connection']>().toEqualTypeOf<'qr' | 'coexistence' | 'dedicated'>();
     expectTypeOf<'group.reaction_added'>().toMatchTypeOf<WebhookEventType>();
     expectTypeOf<'group_join_request.created'>().toMatchTypeOf<WebhookEventType>();
   }
@@ -93,6 +111,8 @@ function typeChecks(client: Funnelchat) {
     // The known error codes autocomplete, and any other string is still accepted.
     expectTypeOf<'mac_lockout_24h'>().toMatchTypeOf<KnownErrorCode>();
     expectTypeOf<'origin_unreachable'>().toMatchTypeOf<KnownErrorCode>();
+    expectTypeOf<'too_many_open_links'>().toMatchTypeOf<KnownErrorCode>();
+    expectTypeOf<'idempotency_key_mismatch'>().toMatchTypeOf<KnownErrorCode>();
     expectTypeOf<'something_new'>().toMatchTypeOf<NonNullable<APIError['code']>>();
   }
 }

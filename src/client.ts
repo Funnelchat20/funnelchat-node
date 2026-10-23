@@ -21,6 +21,7 @@ import type {
   UntypedRequestOptions,
 } from './core/types.js';
 import { interpolatePath, joinUrl, serializeQuery } from './core/url.js';
+import { ConnectLinks } from './resources/connect-links.js';
 import { Contacts } from './resources/contacts.js';
 import { Conversations } from './resources/conversations.js';
 import { CustomFields } from './resources/custom-fields.js';
@@ -93,6 +94,8 @@ export class Funnelchat {
   readonly customFields: CustomFields;
   readonly groups: Groups;
   readonly devices: Devices;
+  /** Single-use pages where your customer connects a WhatsApp number to your account. */
+  readonly connectLinks: ConnectLinks;
   /** Webhook subscriptions, plus `verify` and `constructEvent`. */
   readonly webhooks: Webhooks;
 
@@ -131,6 +134,7 @@ export class Funnelchat {
     this.customFields = new CustomFields(this);
     this.groups = new Groups(this);
     this.devices = new Devices(this);
+    this.connectLinks = new ConnectLinks(this);
     this.webhooks = new Webhooks(this);
   }
 

@@ -8,6 +8,8 @@ interface Patch {
   method: string;
   path: string;
   while?: Record<string, unknown>;
+  requestBodyProperties?: Record<string, unknown>;
+  parameters?: { name: string; in: string }[];
 }
 interface SpecFile {
   paths?: PathItems;
@@ -44,9 +46,20 @@ describe('generated layer and the pending-of-the-spec layer', () => {
     expect(added.map((r) => key(r.method, r.path)).sort()).toEqual(missing.map((m) => key(m.method, m.path)).sort());
   });
 
+  // A patch without `while` applies while the snapshot operation lacks one of its properties or parameters.
+  const lacksSomething = (op: Operation | undefined, patch: Patch) => {
+    const body = (op?.requestBody as { content?: Record<string, { schema?: { properties?: object } }> } | undefined)?.content?.['application/json']?.schema;
+    const params = (op?.parameters ?? []) as { name: string; in: string }[];
+    return (
+      Object.keys(patch.requestBodyProperties ?? {}).some((prop) => !(prop in (body?.properties ?? {}))) ||
+      (patch.parameters ?? []).some((p) => !params.some((q) => q.name === p.name && q.in === p.in))
+    );
+  };
+
   it('flags the snapshot operations a pending patch still applies to', () => {
     for (const patch of [...(pending.operationPatches ?? []), ...(pending.responsePatches ?? [])]) {
-      if (matches(snapshotOp(patch.method, patch.path), patch.while)) {
+      const op = snapshotOp(patch.method, patch.path);
+      if (matches(op, patch.while) && (patch.while !== undefined || lacksSomething(op, patch))) {
         expect(routeKeys.get(key(patch.method, patch.path))?.pending).toBe(true);
       }
     }

@@ -5,7 +5,9 @@
  * Sources (production, 22-10): platform-gate v0.8.0 as pinned by accounts v1.4.24; api-edge v0.3.0
  * (src/index.ts); conversations v1.18.10 (Message/Services/ApiSendGuard.php,
  * Message/Support/ApiKeySendResponse.php, WhatsappForm/Support/FormSendPreflight.php). The spec
- * does not document most of them yet; when it does, this list can be generated.
+ * does not document most of them yet; when it does, this list can be generated. The codes of
+ * creating and connecting numbers come from contract 1022-alta-de-numeros v0 (22-10-2026), not from
+ * production yet.
  */
 
 /** Errors of the API entry and of the key gate, on any route. */
@@ -71,11 +73,41 @@ export const SEND_ERROR_CODES = {
   number_not_eligible: 422,
 } as const;
 
+/**
+ * Rejections of creating a number (`devices.create`) or a connect link (`connectLinks.create`):
+ * nothing was created. The first four are the quota of the plan, the same as in the panel.
+ */
+export const NUMBER_ERROR_CODES = {
+  /** 403: the plan of the account does not include numbers. */
+  numbers_not_included: 403,
+  /** 403: the account already uses every number of its plan. */
+  number_limit_reached: 403,
+  /** 422: QR can only be added to an official number that is in coexistence. */
+  qr_requires_coexistence: 422,
+  /** 422: the number already has that connection method; the body brings its `device_id`. */
+  method_already_present: 422,
+  /** 429: the account has 20 connect links open. Revoke some, or wait for them to end. Not worth retrying. */
+  too_many_open_links: 429,
+  /** 503: official numbers (`type: 'meta'`) cannot be connected by link yet. QR links work. Not worth retrying. */
+  meta_connect_disabled: 503,
+} as const;
+
+/** Rejections of a create sent with `idempotencyKey`. */
+export const IDEMPOTENCY_ERROR_CODES = {
+  /** 422: the key was already used with another body. Use a new key for a new resource. */
+  idempotency_key_mismatch: 422,
+  /** 409: the first call with that key, or another operation on the number, is still running. Read the state, or repeat it later. */
+  operation_in_progress: 409,
+} as const;
+
 export type AccessErrorCode = keyof typeof ACCESS_ERROR_CODES;
 /** An error code of a send rejected by the WhatsApp rules (`APIError.code`). */
 export type SendErrorCode = keyof typeof SEND_ERROR_CODES;
+/** An error code of creating a number or a connect link (`APIError.code`). */
+export type NumberErrorCode = keyof typeof NUMBER_ERROR_CODES;
+export type IdempotencyErrorCode = keyof typeof IDEMPOTENCY_ERROR_CODES;
 /** Every `error` code the SDK knows. The API can send others: treat `code` as a `string`. */
-export type KnownErrorCode = AccessErrorCode | SendErrorCode;
+export type KnownErrorCode = AccessErrorCode | SendErrorCode | NumberErrorCode | IdempotencyErrorCode;
 
 const has = (table: object, code: string | undefined): boolean => code !== undefined && Object.prototype.hasOwnProperty.call(table, code);
 
@@ -84,8 +116,16 @@ export function isSendRuleError(code: string | undefined): code is SendErrorCode
   return has(SEND_ERROR_CODES, code);
 }
 
+const QUOTA_CODES: ReadonlySet<string> = new Set(['numbers_not_included', 'number_limit_reached', 'qr_requires_coexistence', 'method_already_present']);
+
+/** Whether an `APIError.code` is a rejection by the number quota of the plan (the same as the panel's). */
+export function isNumberQuotaError(code: string | undefined): code is 'numbers_not_included' | 'number_limit_reached' | 'qr_requires_coexistence' | 'method_already_present' {
+  return code !== undefined && QUOTA_CODES.has(code);
+}
+
 /**
- * Codes that a retry would only repeat: a `429` for the monthly active contacts is not a pace,
- * so it is never retried automatically.
+ * Codes that a retry would only repeat: a `429` for the monthly active contacts or for the open
+ * connect links is not a pace, and `503 meta_connect_disabled` is a switch, not an outage; so they
+ * are never retried automatically.
  */
-export const NOT_RETRYABLE_CODES: ReadonlySet<string> = new Set(['mac_lockout_24h', 'mac_limit_reached']);
+export const NOT_RETRYABLE_CODES: ReadonlySet<string> = new Set(['mac_lockout_24h', 'mac_limit_reached', 'too_many_open_links', 'meta_connect_disabled']);

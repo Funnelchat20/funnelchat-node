@@ -152,8 +152,11 @@ function mergePending(spec, pending) {
     }
   }
 
+  // Operation patches add body properties and `parameters`. With `while` they apply while the
+  // operation matches it; without it, each property or parameter only while the operation lacks it.
   for (const patch of pending.operationPatches ?? []) {
-    const label = `${patch.method.toUpperCase()} ${patch.path} (patch: ${Object.keys(patch.requestBodyProperties ?? {}).join(', ')})`;
+    const names = [...Object.keys(patch.requestBodyProperties ?? {}), ...(patch.parameters ?? []).map((p) => p.name)];
+    const label = `${patch.method.toUpperCase()} ${patch.path} (patch: ${names.join(', ')})`;
     const op = merged.paths[patch.path]?.[patch.method];
     if (!op) {
       report.missing.push(label);
@@ -165,14 +168,24 @@ function mergePending(spec, pending) {
     }
     let schema = op.requestBody?.content?.['application/json']?.schema;
     if (schema?.$ref) schema = merged.components.schemas[schema.$ref.replace('#/components/schemas/', '')];
-    if (!schema) {
+    if (patch.requestBodyProperties && !schema) {
       report.missing.push(label);
       continue;
     }
-    schema.properties ??= {};
-    for (const [prop, propSchema] of Object.entries(patch.requestBodyProperties ?? {})) {
-      schema.properties[prop] ??= propSchema;
+    const missingProps = Object.keys(patch.requestBodyProperties ?? {}).filter((prop) => !(prop in (schema?.properties ?? {})));
+    const hasParameter = (p) => (op.parameters ?? []).some((q) => q.name === p.name && q.in === p.in);
+    const missingParams = (patch.parameters ?? []).filter((p) => !hasParameter(p));
+    if (!patch.while && missingProps.length === 0 && missingParams.length === 0) {
+      report.superseded.push(label);
+      continue;
     }
+    if (schema) {
+      schema.properties ??= {};
+      for (const [prop, propSchema] of Object.entries(patch.requestBodyProperties ?? {})) {
+        schema.properties[prop] ??= propSchema;
+      }
+    }
+    if (missingParams.length) op.parameters = [...(op.parameters ?? []), ...missingParams];
     op['x-fc-pending'] = patch['x-fc-pending'];
     report.applied.push(label);
   }

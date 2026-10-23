@@ -120,13 +120,15 @@ export class UnsupportedMediaTypeError extends APIError {}
 export class UnprocessableEntityError extends APIError {}
 /**
  * `429`: rate limit (`rate_limited`, `daily_cap_exceeded`; `retryAfter` says how many seconds to
- * wait) or the monthly active contacts (`mac_lockout_24h`, `mac_limit_reached`), which waiting
- * does not fix.
+ * wait), the monthly active contacts (`mac_lockout_24h`, `mac_limit_reached`) or the open connect
+ * links (`too_many_open_links`), which waiting does not fix.
  */
 export class RateLimitError extends APIError {}
 /**
  * `5xx`. `502 origin_unreachable` and `500 edge_misconfigured` come from the API entry. After a
- * `5xx` on a write, read the state before repeating it: it may have been applied.
+ * `5xx` on a write, read the state before repeating it: it may have been applied (or repeat a create
+ * with the same `idempotencyKey`). `503 meta_connect_disabled`: official numbers cannot be connected
+ * by link yet.
  */
 export class InternalServerError extends APIError {}
 

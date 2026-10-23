@@ -56,7 +56,8 @@ Every request sends `Authorization: Bearer <key>`, `Accept: application/json` an
 | `funnelchat.tags` | `list`, `create`, `retrieve`, `update`, `delete`, `listContacts`. |
 | `funnelchat.customFields` | `list`, `create`, `retrieve`, `update`, `delete`. |
 | `funnelchat.groups` | Read groups, participants, events and messages. |
-| `funnelchat.devices` | `list`, `retrieve` (with `capabilities`), `update`, `status`, `health`, `me`, `checkPhone`, connection history. |
+| `funnelchat.devices` | `list` (filter by `external_reference`), `create` (a QR number), `qr`, `retrieve` (with `capabilities`), `update`, `status`, `health`, `me`, `checkPhone`, connection history. |
+| `funnelchat.connectLinks` | `create`, `get`, `list`, `revoke`: a page where your customer connects a number. See [Connect a number](#connect-a-number). |
 | `funnelchat.webhooks` | Subscriptions (`list`, `create`, `retrieve`, `update`, `delete`, `test`, `listDeliveries`), the catalog (`events`), `verify` and `constructEvent`. |
 
 Parameters, bodies and responses are typed from the spec. For any other route, see [Any route](#any-route).
@@ -144,6 +145,87 @@ const { message } = await funnelchat.messages.sendForm(2001, {
 ```
 
 The answers arrive by the `whatsapp_form.completed` webhook (`answers`: `key`, `label` and `value`) and are read with `forms.listResponses(familyId)`. `forms.templates()` lists the templates to start from; `forms.update(id, { definition, expected_updated_at })` saves a draft and answers `409 STALE` when someone saved it first.
+
+## Connect a number
+
+> **Not in production yet.** This follows contract 1022-alta-de-numeros (22-10-2026); the API that serves it is being built. See [Pending of the spec](#pending-of-the-spec).
+
+A number belongs to the account of the key and takes a slot of its plan, as in the panel. Creating numbers, showing their QR code and creating or revoking connect links needs the `accounts:operate` permission; reading links, `accounts:read`. Tag each number with your own `external_reference` (for example the id of your customer): it comes back in the number, in the links and in every `device.*` webhook.
+
+**A connect link** is a single-use page on the Funnelchat domain. Send your customer there: the number is created when they finish.
+
+```ts
+const { data: link } = await funnelchat.connectLinks.create(
+  {
+    type: 'meta',                                   // an official WhatsApp Cloud number; or 'qr'
+    allowed_connection_types: ['coexistence', 'dedicated'], // with both, your customer chooses
+    external_reference: 'customer-81',
+    return_url: 'https://your-app.example/whatsapp/done',   // optional, https only
+    expires_in_minutes: 1440,                       // 30 to 10080; 24 hours by default
+  },
+  { idempotencyKey: 'connect-customer-81' },
+);
+console.log(link.url); // https://api.funnelchat.com/connect/… — it carries the token and is shown only now
+```
+
+- `provision_us_number: true` (only `meta`) also offers a US number of the pool. `device_id` reconnects a number you already have, without taking a new slot; `same_number_as` (only `qr`) adds QR to a number in coexistence.
+- You learn the result three ways: the `device.connected` webhook (with `connect_link_id` and `external_reference`), the `return_url` (`?connect_link_id=…&status=completed|failed&device_id=…&error_code=…`), or reading the link:
+
+```ts
+const { data } = await funnelchat.connectLinks.get(link.id);
+console.log(data.status, data.device_id, data.error_code); // 'completed', 9, null
+
+for await (const open of funnelchat.connectLinks.list({ status: 'pending', external_reference: 'customer-81' })) {
+  await funnelchat.connectLinks.revoke(open.id); // only a pending link; any other answers 409
+}
+```
+
+**A QR number, without a page.** Create it and show its QR yourself:
+
+```ts
+const { data: device } = await funnelchat.devices.create(
+  { connection: 'qr', alias: 'Sales', external_reference: 'customer-81' },
+  { idempotencyKey: 'qr-customer-81' },
+);
+
+const { data: qr } = await funnelchat.devices.qr(device.id);
+// qr.qr_code is a PNG data URI (null once connected); ask again after qr.expires_in seconds.
+
+for await (const number of funnelchat.devices.list({ external_reference: 'customer-81' })) {
+  console.log(number.id, number.connection, number.connected);
+}
+```
+
+`external_reference` changes with `devices.update(id, { external_reference })`. Deleting a number (`DELETE /api/v1/devices/{device}`) frees its slot and sends `device.deleted`.
+
+**`idempotencyKey`** (both creates) is sent as `Idempotency-Key` and kept 24 hours. The same key with the same body answers the same response without creating another number or link, so after a timeout or a `5xx` you can repeat the call with it. On their own, creates follow the rule of writes (see [Retries](#retries)): they are retried only on a `429` or `503`, which guarantee nothing was created.
+
+**The webhooks of numbers:**
+
+| Event | `data` |
+|---|---|
+| `device.connected` | `device`, `connected_at`, `connect_link_id` (or `null`). |
+| `device.disconnected` | `device`, `disconnected_at`, `reason`: `qr_logged_out`, `meta_account_not_registered`, `shadow_ban_protection`, `provider_error` or `unknown`. |
+| `device.deleted` | `device`, `deleted_at`. |
+| `device.health_changed` | `device`, `previous_state`, `state` (`available`, `limited`, `blocked`, `unknown`), `changed_at`. Official numbers, only when the state changes. |
+
+`device` is `{ id, name, number, connection, external_reference }`, where `connection` is `qr`, `coexistence` or `dedicated`.
+
+**When it is refused** (`NUMBER_ERROR_CODES` and `IDEMPOTENCY_ERROR_CODES`):
+
+| Error | What happened |
+|---|---|
+| `403 numbers_not_included` | The plan does not include numbers. |
+| `403 number_limit_reached` | Every number of the plan is in use. |
+| `422 qr_requires_coexistence` | QR can only be added to an official number in coexistence. |
+| `422 method_already_present` | The number already has that method; the body brings its `device_id`. |
+| `429 too_many_open_links` | 20 connect links are open. Revoke some. |
+| `503 meta_connect_disabled` | Official numbers cannot be connected by link yet; QR links work. |
+| `422 idempotency_key_mismatch` | The key was used with another body. |
+| `409 operation_in_progress` | The first call with that key is still running. |
+| `422 provider_unsupported` | `devices.qr` on an official number. |
+
+`isNumberQuotaError(error.code)` tells you whether it was the quota of the plan (the first four). `too_many_open_links` and `meta_connect_disabled` are never retried automatically.
 
 ## Receive webhooks with Express
 
@@ -330,7 +412,8 @@ The published spec does not describe everything the API in production already ha
 - what sends answer (the queued message), `messages.get`, `client_reference`, `file_type` and `file_name`;
 - forms and `messages.sendForm`;
 - the `capabilities` of numbers;
-- webhook subscriptions and the events the spec does not bring (`message.status_changed` with its shape, `whatsapp_form.completed`, the group ones and the account ones).
+- webhook subscriptions and the events the spec does not bring (`message.status_changed` with its shape, `whatsapp_form.completed`, the group ones and the account ones);
+- creating and connecting numbers (`devices.create`, `devices.qr`, `external_reference`, `connectLinks`, `Idempotency-Key`) and the `device.*` events: these come from a contract, not from production yet, and will follow the spec of the API when it is published.
 
 `src/pending/` has what is not OpenAPI (`device_id` in `message.received`) and `src/core/error-codes.ts` the error codes.
 
@@ -358,7 +441,7 @@ npm run generate                                    # with the one in spec/, for
 ```
 
 1. With `--spec`, it copies the spec to `spec/funnelchat.json` and writes `spec/procedencia.json`: repository, branch, commit, date and `sha256` of the file.
-2. It adds `spec/pending.json`, but only what the spec does not bring, and lists what it already brings so you can delete it from there.
+2. It adds `spec/pending.json`, but only what the spec does not bring, and lists what it already brings so you can delete it from there. An `operationPatches` entry without `while` adds body properties or `parameters` (such as a query filter) one by one, only while the operation lacks them.
 3. It writes `src/generated/openapi.ts` (with [openapi-typescript](https://openapi-ts.dev)), `src/generated/routes.ts` (every operation, with area and permission) and `src/generated/events.ts` (the event catalog and the shape of the `data` of each one).
 
 ```

@@ -3700,7 +3700,11 @@ export interface paths {
          */
         get: operations["device.index"];
         put?: never;
-        post?: never;
+        /**
+         * Create a number connected by QR code
+         * @description Same path and same rejections as the panel: `403 numbers_not_included`, `403 number_limit_reached`, `422 qr_requires_coexistence`, `422 method_already_present` (with `device_id`), `409 operation_in_progress`. The provider is chosen by the system. Then ask for the QR with `GET devices/{device}/qr`.
+         */
+        post: operations["pendingDevice.store"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4802,6 +4806,71 @@ export interface paths {
          */
         post: operations["pendingForms.send"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/devices/{device}/qr": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The QR code to connect a number
+         * @description Creates the WhatsApp instance when needed. Only for QR numbers: an official one answers `422 provider_unsupported`. Scanning the QR gives control of a WhatsApp, so it needs `accounts:operate`.
+         */
+        get: operations["pendingDevice.qr"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/connect-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List connect links
+         * @description Without the token: `url` is not shown again.
+         */
+        get: operations["pendingConnectLink.index"];
+        put?: never;
+        /**
+         * Create a connect link
+         * @description A single-use page where your customer connects a number: by QR code, or an official one through the Meta sign-up. The number is created when the page finishes. The quota is checked now (except on a reconnection) and again at the end, with the rejections of `POST devices`. At most 20 open links per account (`429 too_many_open_links`); `type: "meta"` while the official sign-up is off answers `503 meta_connect_disabled`.
+         */
+        post: operations["pendingConnectLink.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/connect-links/{link}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read a connect link */
+        get: operations["pendingConnectLink.show"];
+        put?: never;
+        post?: never;
+        /**
+         * Revoke a connect link
+         * @description Only a `pending` link: any other answers `409`.
+         */
+        delete: operations["pendingConnectLink.destroy"];
         options?: never;
         head?: never;
         patch?: never;
@@ -6056,7 +6125,7 @@ export interface webhooks {
         put?: never;
         /**
          * device.connected
-         * @description One of the numbers of the account got connected: by scanning the QR code or by finishing the sign-up of a WhatsApp Cloud number.
+         * @description One of the numbers of the account got connected: by scanning the QR code, by finishing the sign-up of a WhatsApp Cloud number, or through a connect link.
          */
         post: {
             parameters: {
@@ -6069,14 +6138,11 @@ export interface webhooks {
                 content: {
                     "application/json": {
                         data?: {
-                            device: {
-                                id: number;
-                                name: string | null;
-                                /** @description Digits only, without `+`. */
-                                number: string | null;
-                            };
+                            device: components["schemas"]["PendingWebhookDevice"];
                             /** Format: date-time */
                             connected_at: string;
+                            /** @description The connect link it came from, or `null`. */
+                            connect_link_id: number | null;
                         };
                     };
                 };
@@ -6100,7 +6166,7 @@ export interface webhooks {
         put?: never;
         /**
          * device.disconnected
-         * @description One of the numbers of the account disconnected and can no longer send or receive.
+         * @description One of the numbers of the account disconnected and can no longer send or receive: a QR session that closed, or an official number that failed its re-registration or was protected from a shadow ban.
          */
         post: {
             parameters: {
@@ -6113,14 +6179,11 @@ export interface webhooks {
                 content: {
                     "application/json": {
                         data?: {
-                            device: {
-                                id: number;
-                                name: string | null;
-                                /** @description Digits only, without `+`. */
-                                number: string | null;
-                            };
+                            device: components["schemas"]["PendingWebhookDevice"];
                             /** Format: date-time */
                             disconnected_at: string;
+                            /** @enum {string} */
+                            reason: "qr_logged_out" | "meta_account_not_registered" | "shadow_ban_protection" | "provider_error" | "unknown";
                         };
                     };
                 };
@@ -7272,6 +7335,88 @@ export interface webhooks {
         patch?: never;
         trace?: never;
     };
+    "device.deleted": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * device.deleted
+         * @description A number of the account was deleted: its slot of the plan is free again.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        data?: {
+                            device: components["schemas"]["PendingWebhookDevice"];
+                            /** Format: date-time */
+                            deleted_at: string;
+                        };
+                    };
+                };
+            };
+            responses: never;
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "device.health_changed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * device.health_changed
+         * @description The health of an official number changed (what Meta lets it do). Emitted only when the overall state changes.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        data?: {
+                            device: components["schemas"]["PendingWebhookDevice"];
+                            /** @enum {string} */
+                            previous_state: "available" | "limited" | "blocked" | "unknown";
+                            /** @enum {string} */
+                            state: "available" | "limited" | "blocked" | "unknown";
+                            /** Format: date-time */
+                            changed_at: string;
+                        };
+                    };
+                };
+            };
+            responses: never;
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export interface components {
     schemas: {
@@ -8342,6 +8487,8 @@ export interface components {
                 /** @description The statuses `message.status_changed` reports for the messages of this number. */
                 statuses: ("sent" | "delivered" | "read" | "failed")[];
             };
+            connection: components["schemas"]["PendingDeviceConnection"];
+            external_reference: components["schemas"]["PendingExternalReference"];
         };
         /** DisconnectSurveyResource */
         DisconnectSurveyResource: {
@@ -9506,6 +9653,106 @@ export interface components {
             published_at?: string | null;
             /** Format: date-time */
             updated_at?: string | null;
+        };
+        /**
+         * @description `qr`: connected by scanning a QR code (not official). `coexistence`: WhatsApp Cloud API together with the WhatsApp Business app. `dedicated`: WhatsApp Cloud API only.
+         * @enum {string}
+         */
+        PendingDeviceConnection: "qr" | "coexistence" | "dedicated";
+        /** @description Your own reference for the number (for example the id of your customer). Free text, not unique. */
+        PendingExternalReference: string | null;
+        PendingDeviceCreate: {
+            /**
+             * @description How the number connects. Only `qr` for now: an official number is created through a connect link.
+             * @enum {string}
+             */
+            connection: "qr";
+            /** @description The name of the number in the panel. */
+            alias?: string;
+            external_reference?: components["schemas"]["PendingExternalReference"];
+            /** @description Adds QR to a number that already exists (in coexistence) instead of taking a new slot of the plan. */
+            same_number_as?: number;
+        };
+        PendingDeviceQr: {
+            connected: boolean;
+            /** @description A PNG image as a data URI, or `null` when the number is already connected. */
+            qr_code: string | null;
+            /** @description Seconds after which to ask for it again. */
+            expires_in: number;
+        };
+        /** @enum {string} */
+        PendingConnectLinkStatus: "pending" | "completed" | "failed" | "expired" | "revoked";
+        /**
+         * @description Why the link did not complete, or `null`.
+         * @enum {string|null}
+         */
+        PendingConnectLinkErrorCode: "link_expired" | "already_used" | "revoked" | "quota_exceeded" | "trial_number_blocked" | "facebook_auth_failed" | "meta_error" | "number_not_owned" | "qr_timeout" | "provider_error" | null;
+        /** @enum {string} */
+        PendingConnectLinkConnectionType: "coexistence" | "dedicated";
+        PendingConnectLink: {
+            id: number;
+            /** @enum {string} */
+            type: "meta" | "qr";
+            status: components["schemas"]["PendingConnectLinkStatus"];
+            /** @description The page to send your customer to. It carries the token, so it comes only in the response of `POST connect-links`. */
+            url?: string | null;
+            /** Format: date-time */
+            expires_at: string;
+            allowed_connection_types: components["schemas"]["PendingConnectLinkConnectionType"][] | null;
+            provision_us_number: boolean;
+            /** @description The number the link created or reconnects; `null` until it completes, unless it is a reconnection. */
+            device_id: number | null;
+            external_reference: components["schemas"]["PendingExternalReference"];
+            return_url: string | null;
+            error_code: components["schemas"]["PendingConnectLinkErrorCode"];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            completed_at: string | null;
+        };
+        PendingConnectLinkWithUrl: components["schemas"]["PendingConnectLink"] & {
+            url: string;
+        };
+        PendingConnectLinkCreate: {
+            /** @enum {string} */
+            type: "meta";
+            /** @description With both, your customer chooses on the page. */
+            allowed_connection_types: components["schemas"]["PendingConnectLinkConnectionType"][];
+            /** @description Offers a US number of the pool (3 per account, 1 on trial accounts, held 15 minutes). `false` by default. */
+            provision_us_number?: boolean;
+            /** @description Reconnects this number instead of creating one; takes no new slot. `type` must match how the number connects. */
+            device_id?: number;
+            external_reference?: components["schemas"]["PendingExternalReference"];
+            /**
+             * Format: uri
+             * @description Only `https`. When the page finishes it redirects there with `connect_link_id`, `status`, `device_id` and `error_code`.
+             */
+            return_url?: string;
+            /** @description 1440 (24 hours) by default. */
+            expires_in_minutes?: number;
+        } | {
+            /** @enum {string} */
+            type: "qr";
+            /** @description Adds QR to a number in coexistence. */
+            same_number_as?: number;
+            /** @description Reconnects this number instead of creating one; takes no new slot. `type` must match how the number connects. */
+            device_id?: number;
+            external_reference?: components["schemas"]["PendingExternalReference"];
+            /**
+             * Format: uri
+             * @description Only `https`. When the page finishes it redirects there with `connect_link_id`, `status`, `device_id` and `error_code`.
+             */
+            return_url?: string;
+            /** @description 1440 (24 hours) by default. */
+            expires_in_minutes?: number;
+        };
+        PendingWebhookDevice: {
+            id: number;
+            name: string | null;
+            /** @description Digits only, without `+`. */
+            number: string | null;
+            connection: components["schemas"]["PendingDeviceConnection"];
+            external_reference: components["schemas"]["PendingExternalReference"];
         };
     };
     responses: {
@@ -17353,7 +17600,10 @@ export interface operations {
     };
     "device.index": {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Only the numbers with this reference (exact match). */
+                external_reference?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -17402,6 +17652,35 @@ export interface operations {
             };
             401: components["responses"]["AccountsAuthenticationException"];
             403: components["responses"]["AccountsAuthorizationException"];
+        };
+    };
+    "pendingDevice.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Kept 24 hours per account. The same key with the same body answers the same response without creating another resource; with another body, `422 idempotency_key_mismatch`; while the first call runs, `409 operation_in_progress`. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PendingDeviceCreate"];
+            };
+        };
+        responses: {
+            /** @description Created, with `connected: false` and `connection: "qr"`. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DeviceResource"];
+                    };
+                };
+            };
         };
     };
     "device.me": {
@@ -17561,6 +17840,7 @@ export interface operations {
                      *     account (defense in depth, see updateMetaDevice below).
                      */
                     capi_consent?: boolean;
+                    external_reference?: components["schemas"]["PendingExternalReference"];
                 };
             };
         };
@@ -19651,6 +19931,134 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["PendingSendResult"];
                 };
+            };
+        };
+    };
+    "pendingDevice.qr": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The device ID */
+                device: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PendingDeviceQr"];
+                    };
+                };
+            };
+        };
+    };
+    "pendingConnectLink.index": {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["PendingConnectLinkStatus"];
+                /** @description Exact match. */
+                external_reference?: string;
+                perPage?: number;
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PendingConnectLink"][];
+                        links?: Record<string, unknown>;
+                        meta?: Record<string, unknown>;
+                    };
+                };
+            };
+        };
+    };
+    "pendingConnectLink.store": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Kept 24 hours per account. The same key with the same body answers the same response without creating another resource; with another body, `422 idempotency_key_mismatch`; while the first call runs, `409 operation_in_progress`. */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PendingConnectLinkCreate"];
+            };
+        };
+        responses: {
+            /** @description Created. `url` carries the token and is shown only here. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PendingConnectLinkWithUrl"];
+                    };
+                };
+            };
+        };
+    };
+    "pendingConnectLink.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                link: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PendingConnectLink"];
+                    };
+                };
+            };
+        };
+    };
+    "pendingConnectLink.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                link: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

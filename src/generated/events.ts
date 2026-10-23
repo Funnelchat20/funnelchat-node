@@ -14,7 +14,7 @@ export interface WebhookEventInfo {
   readonly description: string | null;
 }
 
-/** Every webhook event type known to the spec (53). */
+/** Every webhook event type known to the spec (55). */
 export const webhookEvents = [
   {"type":"account.blocked","domains":["accounts"],"status":"live","pending":true,"description":"The account was blocked by usage: the 24-hour grace period after using up the monthly active contacts ended."},
   {"type":"ai_quota.low_balance","domains":["accounts"],"status":"planned","pending":true,"description":"The AI message quota is about to run out. Planned: not emitted yet."},
@@ -34,8 +34,10 @@ export const webhookEvents = [
   {"type":"conversation.assigned","domains":["conversations"],"status":"live","pending":false,"description":"Una conversación quedó asignada a una persona del equipo o a un agente de IA.\n\nSe envía cuando una conversación queda asignada a una persona del equipo (`assignee.type` = `human`) o a un agente de IA (`assignee.type` = `ai`), por cualquier camino. `assignee` trae el tipo y el nombre, nunca un identificador. No se envía al desasignar, ni cuando se vuelve a enviar el mismo asignado."},
   {"type":"conversation.closed","domains":["conversations"],"status":"live","pending":false,"description":"Una conversación pasó a cerrada.\n\nSe envía cuando una conversación pasa de abierta a cerrada. No se envía si la conversación ya estaba cerrada ni cuando se reabre."},
   {"type":"daily_report.generated","domains":["communities"],"status":"live","pending":true,"description":"The daily report of the account was generated (clicks, joins and leaves)."},
-  {"type":"device.connected","domains":["accounts"],"status":"live","pending":true,"description":"One of the numbers of the account got connected: by scanning the QR code or by finishing the sign-up of a WhatsApp Cloud number."},
-  {"type":"device.disconnected","domains":["accounts"],"status":"live","pending":true,"description":"One of the numbers of the account disconnected and can no longer send or receive."},
+  {"type":"device.connected","domains":["accounts"],"status":"live","pending":true,"description":"One of the numbers of the account got connected: by scanning the QR code, by finishing the sign-up of a WhatsApp Cloud number, or through a connect link."},
+  {"type":"device.deleted","domains":["accounts"],"status":"planned","pending":true,"description":"A number of the account was deleted: its slot of the plan is free again."},
+  {"type":"device.disconnected","domains":["accounts"],"status":"live","pending":true,"description":"One of the numbers of the account disconnected and can no longer send or receive: a QR session that closed, or an official number that failed its re-registration or was protected from a shadow ban."},
+  {"type":"device.health_changed","domains":["accounts"],"status":"planned","pending":true,"description":"The health of an official number changed (what Meta lets it do). Emitted only when the overall state changes."},
   {"type":"flow.completed","domains":["conversations"],"status":"live","pending":false,"description":"Un contacto terminó un flujo de automatización.\n\nSe envía una sola vez por cada ejecución de un flujo, cuando termina con éxito. No se envía si la ejecución se cortó, se canceló, quedó bloqueada o falló. `contact` es `null` si la ejecución no tiene un contacto asociado. Un flujo muy usado puede generar muchos eventos seguidos."},
   {"type":"flow.failed","domains":["conversations"],"status":"live","pending":false,"description":"La ejecución de un flujo para un contacto terminó por un error.\n\nSe envía una sola vez por cada ejecución de un flujo que termina por un error, no porque llegó al final. `reason` indica el motivo y toma uno de estos valores: `node_missing` (el paso a ejecutar ya no existe), `unknown_node_type` (el paso es de un tipo no reconocido), `missing_subflow` (el flujo que debía ejecutarse dentro de otro ya no existe), `malformed_node` (el paso tiene una configuración dañada), `loop_detected` (la ejecución dio vueltas sin esperar nada) y `execution_error` (un error inesperado detuvo la ejecución). No se envía si la ejecución se canceló, quedó bloqueada o se cortó porque se editó el flujo o se unieron contactos. `contact` es `null` si la ejecución no tiene un contacto asociado."},
   {"type":"group_action.failed","domains":["communities"],"status":"live","pending":true,"description":"An action on a group of a campaign failed."},
@@ -234,25 +236,30 @@ export interface WebhookEventDataMap {
     leaves: number;
     conversion_rate: number;
   };
-  /** `device.connected` (live, pending of the spec; typed from: schema). One of the numbers of the account got connected: by scanning the QR code or by finishing the sign-up of a WhatsApp Cloud number. */
+  /** `device.connected` (live, pending of the spec; typed from: schema). One of the numbers of the account got connected: by scanning the QR code, by finishing the sign-up of a WhatsApp Cloud number, or through a connect link. */
   "device.connected": {
-    device: {
-      id: number;
-      name: string | null;
-      /** Digits only, without `+`. */
-      number: string | null;
-    };
+    device: components["schemas"]["PendingWebhookDevice"];
     connected_at: string;
+    /** The connect link it came from, or `null`. */
+    connect_link_id: number | null;
   };
-  /** `device.disconnected` (live, pending of the spec; typed from: schema). One of the numbers of the account disconnected and can no longer send or receive. */
+  /** `device.deleted` (planned, pending of the spec; typed from: schema). A number of the account was deleted: its slot of the plan is free again. */
+  "device.deleted": {
+    device: components["schemas"]["PendingWebhookDevice"];
+    deleted_at: string;
+  };
+  /** `device.disconnected` (live, pending of the spec; typed from: schema). One of the numbers of the account disconnected and can no longer send or receive: a QR session that closed, or an official number that failed its re-registration or was protected from a shadow ban. */
   "device.disconnected": {
-    device: {
-      id: number;
-      name: string | null;
-      /** Digits only, without `+`. */
-      number: string | null;
-    };
+    device: components["schemas"]["PendingWebhookDevice"];
     disconnected_at: string;
+    reason: "qr_logged_out" | "meta_account_not_registered" | "shadow_ban_protection" | "provider_error" | "unknown";
+  };
+  /** `device.health_changed` (planned, pending of the spec; typed from: schema). The health of an official number changed (what Meta lets it do). Emitted only when the overall state changes. */
+  "device.health_changed": {
+    device: components["schemas"]["PendingWebhookDevice"];
+    previous_state: "available" | "limited" | "blocked" | "unknown";
+    state: "available" | "limited" | "blocked" | "unknown";
+    changed_at: string;
   };
   /** `flow.completed` (live; typed from: example). Un contacto terminó un flujo de automatización. Se envía una sola vez por cada ejecución de un flujo, cuando termina con éxito. No se envía si la ejecución se cortó, se canceló, quedó bloqueada o falló. `contact` es `null` si la ejecución no tiene un contacto asociado. Un flujo muy usado puede generar muchos eventos seguidos. */
   "flow.completed": {
