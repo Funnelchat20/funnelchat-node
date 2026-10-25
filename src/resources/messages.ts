@@ -19,8 +19,8 @@ export type SendMessageParams = Omit<SendMessageBody, 'contact_id'> & { contact_
  * delivered. The rest arrives by `message.status_changed` (with the same `id` as `message_id`) or
  * with {@link Messages.get}.
  *
- * Sending with an API key needs the `conversations:send` permission and is subject to the
- * WhatsApp rules: `422 window_closed`, `422 antiblock_*`, `422 recipient_*`,
+ * Sending with an API key needs **Contacts and conversations → Send** (`conversations:send`) and
+ * is subject to the WhatsApp rules: `422 window_closed`, `422 antiblock_*`, `422 recipient_*`,
  * `422 provider_unsupported`, `429 rate_limited` (with `retryAfter`) and `429 mac_lockout_24h`. A
  * rejected send stores nothing (see `SEND_ERROR_CODES`). Sends are never retried automatically
  * unless you pass `retrySend: true`.

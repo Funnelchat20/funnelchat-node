@@ -10,7 +10,8 @@ type LinkId = PathParams<'/api/v1/connect-links/{link}', 'GET'>['link'];
  * `device_id` the link reconnects that number instead, without taking a new slot. The Meta sign-up
  * is not available in production yet: `type: 'meta'` answers `503 meta_connect_disabled` until it is.
  *
- * Reading needs `accounts:read`; creating and revoking, `accounts:operate`. The result arrives three
+ * Reading needs **WhatsApp numbers → View** (`accounts:read`); creating and revoking,
+ * **WhatsApp numbers → Create, connect and delete** (`accounts:operate`). The result arrives three
  * ways: the `device.connected` webhook (with `connect_link_id` and `external_reference`), the
  * `return_url`, or `get`. The other `device.*` events carry the link that last connected the number.
  *

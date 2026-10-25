@@ -1,2 +1,2 @@
 /** The SDK version, sent in the `User-Agent`. A test keeps it equal to package.json. */
-export const VERSION = '0.2.0';
+export const VERSION = '0.2.1';

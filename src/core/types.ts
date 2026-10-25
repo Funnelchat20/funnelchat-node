@@ -78,8 +78,9 @@ export interface RequestOptions {
   /** Overrides the client's `maxRetries` for this request. */
   maxRetries?: number;
   /**
-   * Allows automatic retries of a non-idempotent send (`POST` with `conversations:send`) for this
-   * request. Off by default: a retried send can deliver the same message twice.
+   * Allows automatic retries of a non-idempotent send for this request: a `POST` that needs
+   * **Contacts and conversations → Send** (`conversations:send`). Off by default: a retried send
+   * can deliver the same message twice.
    */
   retrySend?: boolean;
   /** Cancels the request. */

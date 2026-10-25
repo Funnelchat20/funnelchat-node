@@ -8,10 +8,13 @@ type SubscriptionId = PathParams<'/api/v1/webhooks/{id}', 'GET'>['id'];
 /**
  * Webhook subscriptions (accounts area) and the verification of deliveries.
  *
- * Reading needs `webhooks:read` and the rest `webhooks:write`; the catalog (`events()`) needs
- * `accounts:read`. A key only sees and manages subscriptions to events of the areas it can read
- * (`conversations:read`, `communities:read`, `accounts:read`): asking for others is a `422` on
- * `events`, and touching a subscription that has them is `403 permission_denied`.
+ * Reading needs **Notifications (webhooks) → View** (`webhooks:read`) and the rest
+ * **Notifications (webhooks) → Manage** (`webhooks:write`); the catalog (`events()`) needs
+ * **WhatsApp numbers → View** (`accounts:read`). A key only sees and manages subscriptions to
+ * events of the areas it can read: **Contacts and conversations → View** (`conversations:read`),
+ * **Groups and campaigns → View** (`communities:read`) and **WhatsApp numbers → View**
+ * (`accounts:read`). Asking for others is a `422` on `events`, and touching a subscription that
+ * has them is `403 permission_denied`.
  */
 export class Webhooks extends Resource {
   /** Same as `Funnelchat.webhooks.verify`. */

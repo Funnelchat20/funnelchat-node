@@ -4820,7 +4820,7 @@ export interface paths {
         };
         /**
          * The QR code to connect a number
-         * @description Creates the WhatsApp instance when needed. Only for QR numbers: an official one answers `422 provider_unsupported`. Scanning the QR gives control of a WhatsApp, so it needs `accounts:operate`. Every call brings the code of that moment: ask again every `expires_in` seconds (5 with a QR) and replace the image with the latest one; the answer carries `Cache-Control: no-store`.
+         * @description Creates the WhatsApp instance when needed. Only for QR numbers: an official one answers `422 provider_unsupported`. Scanning the QR gives control of a WhatsApp, so it needs **WhatsApp numbers → Create, connect and delete** (`accounts:operate`). Every call brings the code of that moment: ask again every `expires_in` seconds (5 with a QR) and replace the image with the latest one; the answer carries `Cache-Control: no-store`.
          */
         get: operations["pendingDevice.qr"];
         put?: never;
@@ -9514,7 +9514,7 @@ export interface components {
             /** @description `https`, public and without user or password. */
             url: string;
             description?: string | null;
-            /** @description Types of the catalog (`GET /api/v1/webhooks/events`). The key needs the `{area}:read` permission of the area of each type. */
+            /** @description Types of the catalog (`GET /api/v1/webhooks/events`). The key needs the **View** permission of the area of each type in the panel (`{area}:read`), such as **WhatsApp numbers → View** (`accounts:read`). */
             events: string[];
             filters?: components["schemas"]["PendingWebhookSubscriptionFilters"] | null;
         };
