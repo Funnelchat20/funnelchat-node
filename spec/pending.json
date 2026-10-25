@@ -11,7 +11,7 @@
       "schemaPatches": "A patch adds properties to a snapshot schema, each one only while the schema lacks it."
     },
     "sources": {
-      "accounts-webhooks": "accounts v1.4.24 (300cc843, in production on 22-10): back/routes/api/webhooks.php:87-111, back/config/platform-gate.php:244-299 (routes open to keys and webhooks:* permissions), Http/Requests/*WebhookSubscriptionRequest.php, Http/Resources/WebhookSubscription*Resource.php, Services/WebhookPermissionRules.php and Catalogs/Areas/*Events.php.",
+      "accounts-webhooks": "accounts v1.4.24 (300cc843, in production on 22-10): back/routes/api/webhooks.php:87-111, back/config/platform-gate.php:244-299 (routes open to keys and the Notifications (webhooks) permissions), Http/Requests/*WebhookSubscriptionRequest.php, Http/Resources/WebhookSubscription*Resource.php, Services/WebhookPermissionRules.php and Catalogs/Areas/*Events.php.",
       "accounts-devices": "accounts v1.4.24 (300cc843, in production on 22-10): back/app/Modules/Device/Http/Resources/DeviceResource.php:65-123 and back/app/Modules/Device/Support/DeviceCapabilities.php:82-194.",
       "conversations-send": "conversations v1.18.10 (a580a3d0, in production on 22-10): sending with an API key (back/app/Modules/Message/Services/ApiSendGuard.php, Support/ApiKeySendResponse.php, Support/ClientReference.php, Support/SendFileType.php, Http/Resources/PublicMessageResource.php, Support/PublicMessageStatus.php) and GET contacts/{contact}/messages/{message} (Http/Controllers/ShowMessageController.php).",
       "conversations-status": "conversations v1.18.10 (a580a3d0, in production on 22-10): data of message.status_changed (back/app/Modules/Webhook/Payloads/MessageStatusChangedPayload.php:161-189).",
@@ -96,7 +96,7 @@
             "minItems": 1,
             "maxItems": 50,
             "items": { "type": "string" },
-            "description": "Types of the catalog (`GET /api/v1/webhooks/events`). The key needs the **View** permission of the area of each type in the panel (`{area}:read`), such as **WhatsApp numbers → View** (`accounts:read`)."
+            "description": "Types of the catalog (`GET /api/v1/webhooks/events`). The key needs the **View** permission of the area of each type in the panel, such as **WhatsApp numbers → View**."
           },
           "filters": {
             "anyOf": [
@@ -1759,7 +1759,7 @@
         "x-fc-pending": "accounts-number-signup",
         "operationId": "pendingDevice.qr",
         "summary": "The QR code to connect a number",
-        "description": "Creates the WhatsApp instance when needed. Only for QR numbers: an official one answers `422 provider_unsupported`. Scanning the QR gives control of a WhatsApp, so it needs **WhatsApp numbers → Create, connect and delete** (`accounts:operate`). Every call brings the code of that moment: ask again every `expires_in` seconds (5 with a QR) and replace the image with the latest one; the answer carries `Cache-Control: no-store`.",
+        "description": "Creates the WhatsApp instance when needed. Only for QR numbers: an official one answers `422 provider_unsupported`. Scanning the QR gives control of a WhatsApp, so it needs **WhatsApp numbers → Create, connect and delete**. Every call brings the code of that moment: ask again every `expires_in` seconds (5 with a QR) and replace the image with the latest one; the answer carries `Cache-Control: no-store`.",
         "x-fc-permission": "accounts:operate",
         "parameters": [
           {

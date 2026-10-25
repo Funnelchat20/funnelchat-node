@@ -49,10 +49,10 @@ const placeholder = /\{[^}]+\}/g;
 const escape = (text: string) => text.replace(/[.*+?^$()|[\]\\]/g, '\\$&');
 
 /**
- * The send operations of the spec (a `POST` with a `*:send` permission, such as
- * `conversations:send`): they deliver a WhatsApp message and are not idempotent, so they are never
- * retried automatically. Built from the generated route table, so a regeneration keeps the list
- * current.
+ * The send operations of the spec (a `POST` that needs a **Send** permission, such as
+ * **Contacts and conversations → Send**): they deliver a WhatsApp message and are not idempotent,
+ * so they are never retried automatically. Built from the generated route table, so a regeneration
+ * keeps the list current.
  */
 const SEND_POST_PATTERNS: readonly RegExp[] = routes
   .filter((route) => route.method === 'POST' && route.permission?.endsWith(':send'))

@@ -8,8 +8,8 @@ type DeviceId = PathParams<'/api/v1/forms/{id}/numbers/{deviceId}', 'DELETE'>['d
 
 /**
  * WhatsApp forms (conversations area): build them, publish them on your numbers and read the
- * answers. Reading needs **Contacts and conversations → View** (`conversations:read`); the rest,
- * **Contacts and conversations → Edit** (`conversations:write`).
+ * answers. Reading needs **Contacts and conversations → View**; the rest,
+ * **Contacts and conversations → Edit**.
  *
  * Two ids: `id` is one version of a form; `family_id` is the form itself (every version). You send
  * a form by its `family_id` with `messages.sendForm`, and `whatsapp_form.completed` brings it as

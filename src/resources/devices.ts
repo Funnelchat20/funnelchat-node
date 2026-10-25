@@ -31,8 +31,8 @@ export class Devices extends Resource {
   /**
    * `POST /api/v1/devices`: creates a number that connects by QR code (`connection: 'qr'`), with
    * `connected: false`. Then show its QR with `qr`, or send your customer a connect link
-   * (`connectLinks.create`). Needs **WhatsApp numbers → Create, connect and delete**
-   * (`accounts:operate`). It takes a slot of the plan, with the panel's
+   * (`connectLinks.create`). Needs **WhatsApp numbers → Create, connect and delete**.
+   * It takes a slot of the plan, with the panel's
    * rejections: `403 numbers_not_included`, `403 number_limit_reached`, `422 qr_requires_coexistence`
    * and `422 method_already_present` (`same_number_as` adds QR to a number in coexistence instead).
    * An account has at most one QR number waiting to be scanned: another one is `409
@@ -55,8 +55,8 @@ export class Devices extends Resource {
   /**
    * `DELETE /api/v1/devices/{device}`: deletes the number and frees its slot of the plan. An
    * official number stops receiving through Funnelchat but stays registered with Meta; a QR one
-   * logs out. Irreversible; needs **WhatsApp numbers → Create, connect and delete**
-   * (`accounts:operate`). Sends `device.deleted`.
+   * logs out. Irreversible; needs **WhatsApp numbers → Create, connect and delete**.
+   * Sends `device.deleted`.
    */
   delete(device: DeviceId, options?: RequestOptions) {
     return this.client.request('DELETE', '/api/v1/devices/{device}', { ...options, path: { device } });
@@ -73,7 +73,7 @@ export class Devices extends Resource {
    * 0 once connected) and have it scanned right away: WhatsApp changes the code every few seconds and
    * an old one no longer links, so show the latest and never store or forward a QR. Only for QR
    * numbers (an official one is `422 provider_unsupported`); needs
-   * **WhatsApp numbers → Create, connect and delete** (`accounts:operate`), since scanning it gives
+   * **WhatsApp numbers → Create, connect and delete**, since scanning it gives
    * control of a WhatsApp. A number that cannot connect now
    * answers `409` (`trial_number_blocked`, `number_suspended_by_plan`, `device_inactive`…).
    */

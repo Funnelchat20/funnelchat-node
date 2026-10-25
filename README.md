@@ -16,7 +16,7 @@ npm install @funnelchat-hq/sdk
 
 ## First call
 
-You need an API key (`<id>|fc_live_...`) created in the "Developers" section of the panel, with the permissions of what you are going to use. The panel groups them by area, with one checkbox per level: this README names each one as the panel shows it, with its literal in parentheses, such as **WhatsApp numbers → View** (`accounts:read`). The literal is what the panel shows as a tooltip and what the API names in its errors. In the panel, **Send** includes **View** and **Edit**, and **Edit** includes **View**. Keep it in an environment variable: the client reads `FUNNELCHAT_API_KEY` when you do not pass it.
+You need an API key (`<id>|fc_live_...`) created in the "Developers" section of the panel, with the permissions of what you are going to use. The panel groups them by area, with one checkbox per level: this README names each one as the panel shows it, such as **WhatsApp numbers → View**. In the panel, **Send** includes **View** and **Edit**, and **Edit** includes **View**. Keep it in an environment variable: the client reads `FUNNELCHAT_API_KEY` when you do not pass it.
 
 ```ts
 import { Funnelchat } from '@funnelchat-hq/sdk';
@@ -24,7 +24,7 @@ import { Funnelchat } from '@funnelchat-hq/sdk';
 
 const funnelchat = new Funnelchat({ apiKey: process.env.FUNNELCHAT_API_KEY });
 
-// Your WhatsApp numbers. Permission: WhatsApp numbers → View (accounts:read). The `id` of each one is the `device_id` you send with.
+// Your WhatsApp numbers. Permission: WhatsApp numbers → View. The `id` of each one is the `device_id` you send with.
 for await (const device of funnelchat.devices.list()) {
   console.log(device.id, device.number, device.capabilities.messages.templates);
 }
@@ -64,7 +64,7 @@ Parameters, bodies and responses are typed from the spec. For any other route, s
 
 ## Send a message
 
-Sending with a key needs **Contacts and conversations → Send** (`conversations:send`) and follows the WhatsApp rules. **Every send answers right away with the registered message, `status: 'queued'`:** accepted is not delivered. What happens next arrives by the `message.status_changed` webhook, or is read with `messages.get`.
+Sending with a key needs **Contacts and conversations → Send** and follows the WhatsApp rules. **Every send answers right away with the registered message, `status: 'queued'`:** accepted is not delivered. What happens next arrives by the `message.status_changed` webhook, or is read with `messages.get`.
 
 **Open window: free text.** With an official Meta number you can only send free text if the contact wrote to you in the last 24 hours. Check the window first:
 
@@ -133,7 +133,7 @@ const { message } = await funnelchat.templates.send(3, '45', {
 A WhatsApp form is built, published on one or more numbers and sent to a contact. There are two ids: `id` is one version; `family_id` is the form itself, the one you send it with and the one that comes back as `form.id` in `whatsapp_form.completed`.
 
 ```ts
-const { data: draft } = await funnelchat.forms.create({ device_id: 3, template_key: 'lead' }); // Contacts and conversations → Edit (conversations:write)
+const { data: draft } = await funnelchat.forms.create({ device_id: 3, template_key: 'lead' }); // Contacts and conversations → Edit
 await funnelchat.forms.publish(draft.id);
 
 const { message } = await funnelchat.messages.sendForm(2001, {
@@ -150,7 +150,7 @@ The answers arrive by the `whatsapp_form.completed` webhook (`answers`: `key`, `
 
 > **In production, except the official sign-up by link.** Creating QR numbers and connect links by QR work in production. Connect links with `type: 'meta'` are not available in production yet: they answer `503 meta_connect_disabled` until the Funnelchat domain is registered with Meta. The published spec does not describe these routes yet; see [Pending of the spec](#pending-of-the-spec).
 
-A number belongs to the account of the key and takes a slot of its plan, as in the panel. Creating numbers, showing their QR code and creating or revoking connect links needs **WhatsApp numbers → Create, connect and delete** (`accounts:operate`); reading links, **WhatsApp numbers → View** (`accounts:read`). Tag each number with your own `external_reference` (for example the id of your customer): it comes back in the number, in the links and in every `device.*` webhook.
+A number belongs to the account of the key and takes a slot of its plan, as in the panel. Creating numbers, showing their QR code and creating or revoking connect links needs **WhatsApp numbers → Create, connect and delete**; reading links, **WhatsApp numbers → View**. Tag each number with your own `external_reference` (for example the id of your customer): it comes back in the number, in the links and in every `device.*` webhook.
 
 **A connect link** is a single-use page on the Funnelchat domain. Send your customer there: the number is created when they finish.
 
@@ -205,7 +205,7 @@ for await (const number of funnelchat.devices.list({ external_reference: 'custom
 - `country` (two letters, optional) is the country of the phone that will scan the QR: the WhatsApp session is opened from there.
 - An account has at most one QR number waiting to be scanned: creating another answers `409 pending_number_exists`, with that number's `device_id` in `error.body`. Show its QR instead, or delete it.
 - `external_reference` changes with `devices.update(id, { external_reference })`.
-- `devices.delete(id)` deletes a number and frees its slot. It needs **WhatsApp numbers → Create, connect and delete** (`accounts:operate`) and is irreversible. An official number stops working through Funnelchat but stays registered with Meta; a QR one logs out. It sends `device.deleted`.
+- `devices.delete(id)` deletes a number and frees its slot. It needs **WhatsApp numbers → Create, connect and delete** and is irreversible. An official number stops working through Funnelchat but stays registered with Meta; a QR one logs out. It sends `device.deleted`.
 - `devices.list(query, options)` takes the query first, like every list. The signature of 0.1.2, `devices.list(options)`, still works.
 
 **`idempotencyKey`** (both creates, 1 to 255 characters) is sent as `Idempotency-Key` and kept 24 hours. The same key with the same body answers the same response without creating another number or link, so after a timeout or a `5xx` you can repeat the call with it. Only a success is replayed, with the `Idempotent-Replayed: true` header (see it with `.withResponse()`); a rejection is evaluated again. On their own, creates follow the rule of writes (see [Retries](#retries)): they are retried only on a `429` or `503`, which guarantee nothing was created.
@@ -306,7 +306,7 @@ const subscription = await funnelchat.webhooks.create({
 // Store subscription.id and subscription.secret: the secret is shown only once.
 ```
 
-- Permissions: **Notifications (webhooks) → View** (`webhooks:read`) to read and **Notifications (webhooks) → Manage** (`webhooks:write`) for the rest. Also, a key can only subscribe to events of the areas it can read: **Contacts and conversations → View** (`conversations:read`), **Groups and campaigns → View** (`communities:read`) and **WhatsApp numbers → View** (`accounts:read`). Asking for others is a `422` on `events`.
+- Permissions: **Notifications (webhooks) → View** to read and **Notifications (webhooks) → Manage** for the rest. Also, a key can only subscribe to events of the areas it can read: **Contacts and conversations → View**, **Groups and campaigns → View** and **WhatsApp numbers → View**. Asking for others is a `422` on `events`.
 - Subscriptions belong to the account: `list()` also brings the ones of other integrations. To change the URL use `update(id, …)` (the secret stays). `test(id)` sends a signed `webhook.test` right now and `listDeliveries(id)` is the history.
 - `rotateSecret(id)` is **not open to API keys** (`403 route_not_available`): rotate the secret from the panel.
 
@@ -367,7 +367,7 @@ The errors of the API entry and of access control apply to any route (`ACCESS_ER
 | Error | What happened |
 |---|---|
 | `401 unauthenticated` | The key is missing or not valid. |
-| `403 permission_denied` | The key lacks the permission of the route. `message` names it by its literal (such as `accounts:operate`), which the panel shows as the tooltip of each checkbox. |
+| `403 permission_denied` | The key lacks the permission of the route, such as **WhatsApp numbers → Create, connect and delete**: give the key that permission in the panel. |
 | `403 route_not_available` | The route is not open to API keys (or it is turned off). |
 | `404 route_not_found` | The route does not exist in the public API. |
 | `429 daily_cap_exceeded` | The daily call cap of the key was reached. It carries `Retry-After`. |
@@ -385,7 +385,7 @@ const { data, requestId, response } = await funnelchat.contacts.retrieve(2001).w
 
 - Reads and writes that give the same result when repeated (`GET`, `PUT`, `DELETE`) are retried on a `429`, a `5xx` or a network error (also when `timeoutMs` ran out), up to `maxRetries` times (2 by default).
 - Other writes (`POST`, `PATCH`) are retried **only when the API guarantees they were not applied**: `429` and `503`. A `500`, `502` or `504`, a timeout or a dropped connection can come after the write was applied, so the error is thrown right away: read the state before repeating it.
-- **A send is never retried automatically**: the `POST`s that need **Contacts and conversations → Send** (`conversations:send`): messages, forms, cards, forwards and templates. If a `429 rate_limited` sent nothing and you want the SDK to retry for you, ask for it in that call with `{ retrySend: true }`: it then follows the rule of writes. `mac_lockout_24h` and `mac_limit_reached` are never retried.
+- **A send is never retried automatically**: the `POST`s that need **Contacts and conversations → Send**: messages, forms, cards, forwards and templates. If a `429 rate_limited` sent nothing and you want the SDK to retry for you, ask for it in that call with `{ retrySend: true }`: it then follows the rule of writes. `mac_lockout_24h` and `mac_limit_reached` are never retried.
 - With `Retry-After`, the wait is exactly what it asks for. If it asks for more than 60 seconds, there is no wait: the error is thrown right away with its `retryAfter` and you decide. Without `Retry-After`, the wait is exponential: 0.5 s, 1 s, 2 s… up to 8 s, with some jitter.
 - Per call you can change `maxRetries`, `timeoutMs` and `signal`:
 

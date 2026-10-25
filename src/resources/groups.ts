@@ -5,7 +5,7 @@ type GroupId = PathParams<'/api/v1/groups/{group}', 'GET'>['group'];
 type GroupUid = PathParams<'/api/v1/groups/{groupUid}/metadata', 'GET'>['groupUid'];
 type DeviceId = PathParams<'/api/v1/devices/{device}/groups', 'GET'>['device'];
 
-/** WhatsApp groups (communities area): read them, their participants, events and messages. Permission: **Groups and campaigns → View** (`communities:read`). */
+/** WhatsApp groups (communities area): read them, their participants, events and messages. Permission: **Groups and campaigns → View**. */
 export class Groups extends Resource {
   /** `GET /api/v1/groups`, paginated. */
   list(query?: Query<'/api/v1/groups'>, options?: RequestOptions) {

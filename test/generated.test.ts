@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { routes, webhookEvents } from '../src/index.js';
 
@@ -70,5 +70,25 @@ describe('generated layer and the pending-of-the-spec layer', () => {
     expect(new Set(types).size).toBe(types.length);
     const expected = new Set([...Object.keys(snapshot.webhooks ?? {}), ...Object.keys(pending.webhooks ?? {})].map(eventType));
     expect(new Set(types)).toEqual(expected);
+  });
+});
+
+describe('permission names', () => {
+  // The docs name a permission as the panel does (**WhatsApp numbers → View**); the literal is only a value.
+  const literal = /\b(?:accounts|communities|conversations|webhooks):(?:[a-z]+\b|\*)|\{area\}:[a-z]+\b/g;
+  const src = new URL('../src/', import.meta.url);
+  const sources = (readdirSync(src, { recursive: true }) as string[]).filter((file) => file.endsWith('.ts'));
+  const literalsIn = (text: string) => [...text.matchAll(literal)].map(([lit]) => lit);
+
+  it('never names one by its literal in the README', () => {
+    expect(literalsIn(readFileSync(new URL('../README.md', import.meta.url), 'utf8'))).toEqual([]);
+  });
+
+  it('never names one by its literal in a comment of src/', () => {
+    const found = sources.flatMap((file) => {
+      const comments = readFileSync(new URL(file, src), 'utf8').match(/\/\*[\s\S]*?\*\/|\/\/.*$/gm) ?? [];
+      return comments.flatMap(literalsIn).map((lit) => `${file}: ${lit}`);
+    });
+    expect(found).toEqual([]);
   });
 });

@@ -79,7 +79,7 @@ export interface RequestOptions {
   maxRetries?: number;
   /**
    * Allows automatic retries of a non-idempotent send for this request: a `POST` that needs
-   * **Contacts and conversations → Send** (`conversations:send`). Off by default: a retried send
+   * **Contacts and conversations → Send**. Off by default: a retried send
    * can deliver the same message twice.
    */
   retrySend?: boolean;

@@ -12,14 +12,17 @@
  *   2. Merge spec/pending.json (the "pending of the spec" layer) into the snapshot: paths, operation
  *      and response patches, schema patches (properties added to a component schema) and webhooks.
  *      Every pending entry is applied only while the snapshot lacks it; the report lists the entries a new snapshot made
- *      obsolete so they can be deleted from spec/pending.json.
+ *      obsolete so they can be deleted from spec/pending.json. Then every permission named in a
+ *      description or summary takes the name the panel gives it (`conversations:send` ->
+ *      **Contacts and conversations → Send**).
  *   3. src/generated/openapi.ts  — openapi-typescript over the merged spec (paths, components, webhooks).
  *   4. src/generated/routes.ts   — every operation: method, path, domain, permission, pending flag.
  *   5. src/generated/events.ts   — the webhook event catalog and the `data` type of each event (from its
  *                                  schema when it lists properties and `required`, otherwise inferred from
  *                                  its example).
  *
- * Nothing in src/generated/ is edited by hand.
+ * Nothing in src/generated/ is edited by hand, and nothing in it names a permission by its literal
+ * outside the `permission` of the route table: the generation fails if it does.
  */
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -249,6 +252,81 @@ function mergePending(spec, pending) {
   }
 
   return { merged, report };
+}
+
+// ---- Permissions: the names of the panel -------------------------------------------------------
+
+/**
+ * Each permission as the panel names it ("Create API key": one area, one checkbox per level). The
+ * literal is a value of the API (`x-fc-permission`, the `permission` of the route table); the
+ * docs name a permission only this way.
+ */
+const PERMISSION_NAMES = {
+  'conversations:read': 'Contacts and conversations → View',
+  'conversations:write': 'Contacts and conversations → Edit',
+  'conversations:send': 'Contacts and conversations → Send',
+  'communities:read': 'Groups and campaigns → View',
+  'communities:write': 'Groups and campaigns → Edit',
+  'communities:send': 'Groups and campaigns → Send',
+  'communities:operate': 'Groups and campaigns → Manage groups',
+  'accounts:read': 'WhatsApp numbers → View',
+  'accounts:write': 'WhatsApp numbers → Edit',
+  'accounts:operate': 'WhatsApp numbers → Create, connect and delete',
+  'webhooks:read': 'Notifications (webhooks) → View',
+  'webhooks:write': 'Notifications (webhooks) → Manage',
+};
+
+/** A permission literal, known or not: `accounts:read`, `webhooks:*`, `{area}:read`. */
+const PERMISSION_LITERAL = /\b(?:accounts|communities|conversations|webhooks):(?:[a-z]+\b|\*)|\{area\}:[a-z]+\b/g;
+const PROSE_KEYS = new Set(['description', 'summary', 'title']);
+
+/**
+ * The text with each known permission literal replaced by its panel name (bold when it was code).
+ * The snapshot's gloss of the level after a literal, `communities:read` (Leer), goes with it.
+ */
+function panelNames(text) {
+  return text
+    .replace(/`([^`]+)`(?: \((?:Leer|Escribir|Enviar|Operar)\))?/g, (code, inner) =>
+      PERMISSION_NAMES[inner] ? `**${PERMISSION_NAMES[inner]}**` : code,
+    )
+    .replace(PERMISSION_LITERAL, (lit) => PERMISSION_NAMES[lit] ?? lit);
+}
+
+/** Rewrites the prose of the merged spec in place; examples and `x-fc-*` values are left as they are. */
+function namePermissionsAsThePanel(node) {
+  if (Array.isArray(node)) {
+    node.forEach(namePermissionsAsThePanel);
+    return;
+  }
+  if (!node || typeof node !== 'object') return;
+  for (const [key, value] of Object.entries(node)) {
+    if (key === 'example' || key === 'examples' || key.startsWith('x-fc-')) continue;
+    if (typeof value === 'string') {
+      if (PROSE_KEYS.has(key)) node[key] = panelNames(value);
+    } else {
+      namePermissionsAsThePanel(value);
+    }
+  }
+}
+
+/**
+ * Fails if a generated file names a permission by its literal anywhere but in the `permission` of
+ * the route table (a literal the rewrite did not know, or text added after it).
+ */
+function assertNoPermissionLiterals(files) {
+  const found = [];
+  for (const [name, content] of Object.entries(files)) {
+    content.split('\n').forEach((line, i) => {
+      const prose = line.replace(/"permission":"[^"]*"/g, '');
+      for (const [lit] of prose.matchAll(PERMISSION_LITERAL)) found.push(`src/generated/${name}:${i + 1}: ${lit}`);
+    });
+  }
+  if (found.length) {
+    throw new Error(
+      `src/generated would name ${found.length} permissions by their literal; name them as the panel does ` +
+        `(PERMISSION_NAMES in scripts/generate.mjs):\n${found.map((f) => `  - ${f}`).join('\n')}`,
+    );
+  }
 }
 
 const HEADER = (specHash) =>
@@ -506,12 +584,14 @@ async function main() {
   const spec = JSON.parse(bytes.toString('utf8'));
   const pending = existsSync(PENDING_FILE) ? JSON.parse(readFileSync(PENDING_FILE, 'utf8')) : {};
   const { merged, report } = mergePending(spec, pending);
+  namePermissionsAsThePanel(merged);
 
   const files = {
     'openapi.ts': await generateOpenapiTypes(merged, specHash),
     'routes.ts': generateRoutes(merged, specHash),
     'events.ts': generateEvents(merged, specHash),
   };
+  assertNoPermissionLiterals(files);
 
   console.log(`pending of the spec: ${report.applied.length} entries applied.`);
   if (report.superseded.length) {
