@@ -17,7 +17,7 @@
       "conversations-status": "conversations v1.18.10 (a580a3d0, in production on 22-10): data of message.status_changed (back/app/Modules/Webhook/Payloads/MessageStatusChangedPayload.php:161-189).",
       "conversations-forms": "conversations v1.18.10 (a580a3d0, in production on 22-10): WhatsApp forms (back/routes/api/whatsapp-forms.php, WhatsappForm/Http/Controllers/WhatsappFormController.php, WhatsappFormSendController.php, Http/Resources/WhatsappFormResource.php, Webhook/Payloads/WhatsappFormCompletedPayload.php:118-136).",
       "communities-events": "communities v2.34.52 (6f32f0b4, in production on 22-10): data of the group events (back/app/Modules/Shared/Support/PlatformEvents/PlatformEventCatalog.php:250-309 and Services/*EventPublisher.php), relayed by the unified catalog of accounts v1.4.24 (300cc843, in production on 22-10).",
-      "accounts-number-signup": "Contract 1022-alta-de-numeros v0.2 (23-10-2026): sections A1 and A3 with the \"Enmienda v0.1\" (accounts feat/alta-de-numeros-api 52d49b319, part 1) and the \"Enmienda v0.2\" (8852b3fad, part 2). NOT in production yet; its OpenAPI will replace these entries. Checked against 52d49b319 (not run): back/app/Modules/Device/Http/Resources/ConnectLinkResource.php, DeviceResource.php:134-135 and Webhook/Services/DeviceWebhookEmitter.php:243-335. The fields the events add are optional here: production does not send them until the deploy. The base payload of device.connected and device.disconnected (device id, name, number and the timestamp) is the one of accounts v1.4.24 (300cc843, in production on 22-10)."
+      "accounts-number-signup": "accounts in production: the API of contract 1022-alta-de-numeros v0.2 (#1315, af2c345e2, first in v1.4.38), the optional `country` (#1319, 6cfe4c6de, v1.4.39) and the QR every 5 seconds (#1335, aa4779e94, v1.4.42); read in accounts origin/main dc2907b44 on 25-10-2026 (not run): back/app/Modules/Device/Http/Requests/StoreDeviceRequest.php, StoreConnectLinkRequest.php, Http/Resources/ConnectLinkResource.php, Http/Controllers/DeviceProvisioningController.php and config/services.php (`connect_links.qr_refresh_seconds` 5). The official sign-up by link (`type: meta`) is off in production (`503 meta_connect_disabled`) until the domain is registered with Meta. Earlier checked against feat/alta-de-numeros-api 52d49b319 and 8852b3fad: DeviceResource.php:134-135 and Webhook/Services/DeviceWebhookEmitter.php:243-335. The fields the events add are optional here, as they were before the deploy. The base payload of device.connected and device.disconnected (device id, name, number and the timestamp) is the one of accounts v1.4.24 (300cc843, in production on 22-10). Not in the published spec yet: its OpenAPI will replace these entries."
     }
   },
   "components": {
@@ -295,7 +295,8 @@
           "connection": { "type": "string", "enum": ["qr"], "description": "How the number connects. Only `qr` for now: an official number is created through a connect link." },
           "alias": { "type": "string", "description": "The name of the number in the panel." },
           "external_reference": { "$ref": "#/components/schemas/PendingExternalReference" },
-          "same_number_as": { "type": "integer", "description": "Adds QR to a number that already exists (in coexistence) instead of taking a new slot of the plan." }
+          "same_number_as": { "type": "integer", "description": "Adds QR to a number that already exists (in coexistence) instead of taking a new slot of the plan." },
+          "country": { "$ref": "#/components/schemas/PendingCountry" }
         },
         "required": ["connection"]
       },
@@ -304,7 +305,10 @@
         "properties": {
           "connected": { "type": "boolean" },
           "qr_code": { "type": ["string", "null"], "description": "A PNG image as a data URI, or `null` when the number is already connected." },
-          "expires_in": { "type": "integer", "description": "Seconds after which to ask for it again: 20 with a QR, 3 while the session starts, 0 once connected." }
+          "expires_in": {
+            "type": "integer",
+            "description": "Seconds after which to ask for it again: 5 with a QR, 3 while the session starts, 0 once connected. WhatsApp changes the code every few seconds and an old one no longer links: show the latest one and have it scanned right away; do not store or forward a QR."
+          }
         },
         "required": ["connected", "qr_code", "expires_in"]
       },
@@ -333,6 +337,7 @@
             "items": { "$ref": "#/components/schemas/PendingConnectLinkConnectionType" }
           },
           "provision_us_number": { "type": "boolean" },
+          "country": { "type": ["string", "null"], "description": "Only `type: qr`: the country the WhatsApp session is opened from, lowercase; `null` when it was not sent." },
           "device_id": { "type": ["integer", "null"], "description": "The number the link reconnects, or the one it created once `completed`; `null` otherwise." },
           "external_reference": { "$ref": "#/components/schemas/PendingExternalReference" },
           "return_url": { "type": ["string", "null"] },
@@ -350,6 +355,7 @@
           "expires_at",
           "allowed_connection_types",
           "provision_us_number",
+          "country",
           "device_id",
           "external_reference",
           "return_url",
@@ -407,6 +413,12 @@
             "properties": {
               "type": { "type": "string", "enum": ["qr"] },
               "same_number_as": { "type": "integer", "description": "Adds QR to a number in coexistence." },
+              "country": {
+                "allOf": [
+                  { "$ref": "#/components/schemas/PendingCountry" }
+                ],
+                "description": "The country of the phone that will scan the QR code (ISO 3166-1 alpha-2): the WhatsApp session is opened from there. Not with `device_id` (`422 invalid_request`): a reconnection creates nothing."
+              },
               "device_id": { "type": "integer", "description": "Reconnects this number instead of creating one; takes no new slot. `type` must match how the number connects." },
               "external_reference": { "$ref": "#/components/schemas/PendingExternalReference" },
               "return_url": {
@@ -431,6 +443,11 @@
           "external_reference": { "$ref": "#/components/schemas/PendingExternalReference" }
         },
         "required": ["id", "name", "number"]
+      },
+      "PendingCountry": {
+        "type": ["string", "null"],
+        "pattern": "^[A-Za-z]{2}$",
+        "description": "The country of the phone that will scan the QR code (ISO 3166-1 alpha-2, two letters, any case): the WhatsApp session is opened from there. Without it, Funnelchat chooses one."
       }
     }
   },
@@ -1698,7 +1715,7 @@
         "x-fc-pending": "accounts-number-signup",
         "operationId": "pendingDevice.store",
         "summary": "Create a number connected by QR code",
-        "description": "Same path and same rejections as the panel: `403 numbers_not_included`, `403 number_limit_reached`, `409 pending_number_exists` (the account already has a QR number waiting to be scanned: its `device_id` comes in the body), `422 qr_requires_coexistence`, `422 method_already_present` (with `device_id`), `409 operation_in_progress`. The provider is chosen by the system. Then ask for the QR with `GET devices/{device}/qr`.",
+        "description": "Same path and same rejections as the panel: `403 numbers_not_included`, `403 number_limit_reached`, `409 pending_number_exists` (the account already has a QR number waiting to be scanned: its `device_id` comes in the body), `422 qr_requires_coexistence`, `422 method_already_present` (with `device_id`), `409 operation_in_progress`. The provider is chosen by the system. Then ask for the QR with `GET devices/{device}/qr`. `country` is the country of the phone that will scan the QR, where the WhatsApp session is opened from.",
         "x-fc-permission": "accounts:operate",
         "parameters": [
           {
@@ -1742,7 +1759,7 @@
         "x-fc-pending": "accounts-number-signup",
         "operationId": "pendingDevice.qr",
         "summary": "The QR code to connect a number",
-        "description": "Creates the WhatsApp instance when needed. Only for QR numbers: an official one answers `422 provider_unsupported`. Scanning the QR gives control of a WhatsApp, so it needs `accounts:operate`.",
+        "description": "Creates the WhatsApp instance when needed. Only for QR numbers: an official one answers `422 provider_unsupported`. Scanning the QR gives control of a WhatsApp, so it needs `accounts:operate`. Every call brings the code of that moment: ask again every `expires_in` seconds (5 with a QR) and replace the image with the latest one; the answer carries `Cache-Control: no-store`.",
         "x-fc-permission": "accounts:operate",
         "parameters": [
           {
@@ -1835,7 +1852,7 @@
         "x-fc-pending": "accounts-number-signup",
         "operationId": "pendingConnectLink.store",
         "summary": "Create a connect link",
-        "description": "A single-use page where your customer connects a number: by QR code, or an official one through the Meta sign-up. The number is created when the page finishes. The quota is checked now (except on a reconnection) and again at the end, with the rejections of `POST devices`. `provision_us_number` needs `dedicated` in `allowed_connection_types` and no `device_id` (`422 invalid_request`). At most 20 open links per account (`429 too_many_open_links`); `type: \"meta\"` while the official sign-up is off answers `503 meta_connect_disabled`.",
+        "description": "A single-use page where your customer connects a number: by QR code, or an official one through the Meta sign-up. The number is created when the page finishes. The quota is checked now (except on a reconnection) and again at the end, with the rejections of `POST devices`. `provision_us_number` needs `dedicated` in `allowed_connection_types` and no `device_id` (`422 invalid_request`). At most 20 open links per account (`429 too_many_open_links`); `type: \"meta\"` answers `503 meta_connect_disabled` while the official sign-up is off, as it is in production until the domain is registered with Meta. `country` (only `qr`, not with `device_id`) is the country of the phone that will scan the QR.",
         "x-fc-permission": "accounts:operate",
         "parameters": [
           {

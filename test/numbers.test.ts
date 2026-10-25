@@ -1,5 +1,5 @@
 /**
- * Creating and connecting numbers (contract 1022-alta-de-numeros v0.1, not in production yet): each
+ * Creating and connecting numbers (contract 1022-alta-de-numeros, in production except Meta links): each
  * method calls its route, the creates send `Idempotency-Key`, the route table carries the
  * permissions, and the new error codes are not retried.
  */
@@ -30,7 +30,7 @@ describe('numbers and connect links', () => {
     const { fetch, calls } = mockFetch(...replies.slice(0, 7), { status: 204 });
     const funnelchat = client(fetch);
     await funnelchat.devices.list({ external_reference: 'customer-81' });
-    await funnelchat.devices.create({ connection: 'qr', alias: 'Sales', external_reference: 'customer-81' });
+    await funnelchat.devices.create({ connection: 'qr', alias: 'Sales', country: 'br', external_reference: 'customer-81' });
     await funnelchat.devices.qr(9);
     await funnelchat.devices.update(9, { external_reference: 'customer-82' });
     await funnelchat.connectLinks.create({ type: 'meta', allowed_connection_types: ['coexistence'] });
@@ -47,7 +47,7 @@ describe('numbers and connect links', () => {
       'GET /connect-links?status=pending&external_reference=customer-81',
       'DELETE /connect-links/31',
     ]);
-    expect(JSON.parse(calls[1]?.body ?? '')).toEqual({ connection: 'qr', alias: 'Sales', external_reference: 'customer-81' });
+    expect(JSON.parse(calls[1]?.body ?? '')).toEqual({ connection: 'qr', alias: 'Sales', country: 'br', external_reference: 'customer-81' });
     expect(revoked).toBeNull();
   });
 

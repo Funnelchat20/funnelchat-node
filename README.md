@@ -148,7 +148,7 @@ The answers arrive by the `whatsapp_form.completed` webhook (`answers`: `key`, `
 
 ## Connect a number
 
-> **Not in production yet.** This follows contract 1022-alta-de-numeros v0.1 (23-10-2026), written from the API that is being built; it is not deployed. See [Pending of the spec](#pending-of-the-spec).
+> **In production, except the official sign-up by link.** Creating QR numbers and connect links by QR work in production. Connect links with `type: 'meta'` are not available in production yet: they answer `503 meta_connect_disabled` until the Funnelchat domain is registered with Meta. The published spec does not describe these routes yet; see [Pending of the spec](#pending-of-the-spec).
 
 A number belongs to the account of the key and takes a slot of its plan, as in the panel. Creating numbers, showing their QR code and creating or revoking connect links needs the `accounts:operate` permission; reading links, `accounts:read`. Tag each number with your own `external_reference` (for example the id of your customer): it comes back in the number, in the links and in every `device.*` webhook.
 
@@ -157,8 +157,8 @@ A number belongs to the account of the key and takes a slot of its plan, as in t
 ```ts
 const { data: link } = await funnelchat.connectLinks.create(
   {
-    type: 'meta',                                   // an official WhatsApp Cloud number; or 'qr'
-    allowed_connection_types: ['coexistence', 'dedicated'], // with both, your customer chooses
+    type: 'qr',                                     // a number by QR code; or 'meta' (not in production yet)
+    country: 'br',                                  // the country of the phone that will scan the QR
     external_reference: 'customer-81',
     return_url: 'https://your-app.example/whatsapp/done',   // optional, https only
     expires_in_minutes: 1440,                       // 30 to 10080; 24 hours by default
@@ -168,6 +168,8 @@ const { data: link } = await funnelchat.connectLinks.create(
 console.log(link.url); // https://api.funnelchat.com/connect/… — it carries the token and is shown only now
 ```
 
+- `country` (only `qr`, two letters, optional) is the country of the phone that will scan the QR: the WhatsApp session is opened from there, so send it when you know it. It does not go with `device_id` (a reconnection creates nothing), and the link returns it, lowercase.
+- `type: 'meta'` (an official WhatsApp Cloud number, **not in production yet**: `503 meta_connect_disabled`) takes `allowed_connection_types: ['coexistence', 'dedicated']`, one or both; with both, your customer chooses on the page.
 - `provision_us_number: true` (only `meta`) also offers a US number of the pool. A pool number is always dedicated: it needs `dedicated` in `allowed_connection_types` and does not go with `device_id`; otherwise the API answers `422 invalid_request` (the SDK does not check it for you).
 - `device_id` reconnects a number you already have, without taking a new slot; `same_number_as` (only `qr`) adds QR to a number in coexistence.
 - A Meta link tolerates retries: after a failure of Facebook or Meta it stays `pending`, so your customer can try again on the page; the fifth failed attempt turns it `failed` with `facebook_auth_failed` or `meta_error`. `quota_exceeded`, `trial_number_blocked` and `number_not_owned` close it at the first attempt.
@@ -186,19 +188,21 @@ for await (const open of funnelchat.connectLinks.list({ status: 'pending', exter
 
 ```ts
 const { data: device } = await funnelchat.devices.create(
-  { connection: 'qr', alias: 'Sales', external_reference: 'customer-81' },
+  { connection: 'qr', alias: 'Sales', country: 'br', external_reference: 'customer-81' },
   { idempotencyKey: 'qr-customer-81' },
 );
 
 const { data: qr } = await funnelchat.devices.qr(device.id);
 // qr.qr_code is a PNG data URI (null once connected); ask again after qr.expires_in seconds
-// (20 with a QR, 3 while the session starts, 0 once connected).
+// (5 with a QR, 3 while the session starts, 0 once connected).
 
 for await (const number of funnelchat.devices.list({ external_reference: 'customer-81' })) {
   console.log(number.id, number.connection, number.connected);
 }
 ```
 
+- **Ask for the QR every 5 seconds and have it scanned right away.** WhatsApp changes the code every few seconds and an old one no longer links ("can't link the device now"): replace the image with the latest one on each call, and never store, cache or forward a QR.
+- `country` (two letters, optional) is the country of the phone that will scan the QR: the WhatsApp session is opened from there.
 - An account has at most one QR number waiting to be scanned: creating another answers `409 pending_number_exists`, with that number's `device_id` in `error.body`. Show its QR instead, or delete it.
 - `external_reference` changes with `devices.update(id, { external_reference })`.
 - `devices.delete(id)` deletes a number and frees its slot (`accounts:operate`, irreversible). An official number stops working through Funnelchat but stays registered with Meta; a QR one logs out. It sends `device.deleted`.
@@ -231,7 +235,7 @@ for await (const number of funnelchat.devices.list({ external_reference: 'custom
 | `422 invalid_reference_device` | `same_number_as` or `device_id` is not a number of yours that can take it. |
 | `422 connection_type_mismatch` | A link with `device_id` of a number that connects another way than `type`. |
 | `429 too_many_open_links` | 20 connect links are open. Revoke some. |
-| `503 meta_connect_disabled` | Official numbers cannot be connected by link yet; QR links work. |
+| `503 meta_connect_disabled` | Official numbers cannot be connected by link yet, as in production today. QR links work. |
 | `409 link_not_pending` | Revoking a link that already ended. |
 | `422 idempotency_key_mismatch` | The key was used with another body. |
 | `422 invalid_idempotency_key` | The key is not 1 to 255 characters. |
@@ -427,7 +431,7 @@ The published spec does not describe everything the API in production already ha
 - forms and `messages.sendForm`;
 - the `capabilities` of numbers;
 - webhook subscriptions and the events the spec does not bring (`message.status_changed` with its shape, `whatsapp_form.completed`, the group ones and the account ones);
-- creating and connecting numbers (`devices.create`, `devices.qr`, `external_reference`, `connectLinks`, `Idempotency-Key`) and the `device.*` events: these come from a contract, not from production yet, and will follow the spec of the API when it is published.
+- creating and connecting numbers (`devices.create`, `devices.qr`, `country`, `external_reference`, `connectLinks`, `Idempotency-Key`) and the `device.*` events: in production (except `type: 'meta'` links), typed from the API of accounts until its spec is published.
 
 `src/pending/` has what is not OpenAPI (`device_id` in `message.received`) and `src/core/error-codes.ts` the error codes.
 

@@ -3702,7 +3702,7 @@ export interface paths {
         put?: never;
         /**
          * Create a number connected by QR code
-         * @description Same path and same rejections as the panel: `403 numbers_not_included`, `403 number_limit_reached`, `409 pending_number_exists` (the account already has a QR number waiting to be scanned: its `device_id` comes in the body), `422 qr_requires_coexistence`, `422 method_already_present` (with `device_id`), `409 operation_in_progress`. The provider is chosen by the system. Then ask for the QR with `GET devices/{device}/qr`.
+         * @description Same path and same rejections as the panel: `403 numbers_not_included`, `403 number_limit_reached`, `409 pending_number_exists` (the account already has a QR number waiting to be scanned: its `device_id` comes in the body), `422 qr_requires_coexistence`, `422 method_already_present` (with `device_id`), `409 operation_in_progress`. The provider is chosen by the system. Then ask for the QR with `GET devices/{device}/qr`. `country` is the country of the phone that will scan the QR, where the WhatsApp session is opened from.
          */
         post: operations["pendingDevice.store"];
         delete?: never;
@@ -4820,7 +4820,7 @@ export interface paths {
         };
         /**
          * The QR code to connect a number
-         * @description Creates the WhatsApp instance when needed. Only for QR numbers: an official one answers `422 provider_unsupported`. Scanning the QR gives control of a WhatsApp, so it needs `accounts:operate`.
+         * @description Creates the WhatsApp instance when needed. Only for QR numbers: an official one answers `422 provider_unsupported`. Scanning the QR gives control of a WhatsApp, so it needs `accounts:operate`. Every call brings the code of that moment: ask again every `expires_in` seconds (5 with a QR) and replace the image with the latest one; the answer carries `Cache-Control: no-store`.
          */
         get: operations["pendingDevice.qr"];
         put?: never;
@@ -4846,7 +4846,7 @@ export interface paths {
         put?: never;
         /**
          * Create a connect link
-         * @description A single-use page where your customer connects a number: by QR code, or an official one through the Meta sign-up. The number is created when the page finishes. The quota is checked now (except on a reconnection) and again at the end, with the rejections of `POST devices`. `provision_us_number` needs `dedicated` in `allowed_connection_types` and no `device_id` (`422 invalid_request`). At most 20 open links per account (`429 too_many_open_links`); `type: "meta"` while the official sign-up is off answers `503 meta_connect_disabled`.
+         * @description A single-use page where your customer connects a number: by QR code, or an official one through the Meta sign-up. The number is created when the page finishes. The quota is checked now (except on a reconnection) and again at the end, with the rejections of `POST devices`. `provision_us_number` needs `dedicated` in `allowed_connection_types` and no `device_id` (`422 invalid_request`). At most 20 open links per account (`429 too_many_open_links`); `type: "meta"` answers `503 meta_connect_disabled` while the official sign-up is off, as it is in production until the domain is registered with Meta. `country` (only `qr`, not with `device_id`) is the country of the phone that will scan the QR.
          */
         post: operations["pendingConnectLink.store"];
         delete?: never;
@@ -9678,12 +9678,13 @@ export interface components {
             external_reference?: components["schemas"]["PendingExternalReference"];
             /** @description Adds QR to a number that already exists (in coexistence) instead of taking a new slot of the plan. */
             same_number_as?: number;
+            country?: components["schemas"]["PendingCountry"];
         };
         PendingDeviceQr: {
             connected: boolean;
             /** @description A PNG image as a data URI, or `null` when the number is already connected. */
             qr_code: string | null;
-            /** @description Seconds after which to ask for it again: 20 with a QR, 3 while the session starts, 0 once connected. */
+            /** @description Seconds after which to ask for it again: 5 with a QR, 3 while the session starts, 0 once connected. WhatsApp changes the code every few seconds and an old one no longer links: show the latest one and have it scanned right away; do not store or forward a QR. */
             expires_in: number;
         };
         /** @enum {string} */
@@ -9707,6 +9708,8 @@ export interface components {
             expires_at: string;
             allowed_connection_types: components["schemas"]["PendingConnectLinkConnectionType"][] | null;
             provision_us_number: boolean;
+            /** @description Only `type: qr`: the country the WhatsApp session is opened from, lowercase; `null` when it was not sent. */
+            country: string | null;
             /** @description The number the link reconnects, or the one it created once `completed`; `null` otherwise. */
             device_id: number | null;
             external_reference: components["schemas"]["PendingExternalReference"];
@@ -9743,6 +9746,8 @@ export interface components {
             type: "qr";
             /** @description Adds QR to a number in coexistence. */
             same_number_as?: number;
+            /** @description The country of the phone that will scan the QR code (ISO 3166-1 alpha-2): the WhatsApp session is opened from there. Not with `device_id` (`422 invalid_request`): a reconnection creates nothing. */
+            country?: components["schemas"]["PendingCountry"];
             /** @description Reconnects this number instead of creating one; takes no new slot. `type` must match how the number connects. */
             device_id?: number;
             external_reference?: components["schemas"]["PendingExternalReference"];
@@ -9762,6 +9767,8 @@ export interface components {
             connection?: components["schemas"]["PendingDeviceConnection"];
             external_reference?: components["schemas"]["PendingExternalReference"];
         };
+        /** @description The country of the phone that will scan the QR code (ISO 3166-1 alpha-2, two letters, any case): the WhatsApp session is opened from there. Without it, Funnelchat chooses one. */
+        PendingCountry: string | null;
     };
     responses: {
         /** @description Unauthenticated */

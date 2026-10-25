@@ -35,7 +35,9 @@ export class Devices extends Resource {
    * rejections: `403 numbers_not_included`, `403 number_limit_reached`, `422 qr_requires_coexistence`
    * and `422 method_already_present` (`same_number_as` adds QR to a number in coexistence instead).
    * An account has at most one QR number waiting to be scanned: another one is `409
-   * pending_number_exists`, with that number's `device_id` in `error.body`.
+   * pending_number_exists`, with that number's `device_id` in `error.body`. `country` (two letters,
+   * such as `'br'`) is the country of the phone that will scan the QR: the WhatsApp session is opened
+   * from there.
    */
   create(body: Body<'/api/v1/devices', 'POST'>, options?: IdempotentRequestOptions) {
     return this.client.request('POST', '/api/v1/devices', { ...this.idempotent(options), body });
@@ -65,8 +67,10 @@ export class Devices extends Resource {
 
   /**
    * `GET /api/v1/devices/{device}/qr`: the QR code to scan, as a PNG data URI (`qr_code`), or `null`
-   * once `connected`. Ask again after `expires_in` seconds (20 with a QR, 3 while the session starts,
-   * 0 once connected). Only for QR numbers (an official one is `422 provider_unsupported`); needs
+   * once `connected`. Ask for it every `expires_in` seconds (5 with a QR, 3 while the session starts,
+   * 0 once connected) and have it scanned right away: WhatsApp changes the code every few seconds and
+   * an old one no longer links, so show the latest and never store or forward a QR. Only for QR
+   * numbers (an official one is `422 provider_unsupported`); needs
    * `accounts:operate`, since scanning it gives control of a WhatsApp. A number that cannot connect now
    * answers `409` (`trial_number_blocked`, `number_suspended_by_plan`, `device_inactive`…).
    */

@@ -66,6 +66,12 @@ function typeChecks(client: Funnelchat) {
     void (() => client.devices.create({ connection: 'coexistence' }));
     void (() => client.devices.list({ external_reference: 'customer-81' }));
     void (() => client.devices.create({ connection: 'qr' }, { idempotencyKey: 'order-8841' }));
+    // The country of the phone that scans the QR: on a QR number and a QR link, which returns it.
+    void (() => client.devices.create({ connection: 'qr', country: 'br' }));
+    void (() => client.connectLinks.create({ type: 'qr', country: 'br' }));
+    // @ts-expect-error country only goes with a QR link
+    void (() => client.connectLinks.create({ type: 'meta', allowed_connection_types: ['dedicated'], country: 'br' }));
+    expectTypeOf<Awaited<ReturnType<typeof client.connectLinks.get>>['data']['country']>().toEqualTypeOf<string | null>();
     // The 0.1.2 signature `list(options)` still compiles.
     void (() => client.devices.list({ maxRetries: 0, signal: AbortSignal.timeout(1000) }));
     expectTypeOf(client.devices.delete).parameter(0).toEqualTypeOf<number>();
