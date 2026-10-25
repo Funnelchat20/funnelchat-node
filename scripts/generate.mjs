@@ -12,9 +12,10 @@
  *   2. Merge spec/pending.json (the "pending of the spec" layer) into the snapshot: paths, operation
  *      and response patches, schema patches (properties added to a component schema) and webhooks.
  *      Every pending entry is applied only while the snapshot lacks it; the report lists the entries a new snapshot made
- *      obsolete so they can be deleted from spec/pending.json. Then every permission named in a
- *      description or summary takes the name the panel gives it (`conversations:send` ->
- *      **Contacts and conversations → Send**).
+ *      obsolete so they can be deleted from spec/pending.json. Before the merge, every permission
+ *      named in a description or summary takes the name the panel gives it, in the language of its
+ *      text: Spanish in the snapshot (`conversations:send` -> **Contactos y conversaciones → Enviar**),
+ *      English in spec/pending.json (**Contacts and conversations → Send**).
  *   3. src/generated/openapi.ts  — openapi-typescript over the merged spec (paths, components, webhooks).
  *   4. src/generated/routes.ts   — every operation: method, path, domain, permission, pending flag.
  *   5. src/generated/events.ts   — the webhook event catalog and the `data` type of each event (from its
@@ -22,7 +23,8 @@
  *                                  its example).
  *
  * Nothing in src/generated/ is edited by hand, and nothing in it names a permission by its literal
- * outside the `permission` of the route table: the generation fails if it does.
+ * outside the `permission` of the route table, or by its English name in a Spanish text: the
+ * generation fails if it does.
  */
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -257,74 +259,85 @@ function mergePending(spec, pending) {
 // ---- Permissions: the names of the panel -------------------------------------------------------
 
 /**
- * Each permission as the panel names it ("Create API key": one area, one checkbox per level). The
- * literal is a value of the API (`x-fc-permission`, the `permission` of the route table); the
- * docs name a permission only this way.
+ * Each permission as the panel names it ("Create API key": one area, one checkbox per level), in
+ * the panel's two languages (accounts `front/account/src/locales/{es,en}.json`). The literal is a
+ * value of the API (`x-fc-permission`, the `permission` of the route table); the docs name a
+ * permission only this way.
  */
 const PERMISSION_NAMES = {
-  'conversations:read': 'Contacts and conversations → View',
-  'conversations:write': 'Contacts and conversations → Edit',
-  'conversations:send': 'Contacts and conversations → Send',
-  'communities:read': 'Groups and campaigns → View',
-  'communities:write': 'Groups and campaigns → Edit',
-  'communities:send': 'Groups and campaigns → Send',
-  'communities:operate': 'Groups and campaigns → Manage groups',
-  'accounts:read': 'WhatsApp numbers → View',
-  'accounts:write': 'WhatsApp numbers → Edit',
-  'accounts:operate': 'WhatsApp numbers → Create, connect and delete',
-  'webhooks:read': 'Notifications (webhooks) → View',
-  'webhooks:write': 'Notifications (webhooks) → Manage',
+  'conversations:read': { es: 'Contactos y conversaciones → Ver', en: 'Contacts and conversations → View' },
+  'conversations:write': { es: 'Contactos y conversaciones → Editar', en: 'Contacts and conversations → Edit' },
+  'conversations:send': { es: 'Contactos y conversaciones → Enviar', en: 'Contacts and conversations → Send' },
+  'communities:read': { es: 'Grupos y campañas → Ver', en: 'Groups and campaigns → View' },
+  'communities:write': { es: 'Grupos y campañas → Editar', en: 'Groups and campaigns → Edit' },
+  'communities:send': { es: 'Grupos y campañas → Enviar', en: 'Groups and campaigns → Send' },
+  'communities:operate': { es: 'Grupos y campañas → Administrar grupos', en: 'Groups and campaigns → Manage groups' },
+  'accounts:read': { es: 'Números de WhatsApp → Ver', en: 'WhatsApp numbers → View' },
+  'accounts:write': { es: 'Números de WhatsApp → Editar', en: 'WhatsApp numbers → Edit' },
+  'accounts:operate': { es: 'Números de WhatsApp → Crear, conectar y borrar', en: 'WhatsApp numbers → Create, connect and delete' },
+  'webhooks:read': { es: 'Avisos (webhooks) → Ver', en: 'Notifications (webhooks) → View' },
+  'webhooks:write': { es: 'Avisos (webhooks) → Administrar', en: 'Notifications (webhooks) → Manage' },
 };
+const ENGLISH_AREAS = [...new Set(Object.values(PERMISSION_NAMES).map((name) => name.en.split(' → ')[0]))];
 
 /** A permission literal, known or not: `accounts:read`, `webhooks:*`, `{area}:read`. */
 const PERMISSION_LITERAL = /\b(?:accounts|communities|conversations|webhooks):(?:[a-z]+\b|\*)|\{area\}:[a-z]+\b/g;
 const PROSE_KEYS = new Set(['description', 'summary', 'title']);
 
 /**
- * The text with each known permission literal replaced by its panel name (bold when it was code).
- * The snapshot's gloss of the level after a literal, `communities:read` (Leer), goes with it.
+ * The text with each known permission literal replaced by its panel name in `lang` (bold when it
+ * was code). The snapshot's gloss of the level after a literal, `communities:read` (Leer), goes
+ * with it.
  */
-function panelNames(text) {
+function panelNames(text, lang) {
   return text
     .replace(/`([^`]+)`(?: \((?:Leer|Escribir|Enviar|Operar)\))?/g, (code, inner) =>
-      PERMISSION_NAMES[inner] ? `**${PERMISSION_NAMES[inner]}**` : code,
+      PERMISSION_NAMES[inner] ? `**${PERMISSION_NAMES[inner][lang]}**` : code,
     )
-    .replace(PERMISSION_LITERAL, (lit) => PERMISSION_NAMES[lit] ?? lit);
+    .replace(PERMISSION_LITERAL, (lit) => PERMISSION_NAMES[lit]?.[lang] ?? lit);
 }
 
-/** Rewrites the prose of the merged spec in place; examples and `x-fc-*` values are left as they are. */
-function namePermissionsAsThePanel(node) {
+/**
+ * Rewrites the prose of a spec in place, naming permissions in `lang`, the language of that spec's
+ * texts; examples and `x-fc-*` values are left as they are.
+ */
+function namePermissionsAsThePanel(node, lang) {
   if (Array.isArray(node)) {
-    node.forEach(namePermissionsAsThePanel);
+    for (const item of node) namePermissionsAsThePanel(item, lang);
     return;
   }
   if (!node || typeof node !== 'object') return;
   for (const [key, value] of Object.entries(node)) {
     if (key === 'example' || key === 'examples' || key.startsWith('x-fc-')) continue;
     if (typeof value === 'string') {
-      if (PROSE_KEYS.has(key)) node[key] = panelNames(value);
+      if (PROSE_KEYS.has(key)) node[key] = panelNames(value, lang);
     } else {
-      namePermissionsAsThePanel(value);
+      namePermissionsAsThePanel(value, lang);
     }
   }
 }
 
 /**
  * Fails if a generated file names a permission by its literal anywhere but in the `permission` of
- * the route table (a literal the rewrite did not know, or text added after it).
+ * the route table (a literal the rewrite did not know, or text added after it), or by its English
+ * panel name in a Spanish line (one that says «permiso», such as «**Permiso requerido:**»).
  */
-function assertNoPermissionLiterals(files) {
+function assertPermissionNames(files) {
   const found = [];
   for (const [name, content] of Object.entries(files)) {
     content.split('\n').forEach((line, i) => {
+      const where = `src/generated/${name}:${i + 1}`;
       const prose = line.replace(/"permission":"[^"]*"/g, '');
-      for (const [lit] of prose.matchAll(PERMISSION_LITERAL)) found.push(`src/generated/${name}:${i + 1}: ${lit}`);
+      for (const [lit] of prose.matchAll(PERMISSION_LITERAL)) found.push(`${where}: ${lit} (literal)`);
+      if (/\bpermiso\b/i.test(prose)) {
+        for (const area of ENGLISH_AREAS) if (prose.includes(`${area} → `)) found.push(`${where}: ${area} (English in a Spanish text)`);
+      }
     });
   }
   if (found.length) {
     throw new Error(
-      `src/generated would name ${found.length} permissions by their literal; name them as the panel does ` +
-        `(PERMISSION_NAMES in scripts/generate.mjs):\n${found.map((f) => `  - ${f}`).join('\n')}`,
+      `src/generated would name ${found.length} permissions other than as the panel does in the language of ` +
+        `the text (PERMISSION_NAMES in scripts/generate.mjs):\n${found.map((f) => `  - ${f}`).join('\n')}`,
     );
   }
 }
@@ -583,15 +596,16 @@ async function main() {
 
   const spec = JSON.parse(bytes.toString('utf8'));
   const pending = existsSync(PENDING_FILE) ? JSON.parse(readFileSync(PENDING_FILE, 'utf8')) : {};
+  namePermissionsAsThePanel(spec, 'es');
+  namePermissionsAsThePanel(pending, 'en');
   const { merged, report } = mergePending(spec, pending);
-  namePermissionsAsThePanel(merged);
 
   const files = {
     'openapi.ts': await generateOpenapiTypes(merged, specHash),
     'routes.ts': generateRoutes(merged, specHash),
     'events.ts': generateEvents(merged, specHash),
   };
-  assertNoPermissionLiterals(files);
+  assertPermissionNames(files);
 
   console.log(`pending of the spec: ${report.applied.length} entries applied.`);
   if (report.superseded.length) {

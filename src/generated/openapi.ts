@@ -13,7 +13,7 @@ export interface paths {
         };
         /**
          * Listar difusiones
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["broadcast.index"];
         put?: never;
@@ -35,7 +35,7 @@ export interface paths {
         put?: never;
         /**
          * Buscar contactos para una difusión
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["broadcast.contacts"];
         delete?: never;
@@ -55,7 +55,7 @@ export interface paths {
         put?: never;
         /**
          * Contar contactos para una difusión
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["broadcast.contactsCount"];
         delete?: never;
@@ -73,7 +73,7 @@ export interface paths {
         };
         /**
          * Ver los tramos de costo
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["broadcast.costTiers"];
         put?: never;
@@ -95,7 +95,7 @@ export interface paths {
         put?: never;
         /**
          * Mover difusiones a una carpeta
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["broadcast.moveToFolder"];
         delete?: never;
@@ -113,14 +113,14 @@ export interface paths {
         };
         /**
          * Ver una difusión
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["broadcast.show"];
         put?: never;
         post?: never;
         /**
          * Eliminar una difusión
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         delete: operations["broadcast.destroy"];
         options?: never;
@@ -137,7 +137,7 @@ export interface paths {
         };
         /**
          * Ver las estadísticas de una difusión
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["broadcast.statistics"];
         put?: never;
@@ -157,7 +157,7 @@ export interface paths {
         };
         /**
          * Ver el costo de una difusión
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["broadcast.cost"];
         put?: never;
@@ -177,7 +177,7 @@ export interface paths {
         };
         /**
          * Listar los contactos de una difusión
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["broadcast.broadcastContacts"];
         put?: never;
@@ -199,7 +199,7 @@ export interface paths {
         put?: never;
         /**
          * Cancelar una difusión
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["broadcast.cancel"];
         delete?: never;
@@ -217,7 +217,7 @@ export interface paths {
         };
         /**
          * Listar los mensajes de una difusión
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["broadcast.broadcastMessages"];
         put?: never;
@@ -237,13 +237,13 @@ export interface paths {
         };
         /**
          * Listar carpetas de difusiones
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["broadcastFolder.index"];
         put?: never;
         /**
          * Crear una carpeta de difusiones
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["broadcastFolder.store"];
         delete?: never;
@@ -262,13 +262,13 @@ export interface paths {
         get?: never;
         /**
          * Actualizar una carpeta de difusiones
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["broadcastFolder.update"];
         post?: never;
         /**
          * Eliminar una carpeta de difusiones
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         delete: operations["broadcastFolder.destroy"];
         options?: never;
@@ -285,13 +285,13 @@ export interface paths {
         };
         /**
          * Listar contactos
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["contact.index"];
         put?: never;
         /**
          * Crear un contacto
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["contact.store"];
         delete?: never;
@@ -311,7 +311,7 @@ export interface paths {
         put?: never;
         /**
          * Crear o actualizar un contacto
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["contact.updateOrCreate"];
         delete?: never;
@@ -331,7 +331,7 @@ export interface paths {
         put?: never;
         /**
          * Asignar un campo personalizado a contactos
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["contact.attachCustomField"];
         delete?: never;
@@ -351,7 +351,7 @@ export interface paths {
         put?: never;
         /**
          * Quitar un campo personalizado de contactos
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["contact.detachCustomField"];
         delete?: never;
@@ -369,12 +369,12 @@ export interface paths {
         };
         /**
          * Ver un contacto
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["contact.show"];
         /**
          * Actualizar un contacto
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["contact.update"];
         post?: never;
@@ -393,7 +393,7 @@ export interface paths {
         };
         /**
          * Listar las etiquetas de un contacto
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["contact.tags"];
         put?: never;
@@ -413,7 +413,7 @@ export interface paths {
         };
         /**
          * Listar los campos personalizados de un contacto
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["contact.customFields"];
         put?: never;
@@ -433,7 +433,7 @@ export interface paths {
         };
         /**
          * Ver la ventana de 24 horas de un contacto
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["contact.metaWindow"];
         put?: never;
@@ -453,7 +453,7 @@ export interface paths {
         };
         /**
          * Listar los contactos de un número
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["contact.contactsByDevice"];
         put?: never;
@@ -475,7 +475,7 @@ export interface paths {
         put?: never;
         /**
          * Eliminar contactos
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["contact.destroy"];
         delete?: never;
@@ -495,7 +495,7 @@ export interface paths {
         put?: never;
         /**
          * Pausar un contacto
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["contactAutomation.pause"];
         delete?: never;
@@ -513,7 +513,7 @@ export interface paths {
         };
         /**
          * Listar los flujos de un contacto
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["contactAutomation.flows"];
         put?: never;
@@ -535,9 +535,9 @@ export interface paths {
         put?: never;
         /**
          * Enviar una tarjeta de contacto
-         * @description > **Nota del portal (v0):** El envío con clave se abre con el permiso **Contacts and conversations → Send** y las reglas de WhatsApp (ventana de 24 horas y frenos contra spam): está en camino. Hasta que se habilite, esta ruta responde `403 route_not_available` a cualquier clave. (Q19; cierra D21)
+         * @description > **Nota del portal (v0):** El envío con clave se abre con el permiso **Contactos y conversaciones → Enviar** y las reglas de WhatsApp (ventana de 24 horas y frenos contra spam): está en camino. Hasta que se habilite, esta ruta responde `403 route_not_available` a cualquier clave. (Q19; cierra D21)
          *
-         *     **Permiso requerido:** **Contacts and conversations → Send**
+         *     **Permiso requerido:** **Contactos y conversaciones → Enviar**
          */
         post: operations["contactCard.store"];
         delete?: never;
@@ -555,7 +555,7 @@ export interface paths {
         };
         /**
          * Ver el lead score de un contacto
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["contactLeadScore.show"];
         put?: never;
@@ -575,13 +575,13 @@ export interface paths {
         };
         /**
          * Listar las notas de un contacto
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["contactNote.index"];
         put?: never;
         /**
          * Agregar una nota a un contacto
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["contactNote.store"];
         delete?: never;
@@ -602,7 +602,7 @@ export interface paths {
         post?: never;
         /**
          * Eliminar una nota
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         delete: operations["contactNote.destroy"];
         options?: never;
@@ -619,7 +619,7 @@ export interface paths {
         };
         /**
          * Listar conversaciones
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["conversation.index"];
         put?: never;
@@ -639,7 +639,7 @@ export interface paths {
         };
         /**
          * Contar conversaciones sin leer
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["conversation.countUnread"];
         put?: never;
@@ -659,7 +659,7 @@ export interface paths {
         };
         /**
          * Contar conversaciones abiertas
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["conversation.countOpen"];
         put?: never;
@@ -679,7 +679,7 @@ export interface paths {
         };
         /**
          * Contar conversaciones cerradas
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["conversation.countClosed"];
         put?: never;
@@ -699,7 +699,7 @@ export interface paths {
         };
         /**
          * Contar todas las conversaciones
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["conversation.countAll"];
         put?: never;
@@ -721,7 +721,7 @@ export interface paths {
         put?: never;
         /**
          * Marcar todas como leídas
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["conversation.markAllAsRead"];
         delete?: never;
@@ -741,7 +741,7 @@ export interface paths {
         put?: never;
         /**
          * Marcar todas como no leídas
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["conversation.markAllAsUnread"];
         delete?: never;
@@ -760,7 +760,7 @@ export interface paths {
         get?: never;
         /**
          * Actualizar la conversación de un contacto
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["conversation.update"];
         post?: never;
@@ -781,9 +781,9 @@ export interface paths {
         put?: never;
         /**
          * Enviar un mensaje a un contacto
-         * @description > **Nota del portal (v0):** El envío con clave se abre con el permiso **Contacts and conversations → Send** y las reglas de WhatsApp (ventana de 24 horas y frenos contra spam): está en camino. Hasta que se habilite, esta ruta responde `403 route_not_available` a cualquier clave. (Q19; cierra D21)
+         * @description > **Nota del portal (v0):** El envío con clave se abre con el permiso **Contactos y conversaciones → Enviar** y las reglas de WhatsApp (ventana de 24 horas y frenos contra spam): está en camino. Hasta que se habilite, esta ruta responde `403 route_not_available` a cualquier clave. (Q19; cierra D21)
          *
-         *     **Permiso requerido:** **Contacts and conversations → Send**
+         *     **Permiso requerido:** **Contactos y conversaciones → Enviar**
          */
         post: operations["conversation.sendMessage"];
         delete?: never;
@@ -801,7 +801,7 @@ export interface paths {
         };
         /**
          * Listar los mensajes de un contacto
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["conversation.getLatestMessages"];
         put?: never;
@@ -821,13 +821,13 @@ export interface paths {
         };
         /**
          * Listar campos personalizados
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["customField.index"];
         put?: never;
         /**
          * Crear un campo personalizado
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["customField.store"];
         delete?: never;
@@ -847,7 +847,7 @@ export interface paths {
         put?: never;
         /**
          * Eliminar campos personalizados
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["customField.destroy"];
         delete?: never;
@@ -865,12 +865,12 @@ export interface paths {
         };
         /**
          * Ver un campo personalizado
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["customField.show"];
         /**
          * Actualizar un campo personalizado
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["customField.update"];
         post?: never;
@@ -889,7 +889,7 @@ export interface paths {
         };
         /**
          * Listar los flujos en curso de un contacto
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["flow.contactFlowHistory"];
         put?: never;
@@ -910,7 +910,7 @@ export interface paths {
         get?: never;
         /**
          * Cancelar un flujo en curso
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["flow.cancelContactFlow"];
         post?: never;
@@ -929,7 +929,7 @@ export interface paths {
         };
         /**
          * Listar flujos
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["flow.index"];
         put?: never;
@@ -949,7 +949,7 @@ export interface paths {
         };
         /**
          * Ver un flujo
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["flow.show"];
         put?: never;
@@ -969,7 +969,7 @@ export interface paths {
         };
         /**
          * Listar los nodos de un flujo
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["flow.nodes"];
         put?: never;
@@ -989,7 +989,7 @@ export interface paths {
         };
         /**
          * Contar los contactos activos de un flujo
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["flow.activeContacts"];
         put?: never;
@@ -1009,7 +1009,7 @@ export interface paths {
         };
         /**
          * Listar los contactos activos de un flujo
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["flow.activeContactsList"];
         put?: never;
@@ -1029,7 +1029,7 @@ export interface paths {
         };
         /**
          * Listar los contactos de un flujo
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["flow.flowContactsList"];
         put?: never;
@@ -1049,13 +1049,13 @@ export interface paths {
         };
         /**
          * Listar carpetas
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["folder.index"];
         put?: never;
         /**
          * Crear una carpeta
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["folder.store"];
         delete?: never;
@@ -1073,18 +1073,18 @@ export interface paths {
         };
         /**
          * Ver una carpeta
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["folder.show"];
         /**
          * Actualizar una carpeta
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["folder.update"];
         post?: never;
         /**
          * Eliminar una carpeta
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         delete: operations["folder.destroy"];
         options?: never;
@@ -1103,9 +1103,9 @@ export interface paths {
         put?: never;
         /**
          * Reenviar un mensaje
-         * @description > **Nota del portal (v0):** El envío con clave se abre con el permiso **Contacts and conversations → Send** y las reglas de WhatsApp (ventana de 24 horas y frenos contra spam): está en camino. Hasta que se habilite, esta ruta responde `403 route_not_available` a cualquier clave. (Q19; cierra D21)
+         * @description > **Nota del portal (v0):** El envío con clave se abre con el permiso **Contactos y conversaciones → Enviar** y las reglas de WhatsApp (ventana de 24 horas y frenos contra spam): está en camino. Hasta que se habilite, esta ruta responde `403 route_not_available` a cualquier clave. (Q19; cierra D21)
          *
-         *     **Permiso requerido:** **Contacts and conversations → Send**
+         *     **Permiso requerido:** **Contactos y conversaciones → Enviar**
          */
         post: operations["forwardMessage.store"];
         delete?: never;
@@ -1125,9 +1125,9 @@ export interface paths {
         put?: never;
         /**
          * Enviar una encuesta
-         * @description > **Nota del portal (v0):** El envío con clave se abre con el permiso **Contacts and conversations → Send** y las reglas de WhatsApp (ventana de 24 horas y frenos contra spam): está en camino. Hasta que se habilite, esta ruta responde `403 route_not_available` a cualquier clave. (Q19; cierra D21)
+         * @description > **Nota del portal (v0):** El envío con clave se abre con el permiso **Contactos y conversaciones → Enviar** y las reglas de WhatsApp (ventana de 24 horas y frenos contra spam): está en camino. Hasta que se habilite, esta ruta responde `403 route_not_available` a cualquier clave. (Q19; cierra D21)
          *
-         *     **Permiso requerido:** **Contacts and conversations → Send**
+         *     **Permiso requerido:** **Contactos y conversaciones → Enviar**
          */
         post: operations["interactiveMessage.storePoll"];
         delete?: never;
@@ -1147,9 +1147,9 @@ export interface paths {
         put?: never;
         /**
          * Enviar una invitación a un evento
-         * @description > **Nota del portal (v0):** El envío con clave se abre con el permiso **Contacts and conversations → Send** y las reglas de WhatsApp (ventana de 24 horas y frenos contra spam): está en camino. Hasta que se habilite, esta ruta responde `403 route_not_available` a cualquier clave. (Q19; cierra D21)
+         * @description > **Nota del portal (v0):** El envío con clave se abre con el permiso **Contactos y conversaciones → Enviar** y las reglas de WhatsApp (ventana de 24 horas y frenos contra spam): está en camino. Hasta que se habilite, esta ruta responde `403 route_not_available` a cualquier clave. (Q19; cierra D21)
          *
-         *     **Permiso requerido:** **Contacts and conversations → Send**
+         *     **Permiso requerido:** **Contactos y conversaciones → Enviar**
          */
         post: operations["interactiveMessage.storeEvent"];
         delete?: never;
@@ -1167,13 +1167,13 @@ export interface paths {
         };
         /**
          * Listar tableros
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["kanbanSetting.index"];
         put?: never;
         /**
          * Crear un tablero
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["kanbanSetting.store"];
         delete?: never;
@@ -1191,18 +1191,18 @@ export interface paths {
         };
         /**
          * Ver un tablero
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["kanbanSetting.show"];
         /**
          * Actualizar un tablero
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["kanbanSetting.update"];
         post?: never;
         /**
          * Eliminar un tablero
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         delete: operations["kanbanSetting.destroy"];
         options?: never;
@@ -1219,7 +1219,7 @@ export interface paths {
         };
         /**
          * Ver los miembros de un tablero
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["kanbanSetting.members"];
         put?: never;
@@ -1239,7 +1239,7 @@ export interface paths {
         };
         /**
          * Ver las etapas de un contacto en los tableros
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["kanbanStage.contactStages"];
         put?: never;
@@ -1261,7 +1261,7 @@ export interface paths {
         put?: never;
         /**
          * Mover un contacto de etapa
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["kanbanStage.moveContact"];
         delete?: never;
@@ -1281,7 +1281,7 @@ export interface paths {
         put?: never;
         /**
          * Mover contactos de etapa en bloque
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["kanbanStage.bulkMove"];
         delete?: never;
@@ -1301,7 +1301,7 @@ export interface paths {
         put?: never;
         /**
          * Sacar un contacto del tablero
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["kanbanStage.removeContact"];
         delete?: never;
@@ -1321,7 +1321,7 @@ export interface paths {
         put?: never;
         /**
          * Sacar contactos del tablero en bloque
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["kanbanStage.bulkRemove"];
         delete?: never;
@@ -1341,7 +1341,7 @@ export interface paths {
         put?: never;
         /**
          * Crear una etapa
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["kanbanStage.store"];
         delete?: never;
@@ -1361,7 +1361,7 @@ export interface paths {
         put?: never;
         /**
          * Reordenar las etapas
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["kanbanStage.reorder"];
         delete?: never;
@@ -1380,13 +1380,13 @@ export interface paths {
         get?: never;
         /**
          * Actualizar una etapa
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["kanbanStage.update"];
         post?: never;
         /**
          * Eliminar una etapa
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         delete: operations["kanbanStage.destroy"];
         options?: never;
@@ -1403,7 +1403,7 @@ export interface paths {
         };
         /**
          * Listar los contactos de una etapa
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["kanbanStage.contacts"];
         put?: never;
@@ -1423,7 +1423,7 @@ export interface paths {
         };
         /**
          * Ver la distribución del lead score
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["leadScoreDistribution.show"];
         put?: never;
@@ -1445,7 +1445,7 @@ export interface paths {
         put?: never;
         /**
          * Registrar un evento de lead score
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["leadScoreEventIngest.ingest"];
         delete?: never;
@@ -1463,12 +1463,12 @@ export interface paths {
         };
         /**
          * Ver la configuración del lead score
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["leadScoreSettings.show"];
         /**
          * Actualizar la configuración del lead score
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["leadScoreSettings.update"];
         post?: never;
@@ -1489,7 +1489,7 @@ export interface paths {
         put?: never;
         /**
          * Ajustar el lead score de un contacto
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["leadScoreSettings.adjust"];
         delete?: never;
@@ -1507,7 +1507,7 @@ export interface paths {
         };
         /**
          * Ver el consumo de MACs
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["mac.status"];
         put?: never;
@@ -1527,7 +1527,7 @@ export interface paths {
         };
         /**
          * Listar los contactos que cuentan como MAC
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["mac.contacts"];
         put?: never;
@@ -1547,7 +1547,7 @@ export interface paths {
         };
         /**
          * Ver el historial de MACs
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["mac.contactsHistory"];
         put?: never;
@@ -1569,9 +1569,9 @@ export interface paths {
         put?: never;
         /**
          * Enviar un mensaje
-         * @description > **Nota del portal (v0):** El envío con clave se abre con el permiso **Contacts and conversations → Send** y las reglas de WhatsApp (ventana de 24 horas y frenos contra spam): está en camino. Hasta que se habilite, esta ruta responde `403 route_not_available` a cualquier clave. (Q19; cierra D21)
+         * @description > **Nota del portal (v0):** El envío con clave se abre con el permiso **Contactos y conversaciones → Enviar** y las reglas de WhatsApp (ventana de 24 horas y frenos contra spam): está en camino. Hasta que se habilite, esta ruta responde `403 route_not_available` a cualquier clave. (Q19; cierra D21)
          *
-         *     **Permiso requerido:** **Contacts and conversations → Send**
+         *     **Permiso requerido:** **Contactos y conversaciones → Enviar**
          */
         post: operations["message.sendMessage"];
         delete?: never;
@@ -1590,17 +1590,17 @@ export interface paths {
         get?: never;
         /**
          * Reaccionar a un mensaje
-         * @description > **Nota del portal (v0):** El envío con clave se abre con el permiso **Contacts and conversations → Send** y las reglas de WhatsApp (ventana de 24 horas y frenos contra spam): está en camino. Hasta que se habilite, esta ruta responde `403 route_not_available` a cualquier clave. (Q19; cierra D21)
+         * @description > **Nota del portal (v0):** El envío con clave se abre con el permiso **Contactos y conversaciones → Enviar** y las reglas de WhatsApp (ventana de 24 horas y frenos contra spam): está en camino. Hasta que se habilite, esta ruta responde `403 route_not_available` a cualquier clave. (Q19; cierra D21)
          *
-         *     **Permiso requerido:** **Contacts and conversations → Send**
+         *     **Permiso requerido:** **Contactos y conversaciones → Enviar**
          */
         put: operations["messageReaction.update"];
         post?: never;
         /**
          * Quitar una reacción
-         * @description > **Nota del portal (v0):** El envío con clave se abre con el permiso **Contacts and conversations → Send** y las reglas de WhatsApp (ventana de 24 horas y frenos contra spam): está en camino. Hasta que se habilite, esta ruta responde `403 route_not_available` a cualquier clave. (Q19; cierra D21)
+         * @description > **Nota del portal (v0):** El envío con clave se abre con el permiso **Contactos y conversaciones → Enviar** y las reglas de WhatsApp (ventana de 24 horas y frenos contra spam): está en camino. Hasta que se habilite, esta ruta responde `403 route_not_available` a cualquier clave. (Q19; cierra D21)
          *
-         *     **Permiso requerido:** **Contacts and conversations → Send**
+         *     **Permiso requerido:** **Contactos y conversaciones → Enviar**
          */
         delete: operations["messageReaction.destroy"];
         options?: never;
@@ -1617,13 +1617,13 @@ export interface paths {
         };
         /**
          * Listar plantillas
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["messageTemplate.templates"];
         put?: never;
         /**
          * Crear una plantilla
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["messageTemplate.store"];
         delete?: never;
@@ -1641,12 +1641,12 @@ export interface paths {
         };
         /**
          * Ver una plantilla
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["messageTemplate.template"];
         /**
          * Actualizar una plantilla
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["messageTemplate.update"];
         post?: never;
@@ -1665,7 +1665,7 @@ export interface paths {
         };
         /**
          * Ver los botones de respuesta rápida de una plantilla
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["messageTemplate.quickReplyButtons"];
         put?: never;
@@ -1687,9 +1687,9 @@ export interface paths {
         put?: never;
         /**
          * Enviar una plantilla
-         * @description > **Nota del portal (v0):** El envío con clave se abre con el permiso **Contacts and conversations → Send** y las reglas de WhatsApp (ventana de 24 horas y frenos contra spam): está en camino. Hasta que se habilite, esta ruta responde `403 route_not_available` a cualquier clave. (Q19; cierra D21)
+         * @description > **Nota del portal (v0):** El envío con clave se abre con el permiso **Contactos y conversaciones → Enviar** y las reglas de WhatsApp (ventana de 24 horas y frenos contra spam): está en camino. Hasta que se habilite, esta ruta responde `403 route_not_available` a cualquier clave. (Q19; cierra D21)
          *
-         *     **Permiso requerido:** **Contacts and conversations → Send**
+         *     **Permiso requerido:** **Contactos y conversaciones → Enviar**
          */
         post: operations["messageTemplate.send"];
         delete?: never;
@@ -1710,7 +1710,7 @@ export interface paths {
         post?: never;
         /**
          * Eliminar una plantilla de un número
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         delete: operations["messageTemplate.delete"];
         options?: never;
@@ -1727,7 +1727,7 @@ export interface paths {
         };
         /**
          * Listar los productos de una plataforma de pagos
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["paymentProduct.index"];
         put?: never;
@@ -1747,13 +1747,13 @@ export interface paths {
         };
         /**
          * Listar respuestas rápidas
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["quickReply.index"];
         put?: never;
         /**
          * Crear una respuesta rápida
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["quickReply.store"];
         delete?: never;
@@ -1771,18 +1771,18 @@ export interface paths {
         };
         /**
          * Ver una respuesta rápida
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["quickReply.show"];
         /**
          * Actualizar una respuesta rápida
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["quickReply.update"];
         post?: never;
         /**
          * Eliminar una respuesta rápida
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         delete: operations["quickReply.destroy"];
         options?: never;
@@ -1799,7 +1799,7 @@ export interface paths {
         };
         /**
          * Ver las métricas de ventas
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["salesDashboard.metrics"];
         put?: never;
@@ -1819,7 +1819,7 @@ export interface paths {
         };
         /**
          * Ver el embudo de ventas
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["salesDashboard.funnel"];
         put?: never;
@@ -1839,7 +1839,7 @@ export interface paths {
         };
         /**
          * Ver las ventas por plataforma
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["salesDashboard.byPlatform"];
         put?: never;
@@ -1859,7 +1859,7 @@ export interface paths {
         };
         /**
          * Listar ventas
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["salesDashboard.index"];
         put?: never;
@@ -1879,13 +1879,13 @@ export interface paths {
         };
         /**
          * Listar etiquetas
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["tag.index"];
         put?: never;
         /**
          * Crear una etiqueta
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["tag.store"];
         delete?: never;
@@ -1903,12 +1903,12 @@ export interface paths {
         };
         /**
          * Ver una etiqueta
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["tag.show"];
         /**
          * Actualizar una etiqueta
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["tag.update"];
         post?: never;
@@ -1927,7 +1927,7 @@ export interface paths {
         };
         /**
          * Listar los contactos con una etiqueta
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["tag.contacts"];
         put?: never;
@@ -1949,7 +1949,7 @@ export interface paths {
         put?: never;
         /**
          * Eliminar etiquetas
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["tag.destroy"];
         delete?: never;
@@ -1967,13 +1967,13 @@ export interface paths {
         };
         /**
          * Listar tickets
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["ticket.index"];
         put?: never;
         /**
          * Crear un ticket
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["ticket.store"];
         delete?: never;
@@ -1991,12 +1991,12 @@ export interface paths {
         };
         /**
          * Ver un ticket
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["ticket.show"];
         /**
          * Actualizar un ticket
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["ticket.update"];
         post?: never;
@@ -2017,7 +2017,7 @@ export interface paths {
         put?: never;
         /**
          * Asignar tickets
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["ticket.assignTicketToUser"];
         delete?: never;
@@ -2037,7 +2037,7 @@ export interface paths {
         put?: never;
         /**
          * Cerrar un ticket
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["ticket.closeTicket"];
         delete?: never;
@@ -2057,7 +2057,7 @@ export interface paths {
         put?: never;
         /**
          * Reabrir un ticket
-         * @description **Permiso requerido:** **Contacts and conversations → Edit**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["ticket.reOpenTicket"];
         delete?: never;
@@ -2075,7 +2075,7 @@ export interface paths {
         };
         /**
          * Ver un agente
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["user.show"];
         put?: never;
@@ -2095,7 +2095,7 @@ export interface paths {
         };
         /**
          * Listar agentes
-         * @description **Permiso requerido:** **Contacts and conversations → View**
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["user.index"];
         put?: never;
@@ -2115,7 +2115,7 @@ export interface paths {
         };
         /**
          * Listar campañas
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `created_at`, `id`, `name`, `updated_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
          */
@@ -2137,7 +2137,7 @@ export interface paths {
         };
         /**
          * Ver una campaña
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["campaign.show"];
         put?: never;
@@ -2157,7 +2157,7 @@ export interface paths {
         };
         /**
          * Ver las condicionales de una campaña
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["campaignConditional.index"];
         put?: never;
@@ -2177,7 +2177,7 @@ export interface paths {
         };
         /**
          * Listar los grupos que se pueden sumar a una campaña
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `pageSize` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
          */
@@ -2199,7 +2199,7 @@ export interface paths {
         };
         /**
          * Listar los grupos de una campaña
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `id`, `name`, `created_at`, `updated_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
          */
@@ -2221,7 +2221,7 @@ export interface paths {
         };
         /**
          * Listar los pipelines de una campaña
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `per_page` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `id`, `name`, `group_index`, `created_at`, `updated_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
          */
@@ -2243,7 +2243,7 @@ export interface paths {
         };
         /**
          * Ver un pipeline
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["campaign.showPipeline"];
         put?: never;
@@ -2263,7 +2263,7 @@ export interface paths {
         };
         /**
          * Ver la configuración de los planes de operación
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["operationPlan.config"];
         put?: never;
@@ -2283,7 +2283,7 @@ export interface paths {
         };
         /**
          * Listar los planes de operación de una campaña
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `per_page` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
          */
@@ -2305,7 +2305,7 @@ export interface paths {
         };
         /**
          * Ver un plan de operación
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["operationPlan.show"];
         put?: never;
@@ -2325,7 +2325,7 @@ export interface paths {
         };
         /**
          * Listar las acciones de sesión de una campaña
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** página fija de 15 elementos; se recorre con `page`.
          */
@@ -2347,7 +2347,7 @@ export interface paths {
         };
         /**
          * Listar los grupos alcanzados por una acción
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `name`, `status`, `created_at`, `updated_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
          */
@@ -2369,7 +2369,7 @@ export interface paths {
         };
         /**
          * Listar grupos
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `created_at`, `id`, `name`, `updated_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
          */
@@ -2391,7 +2391,7 @@ export interface paths {
         };
         /**
          * Listar los grupos que administra un número
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `pageSize` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
          */
@@ -2413,7 +2413,7 @@ export interface paths {
         };
         /**
          * Listar los grupos de anuncios de un número
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `pageSize` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
          */
@@ -2435,7 +2435,7 @@ export interface paths {
         };
         /**
          * Listar los canales de un número
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `pageSize` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
          */
@@ -2457,7 +2457,7 @@ export interface paths {
         };
         /**
          * Ver los datos actuales de un grupo en WhatsApp
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["groupMetadata.show"];
         put?: never;
@@ -2477,7 +2477,7 @@ export interface paths {
         };
         /**
          * Ver un grupo
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["group.show"];
         put?: never;
@@ -2497,7 +2497,7 @@ export interface paths {
         };
         /**
          * Listar las acciones de sesión sobre un grupo
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `status`, `created_at`, `updated_at`, `completed_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
          */
@@ -2519,7 +2519,7 @@ export interface paths {
         };
         /**
          * Listar los mensajes enviados a un grupo
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** página fija de 3 elementos; se recorre con `page`.
          */
@@ -2541,7 +2541,7 @@ export interface paths {
         };
         /**
          * Listar los envíos programados que incluyen un grupo
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `id`, `name`, `created_at`, `updated_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
          */
@@ -2563,7 +2563,7 @@ export interface paths {
         };
         /**
          * Listar los participantes de una campaña
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `updated_at`, `id`, `created_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
          */
@@ -2585,7 +2585,7 @@ export interface paths {
         };
         /**
          * Listar los participantes con su grupo actual
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `joined_at`, `left_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
          */
@@ -2607,7 +2607,7 @@ export interface paths {
         };
         /**
          * Listar entradas y salidas de una campaña
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
          */
@@ -2629,7 +2629,7 @@ export interface paths {
         };
         /**
          * Listar los participantes de un grupo
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `created_at`, `id`, `updated_at`; dirección `orderDirection`: `asc` o `desc`. Otro valor responde `422`.
          */
@@ -2651,7 +2651,7 @@ export interface paths {
         };
         /**
          * Listar entradas y salidas de un grupo
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
          */
@@ -2673,7 +2673,7 @@ export interface paths {
         };
         /**
          * Listar envíos programados
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `created_at`, `id`, `name`, `updated_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
          */
@@ -2695,7 +2695,7 @@ export interface paths {
         };
         /**
          * Ver un envío programado
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["scheduledMessage.show"];
         put?: never;
@@ -2715,7 +2715,7 @@ export interface paths {
         };
         /**
          * Listar los grupos destino de un envío
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** página fija de 3 elementos; se recorre con `page`. Orden: `orderBy` acepta `created_at`, `id`, `name`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
          */
@@ -2737,7 +2737,7 @@ export interface paths {
         };
         /**
          * Ver el resultado por grupo de un envío
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `group_message_template.id`, `group_message_template.status`, `groups.name`, `group_message_template.created_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
          */
@@ -2759,7 +2759,7 @@ export interface paths {
         };
         /**
          * Ver las tasas de lectura y reproducción de un envío
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["scheduledMessage.readedAndPlayedRates"];
         put?: never;
@@ -2779,7 +2779,7 @@ export interface paths {
         };
         /**
          * Listar las ocurrencias de un envío recurrente
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
          */
@@ -2801,7 +2801,7 @@ export interface paths {
         };
         /**
          * Listar las carpetas de envíos
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["scheduledMessageFolder.index"];
         put?: never;
@@ -2821,7 +2821,7 @@ export interface paths {
         };
         /**
          * Listar las respuestas a un envío
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
          */
@@ -2843,7 +2843,7 @@ export interface paths {
         };
         /**
          * Listar las etiquetas que se aplican a quien responde
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["scheduledMessage.responseTags"];
         put?: never;
@@ -2863,7 +2863,7 @@ export interface paths {
         };
         /**
          * Ver participantes por período
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** `start_date` y `end_date` son obligatorios, con formato `AAAA-MM-DD`, y el rango entre los dos, ambos incluidos, admite como máximo 366 días (un año completo, bisiesto incluido). Si falta una de las dos fechas, si una es inválida, si `end_date` es anterior a `start_date` o si el rango es mayor, responde `422`.
          */
@@ -2885,7 +2885,7 @@ export interface paths {
         };
         /**
          * Ver participantes activos
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** `start_date` y `end_date` son obligatorios, con formato `AAAA-MM-DD`, y el rango entre los dos, ambos incluidos, admite como máximo 366 días (un año completo, bisiesto incluido). Si falta una de las dos fechas, si una es inválida, si `end_date` es anterior a `start_date` o si el rango es mayor, responde `422`.
          */
@@ -2907,7 +2907,7 @@ export interface paths {
         };
         /**
          * Ver grupos por estado
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** `start_date` y `end_date` son obligatorios, con formato `AAAA-MM-DD`, y el rango entre los dos, ambos incluidos, admite como máximo 366 días (un año completo, bisiesto incluido). Si falta una de las dos fechas, si una es inválida, si `end_date` es anterior a `start_date` o si el rango es mayor, responde `422`.
          */
@@ -2929,7 +2929,7 @@ export interface paths {
         };
         /**
          * Ver clics en links
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** `start_date` y `end_date` son obligatorios, con formato `AAAA-MM-DD`, y el rango entre los dos, ambos incluidos, admite como máximo 366 días (un año completo, bisiesto incluido). Si falta una de las dos fechas, si una es inválida, si `end_date` es anterior a `start_date` o si el rango es mayor, responde `422`.
          */
@@ -2951,7 +2951,7 @@ export interface paths {
         };
         /**
          * Listar registros de clics
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `per_page` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
          */
@@ -2973,7 +2973,7 @@ export interface paths {
         };
         /**
          * Ver métricas por país
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["stats.countryMetrics"];
         put?: never;
@@ -2993,7 +2993,7 @@ export interface paths {
         };
         /**
          * Listar países presentes
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["stats.countryList"];
         put?: never;
@@ -3013,7 +3013,7 @@ export interface paths {
         };
         /**
          * Listar los webhooks de una campaña
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Nota:** Webhooks legados de campaña, con otro formato; no reciben los eventos de plataforma (ver `/webhooks`).
          */
@@ -3035,7 +3035,7 @@ export interface paths {
         };
         /**
          * Listar las entregas de los webhooks de una campaña
-         * @description **Permiso requerido:** **Groups and campaigns → View**
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `per_page` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
          */
@@ -3057,7 +3057,7 @@ export interface paths {
         };
         /**
          * Ver mi cuenta
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          */
         get: {
             parameters: {
@@ -3103,7 +3103,7 @@ export interface paths {
          *     searchable by `name`. Degrades to 503 when the `groups` connection is
          *     unavailable instead of leaking a 500 / stack trace
          *
-         *     **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         *     **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25); también `per_page` · orden fijo: id ascendente · no acepta parámetros de orden.
          */
@@ -3125,7 +3125,7 @@ export interface paths {
         };
         /**
          * Ver el catálogo de alertas
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          *
          *     Stripe-only alerts (concepts/events that only exist for accounts billed
          *     through Stripe, e.g. subscription reactivation, dormant period ending)
@@ -3153,7 +3153,7 @@ export interface paths {
          * @description Return the daily report configuration for the authenticated owner.
          *     Returns a default structure if no record exists yet
          *
-         *     **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         *     **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          */
         get: operations["alertDailyReport.show"];
         /**
@@ -3161,7 +3161,7 @@ export interface paths {
          * @description Upsert the daily report configuration for the authenticated owner.
          *     Ensures exactly one row per owner (unique(owner_id))
          *
-         *     **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         *     **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          *
          *     When `all_campaigns` is false, the submitted `campaign_ids` are pruned
          *     to only those that still resolve to a visible campaign (owner + agents
@@ -3190,7 +3190,7 @@ export interface paths {
          *     Seed lazy: if the owner has no destinations and has a phone number,
          *     create an unverified phone destination from it
          *
-         *     **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         *     **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25) · orden fijo: id ascendente · no acepta parámetros de orden.
          */
@@ -3198,7 +3198,7 @@ export interface paths {
         put?: never;
         /**
          * Crear un destino de alertas
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          *
          *     Enforces, para `webhook`:
          *       - tope de {@see self::WEBHOOK_DESTINATION_LIMIT} destinos por cuenta;
@@ -3233,7 +3233,7 @@ export interface paths {
         post?: never;
         /**
          * Eliminar un destino de alertas
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          *
          *     Returns 404 for both non-existent and other-owner destinations to prevent
          *     resource-existence enumeration by unauthenticated/unauthorized callers.
@@ -3243,7 +3243,7 @@ export interface paths {
         head?: never;
         /**
          * Actualizar un destino de alertas
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          *
          *     La URL de un `phone` sigue siendo de solo lectura post-creacion (se
          *     verifica por OTP contra ese numero; cambiarlo seria crear otro destino).
@@ -3272,7 +3272,7 @@ export interface paths {
         put?: never;
         /**
          * Enviar un código de verificación
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          *
          *     HTTP 202: OTP dispatched.
          *     HTTP 422: destination is not a phone or is already verified.
@@ -3296,7 +3296,7 @@ export interface paths {
         put?: never;
         /**
          * Verificar el código
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          *
          *     HTTP 200: verified — returns updated destination resource.
          *     HTTP 422: destination not a phone, already verified, or wrong/expired code.
@@ -3320,7 +3320,7 @@ export interface paths {
          * @description Return the quiet hours configuration for the authenticated owner.
          *     Returns an empty/default structure if no record exists yet
          *
-         *     **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         *     **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          */
         get: operations["alertQuietHour.show"];
         /**
@@ -3328,7 +3328,7 @@ export interface paths {
          * @description Upsert the quiet hours configuration for the authenticated owner.
          *     Ensures exactly one row per owner (unique(owner_id))
          *
-         *     **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         *     **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          */
         put: operations["alertQuietHour.update"];
         post?: never;
@@ -3348,7 +3348,7 @@ export interface paths {
         get?: never;
         /**
          * Activar o desactivar una alerta
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          *
          *     - Validates that the module/action pair exists in AlertCatalog.
          *     - Validates that the destination is verified (verified_at not null).
@@ -3375,7 +3375,7 @@ export interface paths {
         put?: never;
         /**
          * Probar un destino webhook
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          *
          *     - Owner-scoped: returns 404 for both non-existent and other-owner destinations
          *       to prevent resource-existence enumeration.
@@ -3400,7 +3400,7 @@ export interface paths {
         put?: never;
         /**
          * Configurar el dataset de Conversions API
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          *
          *     Idempotently create or recover the Meta Conversions API dataset for the
          *     device's WABA and persist it in `waba_capi_datasets`.
@@ -3424,7 +3424,7 @@ export interface paths {
         };
         /**
          * Probar la conexión con Conversions API
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          *
          *     "Probar conexión": verifies the device token has the
          *     `whatsapp_business_manage_events` scope (`GET /debug_token`) and that the
@@ -3456,7 +3456,7 @@ export interface paths {
         };
         /**
          * Listar los datasets de Conversions API
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25) · orden fijo: id ascendente · no acepta parámetros de orden.
          *
@@ -3492,7 +3492,7 @@ export interface paths {
         };
         /**
          * Listar dominios propios
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25) · orden fijo: id ascendente · no acepta parámetros de orden.
          */
@@ -3500,7 +3500,7 @@ export interface paths {
         put?: never;
         /**
          * Registrar un dominio propio
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          *
          *     `StoreCustomDomainRequest` already sanitized `hostname` and validated
          *     shape + uniqueness (422, no Cloudflare call) before this method runs.
@@ -3557,7 +3557,7 @@ export interface paths {
          *     and persist the resolved canonical status ("verify now", design.md
          *     D4/D6/D10)
          *
-         *     **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         *     **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          *
          *     Scoped to the authenticated admin: a domain id belonging to another
          *     account resolves to a `ModelNotFoundException`, which the app's global
@@ -3613,7 +3613,7 @@ export interface paths {
          * @description Switch a domain's SSL Domain Control Validation (DCV) method between
          *     `HTTP` (default) and `TXT` (fallback, design.md D11)
          *
-         *     **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         *     **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          *
          *     This is the escape hatch for domains whose CNAME does not yet route to
          *     Cloudflare: HTTP DCV cannot complete without traffic reaching the
@@ -3657,7 +3657,7 @@ export interface paths {
          * @description Unregister a custom domain: delete it from Cloudflare, then hard-delete
          *     the local row (design.md D6)
          *
-         *     **Escritura** · requiere el permiso **WhatsApp numbers → Create, connect and delete**.
+         *     **Escritura** · requiere el permiso **Números de WhatsApp → Crear, conectar y borrar**.
          *
          *     > ⚠️ **Operación irreversible.** No hay papelera ni deshacer: resetear o limpiar un número mata su sesión de WhatsApp (hay que volver a escanear el código), purgar la cola descarta los mensajes encolados sin dejar registro de lo descartado, y los borrados eliminan el recurso.
          *
@@ -3694,7 +3694,7 @@ export interface paths {
         };
         /**
          * Listar números
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25) · orden fijo: id ascendente · no acepta parámetros de orden.
          */
@@ -3720,7 +3720,7 @@ export interface paths {
         };
         /**
          * Ver el perfil de WhatsApp de un número
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          */
         get: operations["device.me"];
         put?: never;
@@ -3740,7 +3740,7 @@ export interface paths {
         };
         /**
          * Verificar si un teléfono tiene WhatsApp
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          */
         get: operations["device.checkPhone"];
         put?: never;
@@ -3760,18 +3760,18 @@ export interface paths {
         };
         /**
          * Ver un número
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          */
         get: operations["device.show"];
         /**
          * Actualizar un número
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          */
         put: operations["device.update"];
         post?: never;
         /**
          * Eliminar un número
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Create, connect and delete**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Crear, conectar y borrar**.
          *
          *     > ⚠️ **Operación irreversible.** No hay papelera ni deshacer: resetear o limpiar un número mata su sesión de WhatsApp (hay que volver a escanear el código), purgar la cola descarta los mensajes encolados sin dejar registro de lo descartado, y los borrados eliminan el recurso.
          */
@@ -3791,7 +3791,7 @@ export interface paths {
         get?: never;
         /**
          * Reiniciar la sesión de un número
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Create, connect and delete**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Crear, conectar y borrar**.
          *
          *     > ⚠️ **Operación irreversible.** No hay papelera ni deshacer: resetear o limpiar un número mata su sesión de WhatsApp (hay que volver a escanear el código), purgar la cola descarta los mensajes encolados sin dejar registro de lo descartado, y los borrados eliminan el recurso.
          */
@@ -3813,7 +3813,7 @@ export interface paths {
         get?: never;
         /**
          * Configurar el webhook de mensajes recibidos
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          */
         put: operations["device.updateWebhookReceived"];
         post?: never;
@@ -3833,7 +3833,7 @@ export interface paths {
         get?: never;
         /**
          * Configurar el webhook de recibidos y entregas
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          */
         put: operations["device.updateWebhookReceivedAndDelivery"];
         post?: never;
@@ -3854,7 +3854,7 @@ export interface paths {
         put?: never;
         /**
          * Limpiar un número
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Create, connect and delete**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Crear, conectar y borrar**.
          *
          *     > ⚠️ **Operación irreversible.** No hay papelera ni deshacer: resetear o limpiar un número mata su sesión de WhatsApp (hay que volver a escanear el código), purgar la cola descarta los mensajes encolados sin dejar registro de lo descartado, y los borrados eliminan el recurso.
          */
@@ -3874,7 +3874,7 @@ export interface paths {
         };
         /**
          * Listar los chats de un número
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25); también `pageSize` · orden fijo: el que devuelve el proveedor · no acepta parámetros de orden.
          */
@@ -3896,7 +3896,7 @@ export interface paths {
         };
         /**
          * Ver qué teléfonos tienen conversación abierta
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          *
          *     **Con API key** · Con una clave de API, `phones` admite como máximo 100 teléfonos por llamada. Más responde `422`.
          */
@@ -3918,7 +3918,7 @@ export interface paths {
         };
         /**
          * Ver la cola de mensajes
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25); también `pageSize` · orden fijo: el que devuelve el proveedor · no acepta parámetros de orden.
          */
@@ -3927,7 +3927,7 @@ export interface paths {
         post?: never;
         /**
          * Eliminar mensajes de la cola
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          */
         delete: operations["device.deleteMessageQueue"];
         options?: never;
@@ -3944,7 +3944,7 @@ export interface paths {
         };
         /**
          * Contar los mensajes en la cola
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          */
         get: operations["device.getQueueCount"];
         put?: never;
@@ -3967,7 +3967,7 @@ export interface paths {
         post?: never;
         /**
          * Vaciar la cola de mensajes
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Create, connect and delete**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Crear, conectar y borrar**.
          *
          *     > ⚠️ **Operación irreversible.** No hay papelera ni deshacer: resetear o limpiar un número mata su sesión de WhatsApp (hay que volver a escanear el código), purgar la cola descarta los mensajes encolados sin dejar registro de lo descartado, y los borrados eliminan el recurso.
          */
@@ -3986,7 +3986,7 @@ export interface paths {
         };
         /**
          * Ver el estado de conexión
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          */
         get: operations["device.status"];
         put?: never;
@@ -4011,7 +4011,7 @@ export interface paths {
          * @description Request a short-lived extension token for transferring a WhatsApp Web session
          *     to this device instance via the Z-API Conector Chrome extension
          *
-         *     **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         *     **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          *
          *     Only available for ZApi and ZApiLite providers. Returns a one-time code with
          *     an expiry timestamp. The frontend uses this code to authenticate the extension
@@ -4033,7 +4033,7 @@ export interface paths {
         };
         /**
          * Ver el historial de conexión
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25) · orden fijo: created_at descendente · no acepta parámetros de orden.
          */
@@ -4055,13 +4055,13 @@ export interface paths {
         };
         /**
          * Ver la encuesta de desconexión
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          */
         get: operations["deviceDisconnectSurvey.show"];
         put?: never;
         /**
          * Responder la encuesta de desconexión
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          */
         post: operations["deviceDisconnectSurvey.store"];
         delete?: never;
@@ -4083,7 +4083,7 @@ export interface paths {
          *     newest-first, keyset-paginated. Returns a `summary` only on the first
          *     page (no `cursor`)
          *
-         *     **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         *     **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25); también `limit` · orden fijo: más reciente primero · no acepta parámetros de orden.
          */
@@ -4108,7 +4108,7 @@ export interface paths {
          * @description `GET /devices/{device}/health` — serves `currentSnapshot()`
          *     normalized through `DeviceHealthDetailResource`. NEVER calls Meta
          *
-         *     **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         *     **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          */
         get: operations["deviceHealth.show"];
         put?: never;
@@ -4135,7 +4135,7 @@ export interface paths {
          *     call, subject to D7's 60s cooldown and per-device `Cache::lock`) and
          *     returns the SAME shape as `show()`, plus `refresh_outcome`
          *
-         *     **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         *     **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          *
          *     `refresh_outcome` (security-auditor finding — Increment 4 plan
          *     review, "the endpoint must tell the truth about what happened"):
@@ -4183,7 +4183,7 @@ export interface paths {
          *     newest-first, keyset-paginated. Returns a `summary` only on the first
          *     page (no `cursor`)
          *
-         *     **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         *     **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25); también `limit` · orden fijo: más reciente primero · no acepta parámetros de orden.
          */
@@ -4208,7 +4208,7 @@ export interface paths {
          * @description Return the device's health signal: the last 5 non-send requests plus a
          *     verdict (`healthy`/`review`/`attention`)
          *
-         *     **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         *     **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          */
         get: operations["deviceLogs.health"];
         put?: never;
@@ -4228,7 +4228,7 @@ export interface paths {
         };
         /**
          * Ver el nombre de usuario
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          *
          *     Fetch the current reserved username from Meta and return it along with the locally stored value.
          */
@@ -4236,7 +4236,7 @@ export interface paths {
         put?: never;
         /**
          * Configurar el nombre de usuario
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          *
          *     Reserve a username via Meta API and persist it locally.
          */
@@ -4256,7 +4256,7 @@ export interface paths {
         };
         /**
          * Sugerir nombres de usuario
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          *
          *     Fetch username suggestions from Meta API.
          */
@@ -4278,7 +4278,7 @@ export interface paths {
         };
         /**
          * Listar entregas de un webhook
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25); también `per_page` · orden fijo: attempted_at descendente, después id descendente · no acepta parámetros de orden.
          */
@@ -4300,7 +4300,7 @@ export interface paths {
         };
         /**
          * Listar webhooks
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25) · orden fijo: id ascendente · no acepta parámetros de orden.
          */
@@ -4308,7 +4308,7 @@ export interface paths {
         put?: never;
         /**
          * Crear un webhook
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          */
         post: operations["webhookEndpoint.store"];
         delete?: never;
@@ -4326,7 +4326,7 @@ export interface paths {
         };
         /**
          * Ver un webhook
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          */
         get: operations["webhookEndpoint.show"];
         put?: never;
@@ -4336,14 +4336,14 @@ export interface paths {
          * @description Da de baja el endpoint. Las suscripciones y el historial de entregas caen
          *     con él por `ON DELETE CASCADE`
          *
-         *     **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         *     **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          */
         delete: operations["webhookEndpoint.destroy"];
         options?: never;
         head?: never;
         /**
          * Actualizar un webhook
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          *
          *     El `SsrfGuard` corre TAMBIÉN acá y no sólo en el alta: si corriera sólo en
          *     el alta, editar sería la puerta de atrás para dejar persistida una URL que
@@ -4362,7 +4362,7 @@ export interface paths {
         get?: never;
         /**
          * Elegir los eventos de un webhook
-         * @description **Escritura** · requiere el permiso **WhatsApp numbers → Edit**.
+         * @description **Escritura** · requiere el permiso **Números de WhatsApp → Editar**.
          */
         put: operations["webhookEndpointEvent.update"];
         post?: never;
@@ -4381,7 +4381,7 @@ export interface paths {
         };
         /**
          * Listar tipos de evento
-         * @description **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         * @description **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          */
         get: operations["webhookEventCatalog.index"];
         put?: never;
@@ -4404,7 +4404,7 @@ export interface paths {
          * @description Returns the full `WhatsappCostSummaryResource` for the requested
          *     (or current, when omitted) calendar month — `?month=YYYY-MM`
          *
-         *     **Lectura** · requiere el permiso **WhatsApp numbers → View**.
+         *     **Lectura** · requiere el permiso **Números de WhatsApp → Ver**.
          */
         get: operations["whatsappCost.index"];
         put?: never;
