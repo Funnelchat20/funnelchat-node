@@ -1,36 +1,131 @@
 # funnelchat-node
 
-Official Node.js and TypeScript SDK for the [Funnelchat public API](https://developers-portal.funnelchat.app/docs/): contacts, conversations and messages, WhatsApp forms, templates, tags, custom fields, groups, numbers and webhooks, with types generated from the OpenAPI spec.
+Official Node.js and TypeScript SDK for the [Funnelchat API](https://developers-portal.funnelchat.app/docs/): connect your WhatsApp number, send messages, know when they are read, receive them and handle your groups from your code.
 
-- TypeScript, ESM and CommonJS. Node 18 or later, with Node's own `fetch`.
-- No runtime dependencies.
-- Safe retries, pagination with `for await`, typed errors carrying the `X-Request-Id` of each response, and webhook signature verification.
-
-> **v0.** The public API is in v0 and may change. What the API already has but its spec does not describe yet is listed in [Pending of the spec](#pending-of-the-spec).
-
-## Install
+- TypeScript, ESM and CommonJS. Node 18 or later, with Node's own `fetch`. No runtime dependencies.
+- Types generated from the OpenAPI spec, safe retries, pagination with `for await`, typed errors with the `X-Request-Id` of each response, and webhook signature verification.
 
 ```bash
 npm install @funnelchat-hq/sdk
 ```
 
-## First call
+## First use
 
-You need an API key (`<id>|fc_live_...`) created in the "Developers" section of the panel, with the permissions of what you are going to use. The panel groups them by area, with one checkbox per level: this README names each one as the panel shows it, such as **WhatsApp numbers → View**. In the panel, **Send** includes **View** and **Edit**, and **Edit** includes **View**. Keep it in an environment variable: the client reads `FUNNELCHAT_API_KEY` when you do not pass it.
+### 1. Create your key
+
+In the Funnelchat panel, go to **Developers** and tap **Create key**, with the permissions of what you will use. Copy it: it is shown only once. Keep it in the `FUNNELCHAT_API_KEY` environment variable, where the client reads it.
 
 ```ts
 import { Funnelchat } from '@funnelchat-hq/sdk';
-// CommonJS: const { Funnelchat } = require('@funnelchat-hq/sdk');
 
-const funnelchat = new Funnelchat({ apiKey: process.env.FUNNELCHAT_API_KEY });
+const funnelchat = new Funnelchat(); // reads FUNNELCHAT_API_KEY
+```
 
-// Your WhatsApp numbers. Permission: WhatsApp numbers → View. The `id` of each one is the `device_id` you send with.
-for await (const device of funnelchat.devices.list()) {
-  console.log(device.id, device.number, device.capabilities.messages.templates);
+### 2. Connect a number
+
+Create a number and show its QR code until it is scanned from WhatsApp → **Linked devices**:
+
+```ts
+const { data: device } = await funnelchat.devices.create({ connection: 'qr' });
+
+while (true) {
+  const { data: qr } = await funnelchat.devices.qr(device.id);
+  if (qr.connected) break;
+  show(qr.qr_code); // your code: a PNG data URI, replaced on every turn
+  await new Promise((resolve) => setTimeout(resolve, qr.expires_in * 1000)); // 5 seconds
 }
 ```
 
-Client options:
+Is the phone someone else's? Send them a page that shows the QR instead: `const { data: link } = await funnelchat.connectLinks.create({ type: 'qr' })` and share `link.url`. Either way, the `device.connected` webhook says when it is connected. More in [Connect a number](#connect-a-number).
+
+### 3. Send a message
+
+The contact goes first; then the text, from your number:
+
+```ts
+const contact = await funnelchat.contacts.create({ phone: '5491100000000', name: 'Ana' }); // with country code, digits only
+
+const { message } = await funnelchat.messages.sendDirect({ device_id: device.id, contact_id: contact.id, text: 'Hi Ana!' });
+console.log(message.id, message.status); // 1002 'queued'
+```
+
+The answer is the queued message: accepted is not delivered yet. With an official number, free text only goes within 24 hours of the contact's last message; after that, an [approved template](#templates).
+
+### 4. Know when it was read
+
+Subscribe once to `message.status_changed` and verify each delivery with your secret:
+
+```ts
+const subscription = await funnelchat.webhooks.create({
+  url: 'https://your-app.example/hooks/funnelchat',
+  events: ['message.status_changed'],
+});
+// Keep subscription.secret (FUNNELCHAT_WEBHOOK_SECRET below): it is shown only once.
+
+app.post('/hooks/funnelchat', express.raw({ type: 'application/json' }), (req, res) => {
+  const event = Funnelchat.webhooks.constructEvent(req.body, req.get('X-Funnelchat-Signature'), process.env.FUNNELCHAT_WEBHOOK_SECRET!);
+  if (event.type === 'message.status_changed' && event.data.status === 'read') {
+    console.log(`Message ${event.data.message_id} was read`);
+  }
+  res.sendStatus(200);
+});
+```
+
+The status goes `sent`, `delivered`, `read` (or `failed`, with `error`). You can also ask for it: `(await funnelchat.messages.get(contact.id, message.id)).status`. More in [Webhooks](#webhooks).
+
+## Receive messages
+
+Add `message.received` to the events of your subscription. Each one brings the message, the contact and the number that received it, the one to answer from:
+
+```ts
+if (event.type === 'message.received') {
+  const { message, contact, device_id } = event.data;
+  console.log(contact.phone, message.text ?? message.type); // text is null for a file without caption
+
+  if (device_id && contact.id) {
+    await funnelchat.messages.sendDirect({ device_id, contact_id: contact.id, text: 'Got it, thanks!' });
+  }
+}
+```
+
+## Groups
+
+List the groups of your numbers and send a message to one by its `uid`:
+
+```ts
+for await (const group of funnelchat.groups.list()) {
+  console.log(group.uid, group.name); // '120363000000000001@g.us', 'Customers'
+}
+
+const { action_id } = await funnelchat.groups.sendMessage('120363000000000001@g.us', {
+  device_id: device.id, // a QR number must be admin of the group
+  type: 'text',
+  text: 'Hi everyone!',
+});
+```
+
+- The message goes out in the background: `group_action.completed` (with `action.uuid` equal to `action_id`) or `funnelchat.groups.action(action_id)` tell you how it went. A file goes as `type: 'image'` (or `video`, `audio`, `document`) with its `https` `media_url`.
+- Who joins or leaves arrives by `group_participant.joined` and `group_participant.left`: `group`, `participant` (`identity`, `identity_type`, `name`) and `campaign`, `null` for a group without a campaign.
+- Permissions: **Groups and campaigns → View** to read and **Groups and campaigns → Send** to send. Sending to groups goes only while the group actions are turned on for the API: otherwise it answers `403 route_not_available`.
+
+## Workspaces
+
+Each key belongs to the workspace where it was created (the one selected at the top of the panel) and only sees and changes what is in it: numbers, contacts, messages, groups, connect links and webhook subscriptions. Anything of another workspace answers `404`, as if it did not exist. Working for several clients? Create a key in each client's workspace.
+
+Every webhook event says which workspace it belongs to, and a subscription only receives the events of its own workspace:
+
+```ts
+const event = Funnelchat.webhooks.constructEvent(rawBody, signature, secret);
+console.log(event.type, event.data.workspace_id); // 'message.received', 37
+```
+
+An account with a single workspace, or without workspaces, works as always: its events carry the id of its default workspace. The caps of 20 keys and 50 subscriptions count per workspace.
+
+---
+
+## Reference
+
+### Client options
 
 | Option | What it is | Default |
 |---|---|---|
@@ -42,29 +137,43 @@ Client options:
 | `defaultHeaders` | Headers sent with every request. | — |
 | `fetch` | Another `fetch` implementation. | Node's |
 
-Every request sends `Authorization: Bearer <key>`, `Accept: application/json` and `User-Agent: funnelchat-node/<version> node/<version>`. The key never shows up in a `console.log` of the client or in an error.
+CommonJS: `const { Funnelchat } = require('@funnelchat-hq/sdk');`. Every request sends `Authorization: Bearer <key>`, `Accept: application/json` and `User-Agent: funnelchat-node/<version> node/<version>`. The key never shows up in a `console.log` of the client or in an error.
 
-## The pieces
+### The pieces
 
 | Resource | What it has |
 |---|---|
+| `funnelchat.devices` | Your WhatsApp numbers: `list` (filter by `external_reference`), `create` (a QR number), `qr`, `retrieve` (with `capabilities`), `update`, `delete`, `status`, `health`, `me`, `checkPhone`, connection history. The `id` of a number is the `device_id` you send with. |
+| `funnelchat.connectLinks` | `create`, `get`, `list`, `revoke`: a page where your customer connects a number. |
 | `funnelchat.contacts` | `list`, `create`, `upsert`, `retrieve`, `update`, `delete`, the tags and fields of a contact, `metaWindow` (the 24-hour window), notes. |
-| `funnelchat.conversations` | `list`, `update`, counters, mark everything as read or unread. |
 | `funnelchat.messages` | `send`, `sendDirect`, `sendForm`, `sendContactCard`, `forward`, `get` (one message by id), `list` (the history of a contact), `react`, `removeReaction`. |
-| `funnelchat.forms` | WhatsApp forms: `list`, `templates`, `create`, `retrieve`, `update`, `delete`, `createVersion`, `sync`, `publish`, numbers, `versions`, answers and `metrics`. |
 | `funnelchat.templates` | `list`, `create`, `retrieve`, `update`, `quickReplyButtons`, `send`, `delete`. |
+| `funnelchat.groups` | `list`, `retrieve`, `listByDevice`, participants and their joins and leaves, messages, `sendMessage` and `action`. |
+| `funnelchat.webhooks` | Subscriptions (`list`, `create`, `retrieve`, `update`, `delete`, `test`, `listDeliveries`), the catalog (`events`), `verify` and `constructEvent`. |
+| `funnelchat.conversations` | `list`, `update`, counters, mark everything as read or unread. |
+| `funnelchat.forms` | WhatsApp forms: `list`, `templates`, `create`, `retrieve`, `update`, `delete`, `createVersion`, `sync`, `publish`, numbers, `versions`, answers and `metrics`. |
 | `funnelchat.tags` | `list`, `create`, `retrieve`, `update`, `delete`, `listContacts`. |
 | `funnelchat.customFields` | `list`, `create`, `retrieve`, `update`, `delete`. |
-| `funnelchat.groups` | Read groups, participants, events and messages. |
-| `funnelchat.devices` | `list` (filter by `external_reference`), `create` (a QR number), `qr`, `retrieve` (with `capabilities`), `update`, `delete`, `status`, `health`, `me`, `checkPhone`, connection history. |
-| `funnelchat.connectLinks` | `create`, `get`, `list`, `revoke`: a page where your customer connects a number. See [Connect a number](#connect-a-number). |
-| `funnelchat.webhooks` | Subscriptions (`list`, `create`, `retrieve`, `update`, `delete`, `test`, `listDeliveries`), the catalog (`events`), `verify` and `constructEvent`. |
 
 Parameters, bodies and responses are typed from the spec. For any other route, see [Any route](#any-route).
 
-## Send a message
+### Permissions
 
-Sending with a key needs **Contacts and conversations → Send** and follows the WhatsApp rules. **Every send answers right away with the registered message, `status: 'queued'`:** accepted is not delivered. What happens next arrives by the `message.status_changed` webhook, or is read with `messages.get`.
+A key has the permissions ticked when it was created. The panel groups them by area, with one checkbox per level, and this README names each one as the panel shows it, such as **WhatsApp numbers → View**. In the panel, **Send** includes **View** and **Edit**, and **Edit** includes **View**.
+
+| To | You need |
+|---|---|
+| List numbers, read their status and connect links | **WhatsApp numbers → View** |
+| Create numbers, show their QR, create and revoke connect links, delete numbers | **WhatsApp numbers → Create, connect and delete** |
+| Create contacts | **Contacts and conversations → Edit** |
+| Send messages and templates | **Contacts and conversations → Send** |
+| Read groups | **Groups and campaigns → View** |
+| Send to a group | **Groups and campaigns → Send** |
+| Webhook subscriptions | **Notifications (webhooks) → View** to read, **Notifications (webhooks) → Manage** for the rest, plus **View** of the area of each event |
+
+### Send a message
+
+Sending with a key follows the WhatsApp rules. **Every send answers right away with the registered message, `status: 'queued'`:** what happens next arrives by the `message.status_changed` webhook, or is read with `messages.get`.
 
 **Open window: free text.** With an official Meta number you can only send free text if the contact wrote to you in the last 24 hours. Check the window first:
 
@@ -82,10 +191,10 @@ if (window.is_open) {
 }
 ```
 
+- `contacts.create({ phone })` (7 to 15 digits) answers the existing contact when that phone is already there. A contact has to exist before you send it anything.
 - `message.id` is the same `message_id` of `message.status_changed`. With it, `funnelchat.messages.get(2001, message.id)` tells you how it is going: `status` moves from `queued` to `sent`, `delivered`, `read` or `failed`, and a `failed` one carries `error` (`code`, `title` and `reason`).
 - `client_reference` (1 to 64 visible ASCII characters, no spaces) comes back in the history of the contact and in `message.status_changed`.
-- `contact_id` goes in the body, but `send` fills it with the contact of the route when you leave it out. Send the `phone` (or `whatsapp_id`) of the same contact: when it does not match, the API answers `422 recipient_mismatch`.
-- `sendDirect` is the same operation through `POST /api/v1/message/send-message`, with `device_id` and `contact_id` in the body.
+- `send` is `POST /api/v1/contacts/{contact}/message` and checks the `phone` (or `whatsapp_id`) of the body against the contact of the route: when it does not match, `422 recipient_mismatch`. `sendDirect` is `POST /api/v1/message/send-message`, with `device_id` and `contact_id` in the body.
 - Contact cards (`sendContactCard`) return `{ messages }`, one per card; a forward (`forward`) one item per destination with its `message` (or `null` when that destination was blocked); a template (`templates.send`) and a form (`sendForm`) `{ message }`.
 
 **A file by URL.** `file` is the URL of the file. When it does not end in a known extension (a signed URL, or one without extension), say what it is with `file_type` and, for a document, the name it arrives with:
@@ -102,7 +211,9 @@ await funnelchat.messages.send(2001, {
 
 Without `file_type`, a URL without a known extension answers `422` with `errors.file_type`, and an unsupported extension `415` (`UnsupportedMediaTypeError`, with `supported_file_types` in `error.body`).
 
-**Closed window: an approved template.** The route takes the number (`3`) and the id of the template (`45`), which comes from `funnelchat.templates.list()`:
+#### Templates
+
+**Closed window: an approved template.** It is the only way to write to a contact after 24 hours with an official number. The route takes the number (`3`) and the id of the template (`45`), from `funnelchat.templates.list()`; send only the ones with `available: true` (Meta pauses or disables the others):
 
 ```ts
 const { message } = await funnelchat.templates.send(3, '45', {
@@ -112,7 +223,9 @@ const { message } = await funnelchat.templates.send(3, '45', {
 });
 ```
 
-**When a send is stopped.** A send that breaks a rule is neither sent nor stored: you get an error with its `code`.
+#### When a send is stopped
+
+A send that breaks a rule is neither sent nor stored: you get an error with its `code`.
 
 | Error | What happened | What to do |
 |---|---|---|
@@ -120,7 +233,7 @@ const { message } = await funnelchat.templates.send(3, '45', {
 | `422 antiblock_duplicate_content` | The same content repeated to the same contact. | Change the text or wait. |
 | `422 antiblock_unanswered_limit` | Too many messages in a row to someone who does not answer. | Wait until they answer. |
 | `422 recipient_mismatch` | The `phone` or `whatsapp_id` is not the contact of the route. | Use that contact's data. |
-| `422 recipient_unsupported` | The contact is a group, a broadcast list or a channel. | This route only writes to people. |
+| `422 recipient_unsupported` | The contact is a group, a broadcast list or a channel. | Write to a group with `groups.sendMessage`. |
 | `422 provider_unsupported` | The number cannot send that. | Check the `capabilities` of the number. |
 | `422 device_unavailable` | The number is not connected. | Reconnect it. |
 | `429 rate_limited` | You went over the pace of your number. It carries `retryAfter`. | Wait those seconds and retry. |
@@ -128,36 +241,22 @@ const { message } = await funnelchat.templates.send(3, '45', {
 
 `isSendRuleError(error.code)` tells you whether the error is a rejected send; `SEND_ERROR_CODES` has all of them, with their HTTP status. A send is **never retried automatically** (see [Retries](#retries)).
 
-## Forms
+#### A message to a group
 
-A WhatsApp form is built, published on one or more numbers and sent to a contact. There are two ids: `id` is one version; `family_id` is the form itself, the one you send it with and the one that comes back as `form.id` in `whatsapp_form.completed`.
+`groups.sendMessage(uid, body)` answers `202` with `{ action_id, status: 'queued' }`. The body is `device_id` and `type`: `text` (with `text`, up to 4096 characters) or `image`, `video`, `audio` or `document` (with `media_url`, a public `https` URL that ends in an extension of the type; `caption` for an image or a video, `file_name` for a document). Polls, events, stickers, contacts and locations are not accepted. A QR number goes out at the pace of the scheduled messages; an official number checks the 24-hour window of the group and its quality first.
 
-```ts
-const { data: draft } = await funnelchat.forms.create({ device_id: 3, template_key: 'lead' }); // Contacts and conversations → Edit
-await funnelchat.forms.publish(draft.id);
+`groups.action(action_id)` brings `status` (`queued`, `running`, `completed` or `failed`), `reason` when it failed and `result.message.uid`, the id of the message in WhatsApp. Its rejections are in `GROUP_ACTION_ERROR_CODES`: `404 device_not_found`, `404 group_not_found`, `422 device_not_connected`, `422 device_not_group_admin` (a QR number that is not admin), `422 device_not_group_number` (an official group of another number), `422 window_closed`, `422 number_restricted`, `422 unsupported_type`, `429 too_many_pending_actions` (50 open actions on the number) and `404 action_not_found` when reading.
 
-const { message } = await funnelchat.messages.sendForm(2001, {
-  form_id: draft.family_id,
-  device_id: 3,
-  text: 'How did it go?',
-  client_reference: 'survey-8841',
-});
-```
+### Connect a number
 
-The answers arrive by the `whatsapp_form.completed` webhook (`answers`: `key`, `label` and `value`) and are read with `forms.listResponses(familyId)`. `forms.templates()` lists the templates to start from; `forms.update(id, { definition, expected_updated_at })` saves a draft and answers `409 STALE` when someone saved it first.
-
-## Connect a number
-
-> **In production, except the official sign-up by link.** Creating QR numbers and connect links by QR work in production. Connect links with `type: 'meta'` are not available in production yet: they answer `503 meta_connect_disabled` until the Funnelchat domain is registered with Meta. The published spec does not describe these routes yet; see [Pending of the spec](#pending-of-the-spec).
-
-A number belongs to the account of the key and takes a slot of its plan, as in the panel. Creating numbers, showing their QR code and creating or revoking connect links needs **WhatsApp numbers → Create, connect and delete**; reading links, **WhatsApp numbers → View**. Tag each number with your own `external_reference` (for example the id of your customer): it comes back in the number, in the links and in every `device.*` webhook.
+A number belongs to the workspace of the key and takes a slot of the plan, as in the panel. Tag each number with your own `external_reference` (for example the id of your customer): it comes back in the number, in the links and in every `device.*` webhook.
 
 **A connect link** is a single-use page on the Funnelchat domain. Send your customer there: the number is created when they finish.
 
 ```ts
 const { data: link } = await funnelchat.connectLinks.create(
   {
-    type: 'qr',                                     // a number by QR code; or 'meta' (not in production yet)
+    type: 'qr',                                     // a number by QR code
     country: 'br',                                  // the country of the phone that will scan the QR
     external_reference: 'customer-81',
     return_url: 'https://your-app.example/whatsapp/done',   // optional, https only
@@ -168,11 +267,10 @@ const { data: link } = await funnelchat.connectLinks.create(
 console.log(link.url); // https://api.funnelchat.com/connect/… — it carries the token and is shown only now
 ```
 
+- Once your customer opens the page, they have 10 minutes to scan the QR.
 - `country` (only `qr`, two letters, optional) is the country of the phone that will scan the QR: the WhatsApp session is opened from there, so send it when you know it. It does not go with `device_id` (a reconnection creates nothing), and the link returns it, lowercase.
-- `type: 'meta'` (an official WhatsApp Cloud number, **not in production yet**: `503 meta_connect_disabled`) takes `allowed_connection_types: ['coexistence', 'dedicated']`, one or both; with both, your customer chooses on the page.
-- `provision_us_number: true` (only `meta`) also offers a US number of the pool. A pool number is always dedicated: it needs `dedicated` in `allowed_connection_types` and does not go with `device_id`; otherwise the API answers `422 invalid_request` (the SDK does not check it for you).
+- `type: 'meta'` (an official WhatsApp Cloud number) takes `allowed_connection_types: ['coexistence', 'dedicated']`, one or both. In production it answers `503 meta_connect_disabled` for now: official numbers are connected from the panel. `provision_us_number: true` (only `meta`) also offers a US number of the pool; it needs `dedicated` and does not go with `device_id` (`422 invalid_request`).
 - `device_id` reconnects a number you already have, without taking a new slot; `same_number_as` (only `qr`) adds QR to a number in coexistence.
-- A Meta link tolerates retries: after a failure of Facebook or Meta it stays `pending`, so your customer can try again on the page; the fifth failed attempt turns it `failed` with `facebook_auth_failed` or `meta_error`. `quota_exceeded`, `trial_number_blocked` and `number_not_owned` close it at the first attempt.
 - You learn the result three ways: the `device.connected` webhook (with `connect_link_id` and `external_reference`), the `return_url` (`?connect_link_id=…&status=completed|failed&device_id=…&error_code=…`), or reading the link:
 
 ```ts
@@ -202,10 +300,9 @@ for await (const number of funnelchat.devices.list({ external_reference: 'custom
 ```
 
 - **Ask for the QR every 5 seconds and have it scanned right away.** WhatsApp changes the code every few seconds and an old one no longer links ("can't link the device now"): replace the image with the latest one on each call, and never store, cache or forward a QR.
-- `country` (two letters, optional) is the country of the phone that will scan the QR: the WhatsApp session is opened from there.
 - An account has at most one QR number waiting to be scanned: creating another answers `409 pending_number_exists`, with that number's `device_id` in `error.body`. Show its QR instead, or delete it.
 - `external_reference` changes with `devices.update(id, { external_reference })`.
-- `devices.delete(id)` deletes a number and frees its slot. It needs **WhatsApp numbers → Create, connect and delete** and is irreversible. An official number stops working through Funnelchat but stays registered with Meta; a QR one logs out. It sends `device.deleted`.
+- `devices.delete(id)` deletes a number and frees its slot. It is irreversible. An official number stops working through Funnelchat but stays registered with Meta; a QR one logs out. It sends `device.deleted`.
 - `devices.list(query, options)` takes the query first, like every list. The signature of 0.1.2, `devices.list(options)`, still works.
 
 **`idempotencyKey`** (both creates, 1 to 255 characters) is sent as `Idempotency-Key` and kept 24 hours. The same key with the same body answers the same response without creating another number or link, so after a timeout or a `5xx` you can repeat the call with it. Only a success is replayed, with the `Idempotent-Replayed: true` header (see it with `.withResponse()`); a rejection is evaluated again. On their own, creates follow the rule of writes (see [Retries](#retries)): they are retried only on a `429` or `503`, which guarantee nothing was created.
@@ -218,10 +315,12 @@ for await (const number of funnelchat.devices.list({ external_reference: 'custom
 | `device.disconnected` | `device`, `disconnected_at`, `connect_link_id`, `reason`: `qr_logged_out`, `meta_account_not_registered`, `shadow_ban_protection`, `provider_error`, `disconnected_by_user` or `unknown`. |
 | `device.deleted` | `device`, `deleted_at`, `connect_link_id`. |
 | `device.health_changed` | `device`, `previous_state`, `state` (`available`, `limited`, `blocked`, `unknown`), `changed_at`, `connect_link_id`. Official numbers, only when the state changes. |
+| `device.quality_changed` | `device`, `previous`, `current` (`GREEN`, `YELLOW`, `RED`), `changed_at`, `connect_link_id`. Official numbers. |
+| `device.messaging_limit_changed` | `device`, `previous`, `current` (`TIER_250` … `TIER_UNLIMITED`), `changed_at`, `connect_link_id`. Official numbers. |
+| `device.display_name_reviewed` | `device`, `decision` (`approved` or `rejected`), `previous_status`, `status`, `verified_name`, `rejection_reason`, `reviewed_at`, `connect_link_id`. |
 
 - `device` is `{ id, name, number, connection, external_reference }`, where `connection` is `qr`, `coexistence`, `dedicated` or `null`.
-- `connect_link_id`: in `device.connected`, the connect link of that connection; in the other three, the link that last connected the number. `null` when it did not come from a link.
-- What these events add to the ones production sends today (`connection`, `external_reference`, `connect_link_id` and `reason`) is optional in the types: it is missing until the API that serves it is deployed. Handle `undefined`.
+- `connect_link_id`: in `device.connected`, the connect link of that connection; in the others, the link that last connected the number. `null` when it did not come from a link.
 
 **When it is refused** (`NUMBER_ERROR_CODES` and `IDEMPOTENCY_ERROR_CODES`):
 
@@ -229,13 +328,14 @@ for await (const number of funnelchat.devices.list({ external_reference: 'custom
 |---|---|
 | `403 numbers_not_included` | The plan does not include numbers. |
 | `403 number_limit_reached` | Every number of the plan is in use (`limit`, `used`, `pending_device_ids` in the body). |
+| `403 connect_not_allowed` | The account cannot connect numbers now. |
 | `409 pending_number_exists` | A QR number is already waiting to be scanned; the body brings its `device_id`. |
 | `422 qr_requires_coexistence` | QR can only be added to an official number in coexistence. |
 | `422 method_already_present` | The number already has that method; the body brings its `device_id`. |
 | `422 invalid_reference_device` | `same_number_as` or `device_id` is not a number of yours that can take it. |
 | `422 connection_type_mismatch` | A link with `device_id` of a number that connects another way than `type`. |
 | `429 too_many_open_links` | 20 connect links are open. Revoke some. |
-| `503 meta_connect_disabled` | Official numbers cannot be connected by link yet, as in production today. QR links work. |
+| `503 meta_connect_disabled` | Official numbers cannot be connected by link yet. QR links work. |
 | `409 link_not_pending` | Revoking a link that already ended. |
 | `422 idempotency_key_mismatch` | The key was used with another body. |
 | `422 invalid_idempotency_key` | The key is not 1 to 255 characters. |
@@ -243,9 +343,9 @@ for await (const number of funnelchat.devices.list({ external_reference: 'custom
 | `422 provider_unsupported` | `devices.qr` on an official number. |
 | `409` on `devices.qr` | The number cannot connect now: `trial_number_blocked`, `number_suspended_by_plan`, `device_inactive`, `provisioning_quota_exceeded`. |
 
-`NUMBER_ERROR_CODES` lists the rest (`connect_not_allowed`, `payment_required`, `provider_error`…), with their status. `isNumberQuotaError(error.code)` tells you whether it was the quota of the plan (the first five). `too_many_open_links` and `meta_connect_disabled` are never retried automatically.
+`NUMBER_ERROR_CODES` lists the rest (`payment_required`, `provider_error`…), with their status. `isNumberQuotaError(error.code)` tells you whether it was the quota of the plan (`numbers_not_included`, `number_limit_reached`, `pending_number_exists`, `qr_requires_coexistence`, `method_already_present`). `too_many_open_links` and `meta_connect_disabled` are never retried automatically.
 
-## Receive webhooks with Express
+### Webhooks
 
 Verify the signature over the **raw body**, exactly as it arrived. If you parse it and serialize it again, the signature changes: use `express.raw`, not `express.json`.
 
@@ -280,8 +380,8 @@ function handle(event) {
     case 'message.status_changed':
       console.log(event.data.message_id, event.data.status, event.data.client_reference);
       break;
-    case 'whatsapp_form.completed':
-      console.log(event.data.form.id, event.data.answers);
+    case 'group_participant.joined':
+      console.log(event.data.group.uid, event.data.participant.identity);
       break;
     default:
       // A type your code does not know yet: it is not an error, answer 2xx anyway.
@@ -289,28 +389,29 @@ function handle(event) {
 }
 ```
 
-- `constructEvent` verifies the signature and returns the typed event: with `event.type`, TypeScript knows the shape of `event.data`. When something fails, it throws `WebhookVerificationError` with `reason`: `missing_header`, `malformed_header`, `timestamp_out_of_tolerance`, `signature_mismatch`, `invalid_body`, `invalid_json`…
+- `constructEvent` verifies the signature and returns the typed event: with `event.type`, TypeScript knows the shape of `event.data`, and every `data` has `workspace_id`. When something fails, it throws `WebhookVerificationError` with `reason`: `missing_header`, `malformed_header`, `timestamp_out_of_tolerance`, `signature_mismatch`, `invalid_body`, `invalid_json`…
 - To just get a yes or no, `Funnelchat.webhooks.verify(rawBody, signatureHeader, secret)` returns `true` or `false` and never throws.
 - Both reject a signature whose `t` is more than 300 seconds away from your clock. To change it: `{ toleranceSeconds: 600 }` as the fourth argument.
 - The algorithm is the portal's: `X-Funnelchat-Signature: t=<unix>,v1=<hex>`, where `v1` is the HMAC-SHA256, with the full secret, of `"<t>." + raw body`, compared in constant time; there can be several `v1`. The tests use the portal's test vectors.
 - `webhookEvents` lists the types the SDK knows, with their status (`live` or `planned`).
 
-### Subscribe
+#### Subscribe
 
 ```ts
 const subscription = await funnelchat.webhooks.create({
   url: 'https://your-server.example/hooks/funnelchat',
-  events: ['message.received', 'message.status_changed', 'whatsapp_form.completed'],
+  events: ['message.received', 'message.status_changed', 'device.connected', 'device.disconnected', 'group_participant.joined', 'group_participant.left'],
   description: 'My integration',
 });
 // Store subscription.id and subscription.secret: the secret is shown only once.
 ```
 
+- Name every event you want: `message.status_changed` too.
 - Permissions: **Notifications (webhooks) → View** to read and **Notifications (webhooks) → Manage** for the rest. Also, a key can only subscribe to events of the areas it can read: **Contacts and conversations → View**, **Groups and campaigns → View** and **WhatsApp numbers → View**. Asking for others is a `422` on `events`.
-- Subscriptions belong to the account: `list()` also brings the ones of other integrations. To change the URL use `update(id, …)` (the secret stays). `test(id)` sends a signed `webhook.test` right now and `listDeliveries(id)` is the history.
+- A subscription belongs to the workspace of the key that created it and receives only that workspace's events; `list()` brings every subscription of the workspace, also the ones of other integrations. To change the URL use `update(id, …)` (the secret stays). `test(id)` sends a signed `webhook.test` right now and `listDeliveries(id)` is the history.
 - `rotateSecret(id)` is **not open to API keys** (`403 route_not_available`): rotate the secret from the panel.
 
-## Pagination
+### Pagination
 
 `list…` methods return a lazy page: nothing is requested until you use it.
 
@@ -330,7 +431,7 @@ while (page.hasNextPage()) {
 
 The SDK understands the three ways the API paginates: by page number (`meta.current_page` and `meta.last_page`), by cursor (`meta.next_cursor`) and lists that come whole in an array. The page size is asked with the parameter of each route (`perPage`, `per_page` or `pageSize`, as the spec says).
 
-## Errors
+### Errors
 
 Everything the SDK throws extends `FunnelchatError`. When the API answers with an error, it is an `APIError`:
 
@@ -369,6 +470,7 @@ The errors of the API entry and of access control apply to any route (`ACCESS_ER
 | `401 unauthenticated` | The key is missing or not valid. |
 | `403 permission_denied` | The key lacks the permission of the route, such as **WhatsApp numbers → Create, connect and delete**: give the key that permission in the panel. |
 | `403 route_not_available` | The route is not open to API keys (or it is turned off). |
+| `404` | The resource does not exist or is of another workspace than the key's. |
 | `404 route_not_found` | The route does not exist in the public API. |
 | `429 daily_cap_exceeded` | The daily call cap of the key was reached. It carries `Retry-After`. |
 | `500 edge_misconfigured` | A problem on our side: report it with the `requestId`. |
@@ -381,11 +483,11 @@ The errors of the API entry and of access control apply to any route (`ACCESS_ER
 const { data, requestId, response } = await funnelchat.contacts.retrieve(2001).withResponse();
 ```
 
-## Retries
+### Retries
 
 - Reads and writes that give the same result when repeated (`GET`, `PUT`, `DELETE`) are retried on a `429`, a `5xx` or a network error (also when `timeoutMs` ran out), up to `maxRetries` times (2 by default).
 - Other writes (`POST`, `PATCH`) are retried **only when the API guarantees they were not applied**: `429` and `503`. A `500`, `502` or `504`, a timeout or a dropped connection can come after the write was applied, so the error is thrown right away: read the state before repeating it.
-- **A send is never retried automatically**: the `POST`s that need **Contacts and conversations → Send**: messages, forms, cards, forwards and templates. If a `429 rate_limited` sent nothing and you want the SDK to retry for you, ask for it in that call with `{ retrySend: true }`: it then follows the rule of writes. `mac_lockout_24h` and `mac_limit_reached` are never retried.
+- **A send is never retried automatically**: the `POST`s that need a **Send** permission (messages, forms, cards, forwards, templates and messages to a group). If a `429 rate_limited` sent nothing and you want the SDK to retry for you, ask for it in that call with `{ retrySend: true }`: it then follows the rule of writes. `mac_lockout_24h`, `mac_limit_reached` and `too_many_pending_actions` are never retried.
 - With `Retry-After`, the wait is exactly what it asks for. If it asks for more than 60 seconds, there is no wait: the error is thrown right away with its `retryAfter` and you decide. Without `Retry-After`, the wait is exponential: 0.5 s, 1 s, 2 s… up to 8 s, with some jitter.
 - Per call you can change `maxRetries`, `timeoutMs` and `signal`:
 
@@ -393,7 +495,7 @@ const { data, requestId, response } = await funnelchat.contacts.retrieve(2001).w
 await funnelchat.tags.list({}, { maxRetries: 0, timeoutMs: 5000, signal: AbortSignal.timeout(10_000) });
 ```
 
-## Any route
+### Any route
 
 `request` calls any route. With a route of the spec, the path parameters, the query, the body and the response are typed:
 
@@ -415,27 +517,28 @@ The query is built the way Laravel reads it: arrays as `key[]=a&key[]=b`, object
 
 The types of the spec are exported too: `paths`, `components`, `operations`, and the shorthands `Body<'/api/v1/tags', 'POST'>`, `Query<'/api/v1/contacts'>`, `ResponseBody<…>`. The `routes` table has every operation with its area and its permission.
 
-## Test against the sandbox
+### Test against the sandbox
 
-[funnelchat-sandbox](https://github.com/Funnelchat20/funnelchat-sandbox) imitates the API on your machine: sends with their status cycle, signed webhooks and the WhatsApp rules, without a real account. Point the client at it:
+The sandbox imitates the API on your machine: sends with their status cycle, signed webhooks and the WhatsApp rules, without a real account. Start it with `npx @funnelchat-hq/sandbox` and point the client at it:
 
 ```ts
 const funnelchat = new Funnelchat({ apiKey: '1|fc_live_sandbox', baseUrl: 'http://localhost:4010' });
 ```
 
-## Pending of the spec
+### Pending of the spec
 
-The published spec does not describe everything the API in production already has yet. What is missing lives in a separate layer, `spec/pending.json`, which generation adds to the types **only while the spec does not bring it**; each entry cites where it came from:
+The published spec does not describe everything the API in production already has yet. What is missing lives in a separate layer, `spec/pending.json`, which generation adds to the types **only while the spec does not bring it**; each entry cites the production release it was read in (04-11-2026: accounts v1.5.97, conversations v1.19.7, communities v2.35.5):
 
 - what sends answer (the queued message), `messages.get`, `client_reference`, `file_type` and `file_name`;
 - forms and `messages.sendForm`;
-- the `capabilities` of numbers;
-- webhook subscriptions and the events the spec does not bring (`message.status_changed` with its shape, `whatsapp_form.completed`, the group ones and the account ones);
-- creating and connecting numbers (`devices.create`, `devices.qr`, `country`, `external_reference`, `connectLinks`, `Idempotency-Key`) and the `device.*` events: in production (except `type: 'meta'` links), typed from the API of accounts until its spec is published.
+- the `capabilities`, `connection` and `external_reference` of numbers, and whether a template is `available`;
+- creating and connecting numbers (`devices.create`, `devices.qr`, `country`, `external_reference`, `connectLinks`, `Idempotency-Key`) and the `device.*` events;
+- a message to a group and its action (`groups.sendMessage`, `groups.action`, `group_action.completed`);
+- webhook subscriptions, and the events the spec does not bring or types from one example: `message.status_changed`, `message.received`, `group_participant.joined` and `.left`, `whatsapp_form.completed`, the group ones and the account ones.
 
-`src/pending/` has what is not OpenAPI (`device_id` in `message.received`) and `src/core/error-codes.ts` the error codes.
+`src/pending/` has what is not OpenAPI (the `workspace_id` of every event and `device_id` in `message.received`) and `src/core/error-codes.ts` the error codes.
 
-## Development
+### Development
 
 ```bash
 npm install
@@ -459,7 +562,7 @@ npm run generate                                    # with the one in spec/, for
 ```
 
 1. With `--spec`, it copies the spec to `spec/funnelchat.json` and writes `spec/procedencia.json`: repository, branch, commit, date and `sha256` of the file.
-2. It adds `spec/pending.json`, but only what the spec does not bring, and lists what it already brings so you can delete it from there. An `operationPatches` entry without `while` adds body properties or `parameters` (such as a query filter) one by one, only while the operation lacks them.
+2. It adds `spec/pending.json`, but only what the spec does not bring, and lists what it already brings so you can delete it from there. An `operationPatches` entry without `while` adds body properties or `parameters` (such as a query filter) one by one, only while the operation lacks them. An event with `x-fc-replace-while` replaces the spec's only while the spec's still matches it.
 3. It writes `src/generated/openapi.ts` (with [openapi-typescript](https://openapi-ts.dev)), `src/generated/routes.ts` (every operation, with area and permission) and `src/generated/events.ts` (the event catalog and the shape of the `data` of each one).
 
 ```

@@ -9,8 +9,70 @@ type PublicMessage = components['schemas']['PendingPublicMessage'];
 describe('types', () => {
   it('compile (the checks below run in `npm run typecheck`)', () => {
     expect(typeof typeChecks).toBe('function');
+    expect(typeof readmeFirstUse).toBe('function');
   });
 });
+
+/**
+ * The code of the README's first use, receive messages, groups and workspaces, as written there
+ * (only `show` and the webhook handler's arguments are stand-ins). Never called: it only has to
+ * compile, so the README cannot drift from the types.
+ */
+async function readmeFirstUse(funnelchat: Funnelchat, event: WebhookEvent, show: (qrCode: string | null) => void) {
+  // 2. Connect a number
+  const { data: device } = await funnelchat.devices.create({ connection: 'qr' });
+
+  while (true) {
+    const { data: qr } = await funnelchat.devices.qr(device.id);
+    if (qr.connected) break;
+    show(qr.qr_code);
+    await new Promise((resolve) => setTimeout(resolve, qr.expires_in * 1000));
+  }
+  const { data: link } = await funnelchat.connectLinks.create({ type: 'qr' });
+  expectTypeOf(link.url).toEqualTypeOf<string>();
+
+  // 3. Send a message
+  const contact = await funnelchat.contacts.create({ phone: '5491100000000', name: 'Ana' });
+
+  const { message } = await funnelchat.messages.sendDirect({ device_id: device.id, contact_id: contact.id, text: 'Hi Ana!' });
+  expectTypeOf(message.status).toEqualTypeOf<'queued' | 'sent' | 'delivered' | 'read' | 'failed' | null>();
+
+  // 4. Know when it was read
+  const subscription = await funnelchat.webhooks.create({
+    url: 'https://your-app.example/hooks/funnelchat',
+    events: ['message.status_changed'],
+  });
+  expectTypeOf(subscription.secret).toEqualTypeOf<string>();
+  if (event.type === 'message.status_changed' && event.data.status === 'read') {
+    expectTypeOf(event.data.message_id).toEqualTypeOf<number>();
+  }
+  expectTypeOf((await funnelchat.messages.get(contact.id, message.id)).status).toEqualTypeOf<'queued' | 'sent' | 'delivered' | 'read' | 'failed' | null>();
+
+  // Receive messages
+  if (event.type === 'message.received') {
+    const { message: received, contact: sender, device_id } = event.data;
+    expectTypeOf(received.text ?? received.type).toEqualTypeOf<string>();
+    expectTypeOf(sender.phone).toEqualTypeOf<string | null>();
+
+    if (device_id && sender.id) {
+      await funnelchat.messages.sendDirect({ device_id, contact_id: sender.id, text: 'Got it, thanks!' });
+    }
+  }
+
+  // Groups
+  for await (const group of funnelchat.groups.list()) {
+    expectTypeOf(group.uid).toEqualTypeOf<string>();
+  }
+  const { action_id } = await funnelchat.groups.sendMessage('120363000000000001@g.us', {
+    device_id: device.id,
+    type: 'text',
+    text: 'Hi everyone!',
+  });
+  expectTypeOf((await funnelchat.groups.action(action_id)).data.result).not.toBeUnknown();
+
+  // Workspaces
+  expectTypeOf(event.data.workspace_id).toEqualTypeOf<number | null>();
+}
 
 /** Never called: it only has to compile. */
 function typeChecks(client: Funnelchat) {
