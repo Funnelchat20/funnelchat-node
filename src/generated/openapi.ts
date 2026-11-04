@@ -2527,7 +2527,7 @@ export interface paths {
         put?: never;
         /**
          * Send a message to a group
-         * @description Sends a text or one file to the group now, from one of your numbers. Asynchronous: it answers `202` with `action_id`; the result arrives in `GET /api/v1/groups/actions/{action}` (`result.message.uid` is the id of the message in WhatsApp) and in the events `group_action.completed` and `group_action.failed`. A QR number goes out at the pace of the scheduled messages; an official number checks the 24-hour window and its quality first. It needs **Groups and campaigns → Send** and the group actions turned on for the API: while they are off, the route answers `403 route_not_available` (it was off in production on 21-10). Rejections: `404 device_not_found`, `404 group_not_found`, `422 unsupported_group_type`, `422 device_not_connected`, `422 device_not_group_admin` (a QR number that is not admin), `422 device_not_group_number` (an official group of another number), `422 provider_unsupported`, `422 window_closed`, `422 number_restricted`, `422 unsupported_type` and `429 too_many_pending_actions`.
+         * @description Sends a text or one file to the group now, from one of your numbers. Asynchronous: it answers `202` with `action_id`; the result arrives in `GET /api/v1/groups/actions/{action}` (`result.message.uid` is the id of the message in WhatsApp) and in the events `group_action.completed` and `group_action.failed`. A QR number goes out at the pace of the scheduled messages; an official number checks the 24-hour window and its quality first. It needs **Groups and campaigns → Send**. Rejections: `404 device_not_found`, `404 group_not_found`, `422 unsupported_group_type`, `422 device_not_connected`, `422 device_not_group_admin` (a QR number that is not admin), `422 device_not_group_number` (an official group of another number), `422 provider_unsupported`, `422 window_closed`, `422 number_restricted`, `422 unsupported_type` and `429 too_many_pending_actions`.
          */
         post: operations["pendingGroups.sendMessage"];
         delete?: never;
@@ -4889,9 +4889,9 @@ export interface paths {
         };
         /**
          * A group action
-         * @description Where an action is (`queued`, `running`, `completed` or `failed`) and its `result`. An action of another key's workspace, or that does not exist, is `404 action_not_found`. Turned off with the group actions, like `POST /api/v1/groups/{group}/messages`.
+         * @description Where an action is (`queued`, `running`, `completed` or `failed`) and its `result`. An action of another key's workspace, or that does not exist, is `404 action_not_found`.
          */
-        get: operations["pendingGroups.action"];
+        get: operations["pendingGroups.retrieveAction"];
         put?: never;
         post?: never;
         delete?: never;
@@ -20517,7 +20517,7 @@ export interface operations {
             };
         };
     };
-    "pendingGroups.action": {
+    "pendingGroups.retrieveAction": {
         parameters: {
             query?: never;
             header?: never;

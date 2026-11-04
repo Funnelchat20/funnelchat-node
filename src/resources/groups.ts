@@ -66,13 +66,12 @@ export class Groups extends Resource {
    * `video`, `audio` or `document`, by its `https` `media_url`) to the group, from `device_id`. It
    * answers `202` with `{ action_id, status: 'queued' }` and goes out in the background: the result
    * arrives by `group_action.completed` (or `group_action.failed`), with the same `action_id` in
-   * `action.uuid`, or with {@link Groups.action}; `result.message.uid` is the id of the message in
+   * `action.uuid`, or with {@link Groups.retrieveAction}; `result.message.uid` is the id of the message in
    * WhatsApp.
    *
    * `group` is the `uid` of the group (`…@g.us`). A QR number must be admin of the group; an official
-   * number, the one the group belongs to. Rejections: `GROUP_ACTION_ERROR_CODES`. While the group
-   * actions are turned off for the API, it answers `403 route_not_available`. Like every send, it is
-   * never retried automatically.
+   * number, the one the group belongs to. Rejections: `GROUP_ACTION_ERROR_CODES`. Like every send, it
+   * is never retried automatically.
    */
   sendMessage(group: SendGroup, body: Body<'/api/v1/groups/{group}/messages', 'POST'>, options?: RequestOptions) {
     return this.client.request('POST', '/api/v1/groups/{group}/messages', { ...options, path: { group }, body });
@@ -82,7 +81,7 @@ export class Groups extends Resource {
    * `GET /api/v1/groups/actions/{action}`: where a group action, such as a message sent with
    * {@link Groups.sendMessage}, is (`queued`, `running`, `completed` or `failed`) and its `result`.
    */
-  action(action: ActionId, options?: RequestOptions) {
+  retrieveAction(action: ActionId, options?: RequestOptions) {
     return this.client.request('GET', '/api/v1/groups/actions/{action}', { ...options, path: { action } });
   }
 }

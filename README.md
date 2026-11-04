@@ -104,9 +104,9 @@ const { action_id } = await funnelchat.groups.sendMessage('120363000000000001@g.
 });
 ```
 
-- The message goes out in the background: `group_action.completed` (with `action.uuid` equal to `action_id`) or `funnelchat.groups.action(action_id)` tell you how it went. A file goes as `type: 'image'` (or `video`, `audio`, `document`) with its `https` `media_url`.
+- The message goes out in the background: `group_action.completed` (with `action.uuid` equal to `action_id`) or `funnelchat.groups.retrieveAction(action_id)` tell you how it went. A file goes as `type: 'image'` (or `video`, `audio`, `document`) with its `https` `media_url`.
 - Who joins or leaves arrives by `group_participant.joined` and `group_participant.left`: `group`, `participant` (`identity`, `identity_type`, `name`) and `campaign`, `null` for a group without a campaign.
-- Permissions: **Groups and campaigns → View** to read and **Groups and campaigns → Send** to send. Sending to groups goes only while the group actions are turned on for the API: otherwise it answers `403 route_not_available`.
+- Permissions: **Groups and campaigns → View** to read and **Groups and campaigns → Send** to send.
 
 ## Workspaces
 
@@ -148,7 +148,7 @@ CommonJS: `const { Funnelchat } = require('@funnelchat-hq/sdk');`. Every request
 | `funnelchat.contacts` | `list`, `create`, `upsert`, `retrieve`, `update`, `delete`, the tags and fields of a contact, `metaWindow` (the 24-hour window), notes. |
 | `funnelchat.messages` | `send`, `sendDirect`, `sendForm`, `sendContactCard`, `forward`, `get` (one message by id), `list` (the history of a contact), `react`, `removeReaction`. |
 | `funnelchat.templates` | `list`, `create`, `retrieve`, `update`, `quickReplyButtons`, `send`, `delete`. |
-| `funnelchat.groups` | `list`, `retrieve`, `listByDevice`, participants and their joins and leaves, messages, `sendMessage` and `action`. |
+| `funnelchat.groups` | `list`, `retrieve`, `listByDevice`, participants and their joins and leaves, messages, `sendMessage` and `retrieveAction`. |
 | `funnelchat.webhooks` | Subscriptions (`list`, `create`, `retrieve`, `update`, `delete`, `test`, `listDeliveries`), the catalog (`events`), `verify` and `constructEvent`. |
 | `funnelchat.conversations` | `list`, `update`, counters, mark everything as read or unread. |
 | `funnelchat.forms` | WhatsApp forms: `list`, `templates`, `create`, `retrieve`, `update`, `delete`, `createVersion`, `sync`, `publish`, numbers, `versions`, answers and `metrics`. |
@@ -245,7 +245,7 @@ A send that breaks a rule is neither sent nor stored: you get an error with its 
 
 `groups.sendMessage(uid, body)` answers `202` with `{ action_id, status: 'queued' }`. The body is `device_id` and `type`: `text` (with `text`, up to 4096 characters) or `image`, `video`, `audio` or `document` (with `media_url`, a public `https` URL that ends in an extension of the type; `caption` for an image or a video, `file_name` for a document). Polls, events, stickers, contacts and locations are not accepted. A QR number goes out at the pace of the scheduled messages; an official number checks the 24-hour window of the group and its quality first.
 
-`groups.action(action_id)` brings `status` (`queued`, `running`, `completed` or `failed`), `reason` when it failed and `result.message.uid`, the id of the message in WhatsApp. Its rejections are in `GROUP_ACTION_ERROR_CODES`: `404 device_not_found`, `404 group_not_found`, `422 device_not_connected`, `422 device_not_group_admin` (a QR number that is not admin), `422 device_not_group_number` (an official group of another number), `422 window_closed`, `422 number_restricted`, `422 unsupported_type`, `429 too_many_pending_actions` (50 open actions on the number) and `404 action_not_found` when reading.
+`groups.retrieveAction(action_id)` brings `status` (`queued`, `running`, `completed` or `failed`), `reason` when it failed and `result.message.uid`, the id of the message in WhatsApp. Its rejections are in `GROUP_ACTION_ERROR_CODES`: `404 device_not_found`, `404 group_not_found`, `422 device_not_connected`, `422 device_not_group_admin` (a QR number that is not admin), `422 device_not_group_number` (an official group of another number), `422 window_closed`, `422 number_restricted`, `422 unsupported_type`, `429 too_many_pending_actions` (50 open actions on the number) and `404 action_not_found` when reading.
 
 ### Connect a number
 
@@ -533,7 +533,7 @@ The published spec does not describe everything the API in production already ha
 - forms and `messages.sendForm`;
 - the `capabilities`, `connection` and `external_reference` of numbers, and whether a template is `available`;
 - creating and connecting numbers (`devices.create`, `devices.qr`, `country`, `external_reference`, `connectLinks`, `Idempotency-Key`) and the `device.*` events;
-- a message to a group and its action (`groups.sendMessage`, `groups.action`, `group_action.completed`);
+- a message to a group and its action (`groups.sendMessage`, `groups.retrieveAction`, `group_action.completed`);
 - webhook subscriptions, and the events the spec does not bring or types from one example: `message.status_changed`, `message.received`, `group_participant.joined` and `.left`, `whatsapp_form.completed`, the group ones and the account ones.
 
 `src/pending/` has what is not OpenAPI (the `workspace_id` of every event and `device_id` in `message.received`) and `src/core/error-codes.ts` the error codes.

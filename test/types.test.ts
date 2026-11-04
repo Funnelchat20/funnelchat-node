@@ -68,7 +68,7 @@ async function readmeFirstUse(funnelchat: Funnelchat, event: WebhookEvent, show:
     type: 'text',
     text: 'Hi everyone!',
   });
-  expectTypeOf((await funnelchat.groups.action(action_id)).data.result).not.toBeUnknown();
+  expectTypeOf((await funnelchat.groups.retrieveAction(action_id)).data.result).not.toBeUnknown();
 
   // Workspaces
   expectTypeOf(event.data.workspace_id).toEqualTypeOf<number | null>();
@@ -146,7 +146,7 @@ function typeChecks(client: Funnelchat) {
     expectTypeOf<Parameters<typeof client.groups.sendMessage>[1]['type']>().toEqualTypeOf<'text' | 'image' | 'video' | 'audio' | 'document'>();
     // @ts-expect-error device_id is required
     void (() => client.groups.sendMessage('120363000000000001@g.us', { type: 'text', text: 'Hi' }));
-    expectTypeOf<Awaited<ReturnType<typeof client.groups.action>>['data']['status']>().toEqualTypeOf<'queued' | 'running' | 'completed' | 'failed'>();
+    expectTypeOf<Awaited<ReturnType<typeof client.groups.retrieveAction>>['data']['status']>().toEqualTypeOf<'queued' | 'running' | 'completed' | 'failed'>();
     // Whether a template can be sent.
     expectTypeOf<Awaited<ReturnType<typeof client.templates.retrieve>>['available']>().toEqualTypeOf<boolean>();
   }

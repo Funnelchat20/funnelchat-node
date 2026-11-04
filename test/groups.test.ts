@@ -53,7 +53,7 @@ describe('a message to a group', () => {
       failed_at: null,
     };
     const { fetch, calls } = mockFetch({ status: 200, body: { data: action } });
-    const { data } = await client(fetch).groups.action(ACTION);
+    const { data } = await client(fetch).groups.retrieveAction(ACTION);
     expect(calls[0]?.url).toBe(`${BASE}/groups/actions/${ACTION}`);
     expect(data.result?.message?.uid).toBe('3EB0C767D26A1D4E5F6A');
   });
@@ -82,7 +82,7 @@ describe('a message to a group', () => {
   });
 
   it.each([
-    [403, 'route_not_available', PermissionDeniedError],
+    [403, 'permission_denied', PermissionDeniedError],
     [422, 'device_not_group_admin', UnprocessableEntityError],
     [422, 'window_closed', UnprocessableEntityError],
   ])('%i %s arrives as a typed error', async (status, code, Class) => {

@@ -128,7 +128,7 @@ export const NUMBER_ERROR_CODES = {
 
 /**
  * Rejections of a message to a group (`groups.sendMessage`) and of reading a group action
- * (`groups.action`): nothing was queued. A number or group of another workspace is answered as one
+ * (`groups.retrieveAction`): nothing was queued. A number or group of another workspace is answered as one
  * that does not exist.
  */
 export const GROUP_ACTION_ERROR_CODES = {
@@ -136,7 +136,7 @@ export const GROUP_ACTION_ERROR_CODES = {
   device_not_found: 404,
   /** 404: the group is not one of the key's workspace (`group` is the `uid`, `…@g.us`). */
   group_not_found: 404,
-  /** 404: `groups.action` of an action that does not exist or is of another workspace. */
+  /** 404: `groups.retrieveAction` of an action that does not exist or is of another workspace. */
   action_not_found: 404,
   /** 422: the `uid` is a community or a channel, not a group. */
   unsupported_group_type: 422,
