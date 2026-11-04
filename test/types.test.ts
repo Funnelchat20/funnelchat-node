@@ -4,7 +4,7 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { APIError, APIPromise, Funnelchat, KnownErrorCode, Page, WebhookEvent, WebhookEventOf, WebhookEventType, components } from '../src/index.js';
 
-type PublicMessage = components['schemas']['PendingPublicMessage'];
+type PublicMessage = components['schemas']['PublicMessageResource'];
 
 describe('types', () => {
   it('compile (the checks below run in `npm run typecheck`)', () => {
@@ -113,8 +113,8 @@ function typeChecks(client: Funnelchat) {
     // Each call returns an APIPromise: withResponse() brings the X-Request-Id.
     expectTypeOf(client.contacts.retrieve(1)).toMatchTypeOf<APIPromise<unknown>>();
     expectTypeOf<Awaited<ReturnType<ReturnType<typeof client.messages.get>['withResponse']>>['requestId']>().toEqualTypeOf<string | undefined>();
-    // The capabilities of a number.
-    expectTypeOf<Awaited<ReturnType<typeof client.devices.retrieve>>['capabilities']['statuses']>().toEqualTypeOf<('sent' | 'delivered' | 'read' | 'failed')[]>();
+    // The capabilities of a number (the spec types the statuses as strings: sent, delivered, read, failed).
+    expectTypeOf<Awaited<ReturnType<typeof client.devices.retrieve>>['capabilities']['statuses']>().toEqualTypeOf<string[]>();
     expectTypeOf(client.forms.create).parameter(0).toHaveProperty('template_key');
     // Creating and connecting numbers.
     // Production sends how a number connects and your reference since accounts v1.4.38.
@@ -122,9 +122,11 @@ function typeChecks(client: Funnelchat) {
     expectTypeOf<Awaited<ReturnType<typeof client.devices.retrieve>>['external_reference']>().toEqualTypeOf<string | null>();
     expectTypeOf<Awaited<ReturnType<typeof client.devices.qr>>['data']['qr_code']>().toEqualTypeOf<string | null>();
     expectTypeOf<Awaited<ReturnType<typeof client.connectLinks.create>>['data']['url']>().toEqualTypeOf<string>();
-    expectTypeOf<Awaited<ReturnType<typeof client.connectLinks.get>>['data']['status']>().toEqualTypeOf<'pending' | 'completed' | 'failed' | 'expired' | 'revoked'>();
-    // @ts-expect-error a meta link needs allowed_connection_types
-    void (() => client.connectLinks.create({ type: 'meta' }));
+    // The spec types the status of a link as a string: pending, completed, failed, expired or revoked.
+    expectTypeOf<Awaited<ReturnType<typeof client.connectLinks.get>>['data']['status']>().toEqualTypeOf<string>();
+    // The spec no longer ties the fields of a link to its type: the API still answers 422 to a meta link
+    // without allowed_connection_types, and to a country on a meta link.
+    void (() => client.connectLinks.create({ type: 'meta', allowed_connection_types: ['dedicated'] }));
     // @ts-expect-error only qr numbers are created directly
     void (() => client.devices.create({ connection: 'coexistence' }));
     void (() => client.devices.list({ external_reference: 'customer-81' }));
@@ -132,8 +134,6 @@ function typeChecks(client: Funnelchat) {
     // The country of the phone that scans the QR: on a QR number and a QR link, which returns it.
     void (() => client.devices.create({ connection: 'qr', country: 'br' }));
     void (() => client.connectLinks.create({ type: 'qr', country: 'br' }));
-    // @ts-expect-error country only goes with a QR link
-    void (() => client.connectLinks.create({ type: 'meta', allowed_connection_types: ['dedicated'], country: 'br' }));
     expectTypeOf<Awaited<ReturnType<typeof client.connectLinks.get>>['data']['country']>().toEqualTypeOf<string | null>();
     // The 0.1.2 signature `list(options)` still compiles.
     void (() => client.devices.list({ maxRetries: 0, signal: AbortSignal.timeout(1000) }));

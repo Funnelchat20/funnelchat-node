@@ -17,20 +17,15 @@ export interface PendingCommonEventData {
    *
    * In production since accounts v1.5.97 (558332bcf, 04-11-2026): written on every delivery by
    * Webhook/Services/EventWorkspaceRouting.php:65-85 (relayed events, the account's own and
-   * `webhook.test`); the snapshot does not describe it yet.
+   * `webhook.test`). The full unified spec of developers-portal c90565e4 does not describe it in
+   * any event.
    */
   workspace_id: number | null;
 }
 
-export interface PendingEventData {
-  'message.received': {
-    /**
-     * The number of your account that received the message: the same `device_id` you send to
-     * reply through it. `null` when the message has no number.
-     *
-     * In production (conversations v1.18.10, Webhook/Payloads/MessageReceivedPayload.php); the
-     * snapshot does not describe it yet.
-     */
-    device_id: number | null;
-  };
-}
+/**
+ * Fields of one event type, by type. Empty since the full unified spec of developers-portal
+ * c90565e4: `device_id` of `message.received` is in its example and in the schema of
+ * spec/pending.json.
+ */
+export type PendingEventData = Record<never, never>;

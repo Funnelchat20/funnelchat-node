@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 8bbbae569b4cab52…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 0f451feaba59418f…) + spec/pending.json.
  */
 import type { components } from './openapi.js';
 
@@ -23,14 +23,14 @@ export const webhookEvents = [
   {"type":"billing.payment_failed","domains":["accounts"],"status":"live","pending":true,"description":"A charge of the subscription could not be processed (Stripe subscriptions only)."},
   {"type":"billing.plan_blocked","domains":["accounts"],"status":"planned","pending":true,"description":"The plan was blocked by an unprocessed charge. Planned: not emitted yet."},
   {"type":"billing.upcoming_charge","domains":["accounts"],"status":"live","pending":true,"description":"The next charge of the subscription is coming up (Stripe subscriptions only)."},
-  {"type":"broadcast.finished","domains":["conversations"],"status":"live","pending":false,"description":"Una campaña llegó a su estado final (enviada, fallida o con fallos parciales), con sus conteos.\n\n`status` es `success`, `failed` o `partially_failed`. `reason` dice por qué terminó: `completed` (se enviaron todas las páginas), `cancelled` (se cerró una campaña pausada), `template_rejected` (Meta rechazó la plantilla, o su categoría cambió, mientras la campaña esperaba), `approval_expired` (la plantilla no se aprobó a tiempo), `mac_lockout` (la cuenta alcanzó su límite de contactos activos), `no_recipients` (la audiencia quedó vacía) o `error` (el envío no pudo despacharse). `totals` son los conteos del envío: `processed` (destinatarios procesados), `failed` y `skipped_unreachable` (destinatarios que el canal no puede alcanzar); valen 0 si la campaña terminó antes de enviar. Se emite una sola vez por campaña."},
-  {"type":"broadcast.paused","domains":["conversations"],"status":"live","pending":false,"description":"Una campaña se pausó sola, por ejemplo porque bajó la calidad del número.\n\n`reason` es `quality_degraded` (la calidad del número bajó respecto de la del inicio, o llegó a RED) o `quality_unreadable` (no se pudo leer la calidad en tres controles seguidos). `quality` y `quality_baseline` son la calidad de Meta leída en el control y la del inicio del envío (`GREEN`, `YELLOW`, `RED`), o `null` si no se pudo leer. Sólo las campañas con envío inteligente se pausan solas. Reanudar la campaña y que se pause otra vez emite otro evento."},
+  {"type":"broadcast.finished","domains":["conversations"],"status":"live","pending":false,"description":"Una campaña llegó a su estado final (enviada, fallida o con fallos parciales), con sus conteos.\n\n`status` es `success`, `failed` o `partially_failed`. `reason` dice por qué terminó: `completed` (se enviaron todas las páginas), `cancelled` (se cerró una campaña pausada), `template_rejected` (Meta rechazó la plantilla, o su categoría cambió, mientras la campaña esperaba; también cuando Meta la pausó durante el envío y se detuvo la campaña), `approval_expired` (la plantilla no se aprobó a tiempo), `mac_lockout` (la cuenta alcanzó su límite de contactos activos), `mac_check_unavailable` (la campaña la inició una API key y el límite de contactos activos no se pudo verificar, así que no se envió nada), `no_recipients` (la audiencia quedó vacía) o `error` (el envío no pudo despacharse). `totals` son los conteos del envío: `processed` (destinatarios procesados), `failed` y `skipped_unreachable` (destinatarios que el canal no puede alcanzar); valen 0 si la campaña terminó antes de enviar. Se emite una sola vez por campaña."},
+  {"type":"broadcast.paused","domains":["conversations"],"status":"live","pending":false,"description":"Una campaña se pausó sola, por ejemplo porque bajó la calidad del número.\n\n`reason` es `quality_degraded` (la calidad del número bajó respecto de la del inicio, o llegó a RED), `quality_unreadable` (no se pudo leer la calidad en tres controles seguidos), `template_unavailable` (Meta dejó la plantilla en `PAUSED`, `DISABLED` o `REJECTED` antes de una tanda) o `rejection_rate` (en los envíos recientes del número, por defecto las últimas 24 horas, Meta rechazó una proporción igual o mayor al umbral configurable: el código 131049, por defecto 5 %; el código 131026, por defecto 5 %; o los códigos que indican una restricción de la cuenta o del número, por defecto 15 %, con la lista configurable y por defecto 131049, 131048, 131031 y 368). Con `rejection_rate` llega además `rejection`: `codes` (los que llegaron a su umbral: `131049`, `131026` o `failed`), `rates` (el porcentaje de cada uno), `attempts` (los envíos medidos) y `window_hours`. `quality` y `quality_baseline` son la calidad de Meta leída en el control y la del inicio del envío (`GREEN`, `YELLOW`, `RED`), o `null` si no se pudo leer. `template` es `{name, status}` con el nombre de la plantilla y su estado en Meta cuando `reason` es `template_unavailable`, y `null` en las demás pausas (por calidad o por rechazos). Con `rejection_rate` el número además queda frenado 7 días (configurable): mientras dure no se pueden crear, ejecutar ni reanudar campañas desde ese número, ni mandar plantillas a contactos que no le escribieron en las últimas 24 horas, y solo soporte lo levanta antes. Sólo las campañas con envío inteligente se pausan solas. Reanudar la campaña y que se pause otra vez emite otro evento."},
   {"type":"campaign.no_groups_available","domains":["communities"],"status":"live","pending":true,"description":"A campaign has no groups to send the people who come through its link to."},
   {"type":"campaign.status_changed","domains":["communities"],"status":"live","pending":false,"description":"Una campaña se activó o se pausó."},
   {"type":"contact.created","domains":["conversations"],"status":"live","pending":false,"description":"Se creó un contacto nuevo en la cuenta.\n\nSe envía un evento por cada contacto nuevo, sea cual sea el canal: un mensaje entrante, la creación manual, una importación o la API. No se envía cuando el contacto ya existía y sólo se actualiza, ni para los contactos que la plataforma crea para sus propias notificaciones. En importaciones grandes el límite de volumen de la cuenta puede descartar parte de los eventos."},
   {"type":"contact.stage_changed","domains":["conversations"],"status":"live","pending":false,"description":"Un contacto cambió de etapa en un tablero.\n\nSe envía un evento por cada contacto que cambia de etapa en un tablero por etapas. `kind` es entry (entra al tablero, `from_stage` es null), move (pasa de una etapa a otra), exit (sale del tablero, `to_stage` es null) o stage_deleted (se reubica porque su etapa se borró; el nombre de la etapa borrada es null). No se envía si el contacto se coloca en la etapa en la que ya estaba."},
   {"type":"contact.tag_added","domains":["conversations"],"status":"live","pending":false,"description":"Un contacto recibió una etiqueta.\n\nSe envía un evento por cada contacto y etiqueta agregados, también en operaciones en bloque; no se envía si el contacto ya tenía la etiqueta. `source` indica el origen: manual, flow, bulk, import, sync, walink o ai. En operaciones en bloque grandes el límite de volumen de la cuenta puede descartar parte de los eventos."},
-  {"type":"contact.tag_removed","domains":["conversations"],"status":"live","pending":false,"description":"Un contacto perdió una etiqueta.\n\nSe envía un evento por cada contacto y etiqueta quitados, también en operaciones en bloque; no se envía si el contacto no tenía la etiqueta. No se envía al borrar la etiqueta, al borrar o fusionar contactos ni al desvincular etiquetas de un tablero. `source` indica el origen: manual, flow o bulk. En operaciones en bloque grandes el límite de volumen de la cuenta puede descartar parte de los eventos."},
+  {"type":"contact.tag_removed","domains":["conversations"],"status":"live","pending":false,"description":"Un contacto perdió una etiqueta.\n\nSe envía un evento por cada contacto y etiqueta quitados, también en operaciones en bloque; no se envía si el contacto no tenía la etiqueta. No se envía al borrar la etiqueta, al borrar o fusionar contactos ni al desvincular etiquetas de un tablero. `source` indica el origen: manual, flow, bulk o ai. En operaciones en bloque grandes el límite de volumen de la cuenta puede descartar parte de los eventos."},
   {"type":"conversation.assigned","domains":["conversations"],"status":"live","pending":false,"description":"Una conversación quedó asignada a una persona del equipo o a un agente de IA.\n\nSe envía cuando una conversación queda asignada a una persona del equipo (`assignee.type` = `human`) o a un agente de IA (`assignee.type` = `ai`), por cualquier camino. `assignee` trae el tipo y el nombre, nunca un identificador. No se envía al desasignar, ni cuando se vuelve a enviar el mismo asignado."},
   {"type":"conversation.closed","domains":["conversations"],"status":"live","pending":false,"description":"Una conversación pasó a cerrada.\n\nSe envía cuando una conversación pasa de abierta a cerrada. No se envía si la conversación ya estaba cerrada ni cuando se reabre."},
   {"type":"daily_report.generated","domains":["communities"],"status":"live","pending":true,"description":"The daily report of the account was generated (clicks, joins and leaves)."},
@@ -62,7 +62,7 @@ export const webhookEvents = [
   {"type":"mac.usage_80","domains":["accounts"],"status":"live","pending":true,"description":"The account reached 80% of its monthly active contacts of the cycle."},
   {"type":"message.received","domains":["conversations"],"status":"live","pending":true,"description":"A contact wrote to one of the WhatsApp numbers of the account."},
   {"type":"message.status_changed","domains":["conversations"],"status":"live","pending":true,"description":"The delivery status of a message you sent with the API changed. One notice per transition, never one that goes back; `queued` is not reported. It must be asked for explicitly in `events`."},
-  {"type":"pipeline.finished","domains":["communities"],"status":"live","pending":false,"description":"Terminó un pipeline de operaciones sobre grupos, con su resultado agregado."},
+  {"type":"pipeline.finished","domains":["communities"],"status":"live","pending":false,"description":"Terminó un pipeline de operaciones sobre grupos, con su resultado agregado y la clave de idempotencia del pedido que lo originó, cuando la hay."},
   {"type":"poll.voted","domains":["communities"],"status":"live","pending":false,"description":"Un participante votó en una encuesta enviada a un grupo, o cambió su voto."},
   {"type":"scheduled_message.finished","domains":["communities"],"status":"live","pending":false,"description":"Un envío programado terminó, con su resultado agregado."},
   {"type":"scheduled_message.group_delivery_failed","domains":["communities"],"status":"live","pending":false,"description":"Un envío programado falló en un grupo concreto, con el motivo desagregado."},
@@ -110,7 +110,7 @@ export interface WebhookEventDataMap {
     amount_cents: number;
     currency: string;
   };
-  /** `broadcast.finished` (live; typed from: example). Una campaña llegó a su estado final (enviada, fallida o con fallos parciales), con sus conteos. `status` es `success`, `failed` o `partially_failed`. `reason` dice por qué terminó: `completed` (se enviaron todas las páginas), `cancelled` (se cerró una campaña pausada), `template_rejected` (Meta rechazó la plantilla, o su categoría cambió, mientras la campaña esperaba), `approval_expired` (la plantilla no se aprobó a tiempo), `mac_lockout` (la cuenta alcanzó su límite de contactos activos), `no_recipients` (la audiencia quedó vacía) o `error` (el envío no pudo despacharse). `totals` son los conteos del envío: `processed` (destinatarios procesados), `failed` y `skipped_unreachable` (destinatarios que el canal no puede alcanzar); valen 0 si la campaña terminó antes de enviar. Se emite una sola vez por campaña. */
+  /** `broadcast.finished` (live; typed from: example). Una campaña llegó a su estado final (enviada, fallida o con fallos parciales), con sus conteos. `status` es `success`, `failed` o `partially_failed`. `reason` dice por qué terminó: `completed` (se enviaron todas las páginas), `cancelled` (se cerró una campaña pausada), `template_rejected` (Meta rechazó la plantilla, o su categoría cambió, mientras la campaña esperaba; también cuando Meta la pausó durante el envío y se detuvo la campaña), `approval_expired` (la plantilla no se aprobó a tiempo), `mac_lockout` (la cuenta alcanzó su límite de contactos activos), `mac_check_unavailable` (la campaña la inició una API key y el límite de contactos activos no se pudo verificar, así que no se envió nada), `no_recipients` (la audiencia quedó vacía) o `error` (el envío no pudo despacharse). `totals` son los conteos del envío: `processed` (destinatarios procesados), `failed` y `skipped_unreachable` (destinatarios que el canal no puede alcanzar); valen 0 si la campaña terminó antes de enviar. Se emite una sola vez por campaña. */
   "broadcast.finished": {
     broadcast: {
       id: number;
@@ -124,7 +124,7 @@ export interface WebhookEventDataMap {
       skipped_unreachable: number;
     };
   };
-  /** `broadcast.paused` (live; typed from: example). Una campaña se pausó sola, por ejemplo porque bajó la calidad del número. `reason` es `quality_degraded` (la calidad del número bajó respecto de la del inicio, o llegó a RED) o `quality_unreadable` (no se pudo leer la calidad en tres controles seguidos). `quality` y `quality_baseline` son la calidad de Meta leída en el control y la del inicio del envío (`GREEN`, `YELLOW`, `RED`), o `null` si no se pudo leer. Sólo las campañas con envío inteligente se pausan solas. Reanudar la campaña y que se pause otra vez emite otro evento. */
+  /** `broadcast.paused` (live; typed from: example). Una campaña se pausó sola, por ejemplo porque bajó la calidad del número. `reason` es `quality_degraded` (la calidad del número bajó respecto de la del inicio, o llegó a RED), `quality_unreadable` (no se pudo leer la calidad en tres controles seguidos), `template_unavailable` (Meta dejó la plantilla en `PAUSED`, `DISABLED` o `REJECTED` antes de una tanda) o `rejection_rate` (en los envíos recientes del número, por defecto las últimas 24 horas, Meta rechazó una proporción igual o mayor al umbral configurable: el código 131049, por defecto 5 %; el código 131026, por defecto 5 %; o los códigos que indican una restricción de la cuenta o del número, por defecto 15 %, con la lista configurable y por defecto 131049, 131048, 131031 y 368). Con `rejection_rate` llega además `rejection`: `codes` (los que llegaron a su umbral: `131049`, `131026` o `failed`), `rates` (el porcentaje de cada uno), `attempts` (los envíos medidos) y `window_hours`. `quality` y `quality_baseline` son la calidad de Meta leída en el control y la del inicio del envío (`GREEN`, `YELLOW`, `RED`), o `null` si no se pudo leer. `template` es `{name, status}` con el nombre de la plantilla y su estado en Meta cuando `reason` es `template_unavailable`, y `null` en las demás pausas (por calidad o por rechazos). Con `rejection_rate` el número además queda frenado 7 días (configurable): mientras dure no se pueden crear, ejecutar ni reanudar campañas desde ese número, ni mandar plantillas a contactos que no le escribieron en las últimas 24 horas, y solo soporte lo levanta antes. Sólo las campañas con envío inteligente se pausan solas. Reanudar la campaña y que se pause otra vez emite otro evento. */
   "broadcast.paused": {
     broadcast: {
       id: number;
@@ -133,6 +133,7 @@ export interface WebhookEventDataMap {
     reason: string;
     quality: string;
     quality_baseline: string;
+    template: unknown;
   };
   /** `campaign.no_groups_available` (live, pending of the spec; typed from: example). A campaign has no groups to send the people who come through its link to. */
   "campaign.no_groups_available": {
@@ -196,7 +197,7 @@ export interface WebhookEventDataMap {
     };
     source: string;
   };
-  /** `contact.tag_removed` (live; typed from: example). Un contacto perdió una etiqueta. Se envía un evento por cada contacto y etiqueta quitados, también en operaciones en bloque; no se envía si el contacto no tenía la etiqueta. No se envía al borrar la etiqueta, al borrar o fusionar contactos ni al desvincular etiquetas de un tablero. `source` indica el origen: manual, flow o bulk. En operaciones en bloque grandes el límite de volumen de la cuenta puede descartar parte de los eventos. */
+  /** `contact.tag_removed` (live; typed from: example). Un contacto perdió una etiqueta. Se envía un evento por cada contacto y etiqueta quitados, también en operaciones en bloque; no se envía si el contacto no tenía la etiqueta. No se envía al borrar la etiqueta, al borrar o fusionar contactos ni al desvincular etiquetas de un tablero. `source` indica el origen: manual, flow, bulk o ai. En operaciones en bloque grandes el límite de volumen de la cuenta puede descartar parte de los eventos. */
   "contact.tag_removed": {
     contact: {
       id: number;
@@ -604,13 +605,17 @@ export interface WebhookEventDataMap {
     device_id: number | null;
     status: "sent" | "delivered" | "read" | "failed";
     previous_status: "sent" | "delivered" | "read" | "failed" | null;
-    /** Only when `status` is `failed`. */
-    error?: components["schemas"]["PendingMessageError"];
+    /** Only when `status` is `failed`. Why it failed. When Funnelchat stopped it, `code` is `null` and `reason` says why; when it failed in WhatsApp, `code` and `title` are the provider's and `reason` is `null`. */
+    error?: {
+      code: number | null;
+      title: string | null;
+      reason: "device_unavailable" | "insufficient_balance" | "window_closed" | "recipient_unreachable" | "template_not_found" | "template_unresolved_placeholder" | "not_queued" | "not_sent" | null;
+    };
     occurred_at: string;
     /** The `client_reference` you sent with the message, or `null`. */
     client_reference: string | null;
   };
-  /** `pipeline.finished` (live; typed from: example). Terminó un pipeline de operaciones sobre grupos, con su resultado agregado. */
+  /** `pipeline.finished` (live; typed from: example). Terminó un pipeline de operaciones sobre grupos, con su resultado agregado y la clave de idempotencia del pedido que lo originó, cuando la hay. */
   "pipeline.finished": {
     campaign: {
       uuid: string;
@@ -627,6 +632,7 @@ export interface WebhookEventDataMap {
       skipped: number;
       cancelled: number;
     };
+    idempotency_key: string;
   };
   /** `poll.voted` (live; typed from: example). Un participante votó en una encuesta enviada a un grupo, o cambió su voto. */
   "poll.voted": {

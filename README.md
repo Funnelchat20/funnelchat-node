@@ -406,7 +406,7 @@ const subscription = await funnelchat.webhooks.create({
 // Store subscription.id and subscription.secret: the secret is shown only once.
 ```
 
-- Name every event you want: `message.status_changed` too.
+- Name every event you want: `message.status_changed` too. `events` is typed with the names the API accepts.
 - Permissions: **Notifications (webhooks) → View** to read and **Notifications (webhooks) → Manage** for the rest. Also, a key can only subscribe to events of the areas it can read: **Contacts and conversations → View**, **Groups and campaigns → View** and **WhatsApp numbers → View**. Asking for others is a `422` on `events`.
 - A subscription belongs to the workspace of the key that created it and receives only that workspace's events; `list()` brings every subscription of the workspace, also the ones of other integrations. To change the URL use `update(id, …)` (the secret stays). `test(id)` sends a signed `webhook.test` right now and `listDeliveries(id)` is the history.
 - `rotateSecret(id)` is **not open to API keys** (`403 route_not_available`): rotate the secret from the panel.
@@ -527,16 +527,14 @@ const funnelchat = new Funnelchat({ apiKey: '1|fc_live_sandbox', baseUrl: 'http:
 
 ### Pending of the spec
 
-The published spec does not describe everything the API in production already has yet. What is missing lives in a separate layer, `spec/pending.json`, which generation adds to the types **only while the spec does not bring it**; each entry cites the production release it was read in (04-11-2026: accounts v1.5.97, conversations v1.19.7, communities v2.35.5):
+The types come from the full unified spec of the developer portal (`spec/funnelchat.json`; where it came from, in `spec/procedencia.json`: developers-portal c90565e4 of 04-11-2026, with the areas at accounts v1.5.97, conversations v1.19.7 and communities v2.35.5). What production has and that spec does not describe, or describes otherwise than production answers, lives in a separate layer, `spec/pending.json`, which generation applies **only while the spec does not bring it**, or still says exactly what the entry corrects; each entry cites the production code it was read in:
 
-- what sends answer (the queued message), `messages.get`, `client_reference`, `file_type` and `file_name`;
-- forms and `messages.sendForm`;
-- the `capabilities`, `connection` and `external_reference` of numbers, and whether a template is `available`;
-- creating and connecting numbers (`devices.create`, `devices.qr`, `country`, `external_reference`, `connectLinks`, `Idempotency-Key`) and the `device.*` events;
-- a message to a group and its action (`groups.sendMessage`, `groups.retrieveAction`, `group_action.completed`);
-- webhook subscriptions, and the events the spec does not bring or types from one example: `message.status_changed`, `message.received`, `group_participant.joined` and `.left`, `whatsapp_form.completed`, the group ones and the account ones.
+- a message to a group and its action (`groups.sendMessage`, `groups.retrieveAction`, `group_action.completed`): the spec was built with the group actions off;
+- the events of the account (`device.*`, billing, subscriptions, monthly active contacts) and some of groups (`group.message_received`, `group.reaction_added`, `group.full`, `group_action.failed`, the join requests): the API publishes them in its catalog (`webhooks.events()`), not in the spec;
+- WhatsApp forms (except sending one) and `webhooks.rotateSecret`;
+- where the spec contradicts production: what a send answers (`{ message }`, never `null`), the body of `devices.qr`, the items of `templates.list`, the answer of `webhooks.update`, and the events the spec only shows by one example (`message.received`, `message.status_changed`, `whatsapp_form.completed`, `group_participant.joined` and `.left`).
 
-`src/pending/` has what is not OpenAPI (the `workspace_id` of every event and `device_id` in `message.received`) and `src/core/error-codes.ts` the error codes.
+`src/pending/` has what is not OpenAPI (the `workspace_id` of every event) and `src/core/error-codes.ts` the error codes.
 
 ### Development
 
@@ -557,12 +555,12 @@ To release, push a `vX.Y.Z` tag on `main` matching the `version` in `package.jso
 Everything generated comes from one script:
 
 ```bash
-npm run generate -- --spec <path>/funnelchat.json   # with a new unified spec of the portal
-npm run generate                                    # with the one in spec/, for example after editing spec/pending.json
+npm run generate -- --spec <path>/funnelchat-completa.json   # with a new full unified spec of the portal
+npm run generate                                             # with the one in spec/, for example after editing spec/pending.json
 ```
 
-1. With `--spec`, it copies the spec to `spec/funnelchat.json` and writes `spec/procedencia.json`: repository, branch, commit, date and `sha256` of the file.
-2. It adds `spec/pending.json`, but only what the spec does not bring, and lists what it already brings so you can delete it from there. An `operationPatches` entry without `while` adds body properties or `parameters` (such as a query filter) one by one, only while the operation lacks them. An event with `x-fc-replace-while` replaces the spec's only while the spec's still matches it.
+1. With `--spec`, it copies the spec to `spec/funnelchat.json` and writes `spec/procedencia.json`: repository, branch, commit, date and `sha256` of the file. The portal builds its full spec in `generated/specs/funnelchat-completa.json`, which git ignores, so a copy of it says where it came from on the command line: `--expect-sha256 <hex>`, `--source repository=… --source branch=… --source commit=… --source path=…` and `--domain <area>=<sha>@<branch>@<snapshot_at>` for each area; `spec/procedencia.json` marks those fields as declared. Never generate from the published `/specs/`: it only carries what the portal shows.
+2. It adds `spec/pending.json`, but only what the spec does not bring, and lists what it already brings so you can delete it from there. An `operationPatches` entry without `while` adds body properties or `parameters` (such as a query filter) one by one, only while the operation lacks them. A `responsePatches` entry, and an event with `x-fc-replace-while`, replace the spec's only while it still matches: a key starting with `/` is a JSON Pointer into the operation or the event (`/responses/200/content/application~1json/schema`), so the entry stops applying, and is listed, as soon as the spec changes that place.
 3. It writes `src/generated/openapi.ts` (with [openapi-typescript](https://openapi-ts.dev)), `src/generated/routes.ts` (every operation, with area and permission) and `src/generated/events.ts` (the event catalog and the shape of the `data` of each one).
 
 ```

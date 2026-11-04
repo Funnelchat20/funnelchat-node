@@ -17,9 +17,10 @@ import {
   type WebhookEventOf,
   isNumberQuotaError,
 } from '../../src/index.js';
+import type { Body } from '../../src/index.js';
 import { type Receiver, SANDBOX_URL, SEED, control, sandboxClient, startReceiver } from './sandbox.js';
 
-const DEVICE_EVENTS = ['device.connected', 'device.disconnected', 'device.deleted', 'device.health_changed'];
+const DEVICE_EVENTS: Body<'/api/v1/webhooks', 'POST'>['events'] = ['device.connected', 'device.disconnected', 'device.deleted', 'device.health_changed'];
 
 describe.skipIf(!SANDBOX_URL)('numbers against the sandbox', () => {
   const funnelchat = sandboxClient();
@@ -139,7 +140,7 @@ describe.skipIf(!SANDBOX_URL)('numbers against the sandbox', () => {
     expect(reconnect).toBeInstanceOf(UnprocessableEntityError);
     expect(reconnect.code).toBe('invalid_request');
     const meta = (await funnelchat.connectLinks
-      // @ts-expect-error country only goes with a QR link; the API refuses it too
+      // country only goes with a QR link: the API refuses it (the spec does not say so)
       .create({ type: 'meta', allowed_connection_types: ['dedicated'], country: 'br' })
       .catch((e: unknown) => e)) as APIError;
     expect(meta.code).toBe('invalid_request');

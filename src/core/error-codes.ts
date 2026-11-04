@@ -8,8 +8,10 @@
  * (Message/Services/ApiSendGuard.php and Message/Support/ApiKeySendResponse.php, byte-identical to
  * v1.18.10, and WhatsappForm/Support/FormSendPreflight.php); accounts v1.5.97 (creating and
  * connecting numbers, contract 1022-alta-de-numeros); communities v2.35.5 (the callers of
- * GroupManagement/Exceptions/ApiGroupActionRejected.php). The spec does not document most of them
- * yet; when it does, this list can be generated.
+ * GroupManagement/Exceptions/ApiGroupActionRejected.php). The full unified spec of developers-portal
+ * c90565e4 enumerates only the send rules of conversations (and the read receipt and typing routes,
+ * which have no method here); the rest is not documented there yet. When it is, this list can be
+ * generated.
  */
 
 /** Errors of the API entry and of the key gate, on any route. */
