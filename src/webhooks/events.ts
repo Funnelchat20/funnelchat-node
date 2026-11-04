@@ -1,12 +1,16 @@
 import { WebhookVerificationError } from '../core/errors.js';
 import type { WebhookEventDataMap, WebhookEventType } from '../generated/events.js';
-import type { PendingEventData } from '../pending/events.js';
+import type { PendingCommonEventData, PendingEventData } from '../pending/events.js';
 import { assertSignature, type RawBody, type VerifyOptions } from './signature.js';
 
 export type { WebhookEventType } from '../generated/events.js';
 
-/** The `data` of an event type: the generated type plus the pending-of-the-spec additions. */
+/**
+ * The `data` of an event type: the generated type plus the pending-of-the-spec additions, among them
+ * `workspace_id`, which every event carries.
+ */
 export type WebhookEventData<T extends WebhookEventType> = WebhookEventDataMap[T] &
+  PendingCommonEventData &
   (T extends keyof PendingEventData ? PendingEventData[T] : unknown);
 
 /** The envelope every delivery shares. */

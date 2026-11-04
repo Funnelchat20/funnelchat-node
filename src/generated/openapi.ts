@@ -2525,7 +2525,11 @@ export interface paths {
          */
         get: operations["group.messages"];
         put?: never;
-        post?: never;
+        /**
+         * Send a message to a group
+         * @description Sends a text or one file to the group now, from one of your numbers. Asynchronous: it answers `202` with `action_id`; the result arrives in `GET /api/v1/groups/actions/{action}` (`result.message.uid` is the id of the message in WhatsApp) and in the events `group_action.completed` and `group_action.failed`. A QR number goes out at the pace of the scheduled messages; an official number checks the 24-hour window and its quality first. It needs **Groups and campaigns → Send** and the group actions turned on for the API: while they are off, the route answers `403 route_not_available` (it was off in production on 21-10). Rejections: `404 device_not_found`, `404 group_not_found`, `422 unsupported_group_type`, `422 device_not_connected`, `422 device_not_group_admin` (a QR number that is not admin), `422 device_not_group_number` (an official group of another number), `422 provider_unsupported`, `422 window_closed`, `422 number_restricted`, `422 unsupported_type` and `429 too_many_pending_actions`.
+         */
+        post: operations["pendingGroups.sendMessage"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4876,87 +4880,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-}
-export interface webhooks {
-    "message.received": {
+    "/api/v1/groups/actions/{action}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
         /**
-         * message.received
-         * @description Un contacto le escribió a un número de WhatsApp de la cuenta.
+         * A group action
+         * @description Where an action is (`queued`, `running`, `completed` or `failed`) and its `result`. An action of another key's workspace, or that does not exist, is `404 action_not_found`. Turned off with the group actions, like `POST /api/v1/groups/{group}/messages`.
          */
-        post: {
-            parameters: {
-                query?: never;
-                header: {
-                    /** @description Firma de la entrega: `t=<timestamp>,v1=<firma>`. Se calcula sobre `t + "." + cuerpo crudo`. */
-                    "X-Funnelchat-Signature": string;
-                    /** @description Tipo de evento (igual que `type` en el cuerpo). */
-                    "X-Funnelchat-Event": string;
-                    /** @description Identificador de esta entrega; cambia en cada intento. */
-                    "X-Funnelchat-Delivery": string;
-                };
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    /**
-                     * @example {
-                     *       "id": "evt_000000000000000000000001",
-                     *       "type": "message.received",
-                     *       "version": 1,
-                     *       "occurred_at": "2026-10-01T12:00:00Z",
-                     *       "data": {
-                     *         "message": {
-                     *           "id": 1001,
-                     *           "type": "text",
-                     *           "text": "Hola, quiero más información",
-                     *           "media": null
-                     *         },
-                     *         "contact": {
-                     *           "id": 2001,
-                     *           "name": "Contacto de ejemplo",
-                     *           "phone": "+5491100000000"
-                     *         },
-                     *         "receiver": {
-                     *           "phone": "+5491100000001"
-                     *         }
-                     *       }
-                     *     }
-                     */
-                    "application/json": {
-                        data?: {
-                            message?: {
-                                /** @enum {string} */
-                                type?: "text" | "image" | "video" | "document" | "sticker" | "contact" | "audio" | "note" | "action" | "invalid" | "interactive" | "location" | "voice_call" | "video_call" | "event" | "button" | "template" | "notification" | "option_list" | "template_button_reply" | "poll" | "whatsapp_form" | "call_permission_request" | "call_permission_reply";
-                            };
-                        };
-                    };
-                };
-            };
-            responses: {
-                /** @description Cualquier respuesta 2xx en 10 segundos o menos confirma la entrega. */
-                "2XX": {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
+        get: operations["pendingGroups.action"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
+}
+export interface webhooks {
     "flow.completed": {
         parameters: {
             query?: never;
@@ -5803,46 +5748,6 @@ export interface webhooks {
         patch?: never;
         trace?: never;
     };
-    "group_participant.joined": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * group_participant.joined
-         * @description Una persona entró a un grupo de una campaña.
-         */
-        post: operations["webhook.group_participant_joined"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "group_participant.left": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * group_participant.left
-         * @description Una persona salió de un grupo de una campaña.
-         */
-        post: operations["webhook.group_participant_left"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "scheduled_message.finished": {
         parameters: {
             query?: never;
@@ -6142,7 +6047,7 @@ export interface webhooks {
                             /** Format: date-time */
                             connected_at: string;
                             /** @description The connect link of this connection, or `null` when it did not come from a link. */
-                            connect_link_id?: number | null;
+                            connect_link_id: number | null;
                         };
                     };
                 };
@@ -6183,9 +6088,9 @@ export interface webhooks {
                             /** Format: date-time */
                             disconnected_at: string;
                             /** @enum {string} */
-                            reason?: "qr_logged_out" | "meta_account_not_registered" | "shadow_ban_protection" | "provider_error" | "unknown" | "disconnected_by_user";
+                            reason: "qr_logged_out" | "meta_account_not_registered" | "shadow_ban_protection" | "provider_error" | "unknown" | "disconnected_by_user";
                             /** @description The connect link that last connected the number, or `null`. */
-                            connect_link_id?: number | null;
+                            connect_link_id: number | null;
                         };
                     };
                 };
@@ -7348,7 +7253,7 @@ export interface webhooks {
         put?: never;
         /**
          * device.deleted
-         * @description A number of the account was deleted: its slot of the plan is free again.
+         * @description A number of the account was deleted (from the panel, the API, or because a connect link expired without connecting it): its slot of the plan is free again.
          */
         post: {
             parameters: {
@@ -7365,7 +7270,7 @@ export interface webhooks {
                             /** Format: date-time */
                             deleted_at: string;
                             /** @description The connect link that last connected the number, or `null`. */
-                            connect_link_id?: number | null;
+                            connect_link_id: number | null;
                         };
                     };
                 };
@@ -7410,7 +7315,434 @@ export interface webhooks {
                             /** Format: date-time */
                             changed_at: string;
                             /** @description The connect link that last connected the number, or `null`. */
-                            connect_link_id?: number | null;
+                            connect_link_id: number | null;
+                        };
+                    };
+                };
+            };
+            responses: never;
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "device.quality_changed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * device.quality_changed
+         * @description The quality Meta gives an official number changed (`GREEN`, `YELLOW` or `RED`, as Meta sends them). If it drops, slow down the sends of that number before Meta limits it. Once per change; not when Meta has no quality data.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        data?: {
+                            device: components["schemas"]["PendingWebhookDevice"];
+                            previous: string;
+                            current: string;
+                            /** Format: date-time */
+                            changed_at: string;
+                            /** @description The connect link that last connected the number, or `null`. */
+                            connect_link_id: number | null;
+                        };
+                    };
+                };
+            };
+            responses: never;
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "device.messaging_limit_changed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * device.messaging_limit_changed
+         * @description The messaging limit Meta gives an official number changed: how many different people it can start a conversation with per day (`TIER_250`, `TIER_1K`, `TIER_2K`, `TIER_10K`, `TIER_100K` or `TIER_UNLIMITED`). Meta sets it per business: one notice per number of the account that changed.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        data?: {
+                            device: components["schemas"]["PendingWebhookDevice"];
+                            previous: string;
+                            current: string;
+                            /** Format: date-time */
+                            changed_at: string;
+                            /** @description The connect link that last connected the number, or `null`. */
+                            connect_link_id: number | null;
+                        };
+                    };
+                };
+            };
+            responses: never;
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "device.display_name_reviewed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * device.display_name_reviewed
+         * @description Meta approved or rejected the display name of an official number.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        data?: {
+                            device: components["schemas"]["PendingWebhookDevice"];
+                            /** @enum {string} */
+                            decision: "approved" | "rejected";
+                            /** @description As Meta sends it. */
+                            previous_status: string;
+                            /** @description `APPROVED` or `DECLINED`, as Meta sends it. */
+                            status: string;
+                            verified_name: string | null;
+                            /** @description Meta's reason in a rejection, or `null`. */
+                            rejection_reason: string | null;
+                            /** Format: date-time */
+                            reviewed_at: string;
+                            /** @description The connect link that last connected the number, or `null`. */
+                            connect_link_id: number | null;
+                        };
+                    };
+                };
+            };
+            responses: never;
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "group_action.completed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * group_action.completed
+         * @description A group action asked through the API finished, such as a message to a group. `action.uuid` is the `action_id` it returned; sending, `result.message.uid` is the id of the message in WhatsApp.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "action": {
+                     *           "uuid": "9b2f0a8e-1c3d-4e5f-8a7b-6c5d4e3f2a10",
+                     *           "type": "send_message"
+                     *         },
+                     *         "group": {
+                     *           "uid": "120363000000000001@g.us",
+                     *           "name": "Example group"
+                     *         },
+                     *         "campaign": null,
+                     *         "result": {
+                     *           "message": {
+                     *             "uid": "3EB0C767D26A1D4E5F6A"
+                     *           }
+                     *         }
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data?: {
+                            action: {
+                                uuid: string;
+                                type: string;
+                            };
+                            group: {
+                                uid: string;
+                                name: string | null;
+                            } | null;
+                            campaign: {
+                                uuid: string;
+                                name: string | null;
+                            } | null;
+                            /** @description Sending: `message.uid`; with phones: `participants`; creating or renewing the link: `invite_link`; the rest, empty. */
+                            result: {
+                                message?: {
+                                    uid?: string;
+                                };
+                                participants?: components["schemas"]["PendingGroupParticipantResult"][];
+                                invite_link?: string;
+                            };
+                        };
+                    };
+                };
+            };
+            responses: never;
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "message.received": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * message.received
+         * @description A contact wrote to one of the WhatsApp numbers of the account.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "message": {
+                     *           "id": 1001,
+                     *           "type": "text",
+                     *           "text": "Hi, I want more information",
+                     *           "media": null
+                     *         },
+                     *         "contact": {
+                     *           "id": 2001,
+                     *           "name": "Example contact",
+                     *           "phone": "+5491100000000"
+                     *         },
+                     *         "receiver": {
+                     *           "phone": "+5491100000001"
+                     *         },
+                     *         "device_id": 3
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data?: {
+                            message: {
+                                /** @description The id of the message in the history of the contact. */
+                                id: number;
+                                /** @enum {string} */
+                                type: "text" | "image" | "video" | "document" | "sticker" | "contact" | "audio" | "note" | "action" | "invalid" | "interactive" | "location" | "voice_call" | "video_call" | "event" | "button" | "template" | "notification" | "option_list" | "template_button_reply" | "poll" | "whatsapp_form" | "call_permission_request" | "call_permission_reply" | "request_contact_info";
+                                /** @description `null` when the message has no text (a file without caption, say). */
+                                text: string | null;
+                                media: {
+                                    /** @description The URL of the file. */
+                                    file: string;
+                                } | null;
+                            };
+                            contact: {
+                                id: number | null;
+                                name: string | null;
+                                /** @description `+` and digits, or `null` when the contact has no phone (a `@lid`, say). */
+                                phone: string | null;
+                            };
+                            receiver: {
+                                /** @description The phone of your number that received it, `+` and digits. */
+                                phone: string | null;
+                            };
+                            /** @description The number of your account that received the message: the same `device_id` you send to reply through it. `null` when the message has no number. */
+                            device_id: number | null;
+                        };
+                    };
+                };
+            };
+            responses: never;
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "group_participant.joined": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * group_participant.joined
+         * @description A person joined one of the account's groups.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "group": {
+                     *           "uid": "120363000000000001@g.us",
+                     *           "name": "Example group"
+                     *         },
+                     *         "campaign": null,
+                     *         "participant": {
+                     *           "identity": "5491100000000",
+                     *           "identity_type": "phone",
+                     *           "name": "Ana"
+                     *         }
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data?: {
+                            group: {
+                                uid: string;
+                                name: string | null;
+                            };
+                            /** @description `null` when the group is not of a campaign. */
+                            campaign: {
+                                uuid: string;
+                            } | null;
+                            participant: {
+                                /** @description The phone, or a `…@lid` when WhatsApp does not show it. */
+                                identity: string;
+                                /** @enum {string} */
+                                identity_type: "phone" | "whatsapp_user";
+                                name: string | null;
+                            };
+                        };
+                    };
+                };
+            };
+            responses: never;
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "group_participant.left": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * group_participant.left
+         * @description A person left one of the account's groups.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "group": {
+                     *           "uid": "120363000000000001@g.us",
+                     *           "name": "Example group"
+                     *         },
+                     *         "campaign": null,
+                     *         "participant": {
+                     *           "identity": "5491100000000",
+                     *           "identity_type": "phone",
+                     *           "name": "Ana"
+                     *         }
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data?: {
+                            group: {
+                                uid: string;
+                                name: string | null;
+                            };
+                            /** @description `null` when the group is not of a campaign. */
+                            campaign: {
+                                uuid: string;
+                            } | null;
+                            participant: {
+                                /** @description The phone, or a `…@lid` when WhatsApp does not show it. */
+                                identity: string;
+                                /** @enum {string} */
+                                identity_type: "phone" | "whatsapp_user";
+                                name: string | null;
+                            };
                         };
                     };
                 };
@@ -8493,8 +8825,8 @@ export interface components {
                 /** @description The statuses `message.status_changed` reports for the messages of this number. */
                 statuses: ("sent" | "delivered" | "read" | "failed")[];
             };
-            connection?: components["schemas"]["PendingDeviceConnection"];
-            external_reference?: components["schemas"]["PendingExternalReference"];
+            connection: components["schemas"]["PendingDeviceConnection"];
+            external_reference: components["schemas"]["PendingExternalReference"];
         };
         /** DisconnectSurveyResource */
         DisconnectSurveyResource: {
@@ -9260,6 +9592,16 @@ export interface components {
             quick_reply_buttons: unknown[];
             waba_id: string | null;
             belongs_to_current_device: boolean;
+            /**
+             * @description Meta's last quality score of the template, as stored.
+             * @enum {string|null}
+             */
+            quality_score: "GREEN" | "YELLOW" | "RED" | "UNKNOWN" | null;
+            /** @description When Meta last reported it. */
+            quality_updated_at: string | null;
+            quality: components["schemas"]["PendingTemplateQuality"];
+            /** @description `false` when Meta paused or disabled the template: it cannot be sent. */
+            available: boolean;
         };
         /** Ticket */
         Ticket: {
@@ -9764,11 +10106,82 @@ export interface components {
             name: string | null;
             /** @description Digits only, without `+`. */
             number: string | null;
-            connection?: components["schemas"]["PendingDeviceConnection"];
-            external_reference?: components["schemas"]["PendingExternalReference"];
+            connection: components["schemas"]["PendingDeviceConnection"];
+            external_reference: components["schemas"]["PendingExternalReference"];
         };
         /** @description The country of the phone that will scan the QR code (ISO 3166-1 alpha-2, two letters, any case): the WhatsApp session is opened from there. Without it, Funnelchat chooses one. */
         PendingCountry: string | null;
+        /** @description A text or one file, sent to the group right away. Polls, events, stickers, contacts and locations are not accepted. */
+        PendingGroupMessageCreate: {
+            /** @description The number of your account that sends it. A QR number must be admin of the group; an official number, the one the group belongs to. */
+            device_id: number;
+            /** @enum {string} */
+            type: "text" | "image" | "video" | "audio" | "document";
+            /** @description Only with `type: text`, and required there. */
+            text?: string;
+            /** @description A public `https` URL that ends in an extension of the type. Required with a file; not with `type: text`. */
+            media_url?: string;
+            /** @description Image or video only. */
+            caption?: string | null;
+            /** @description Document only. */
+            file_name?: string | null;
+        };
+        /** @description The action is queued. Follow it with `GET /api/v1/groups/actions/{action}` or with the events `group_action.completed` and `group_action.failed`. */
+        PendingGroupActionAccepted: {
+            /** Format: uuid */
+            action_id: string;
+            /** @enum {string} */
+            status: "queued";
+        };
+        PendingGroupParticipantResult: {
+            /** @description The phone in digits, without `+`, or a `…@lid`. */
+            identity: string;
+            /** @enum {string} */
+            identity_type: "phone" | "whatsapp_user";
+            /** @enum {string} */
+            status: "added" | "invited" | "removed" | "promoted" | "demoted" | "approved" | "rejected" | "failed";
+            reason: string | null;
+        };
+        PendingGroupAction: {
+            /** Format: uuid */
+            action_id: string;
+            /** @description `send_message` for a message to the group. */
+            type: string;
+            /** @enum {string} */
+            status: "queued" | "running" | "completed" | "failed";
+            device_id: number | null;
+            group: {
+                uid: string;
+                name: string | null;
+            } | null;
+            /** @description `{}` while it is open. Sending: `{message: {uid}}`, the id of the message in WhatsApp. Other actions: `{participants: [...]}`, `{group, invite_link}` or `{invite_link}`. */
+            result: {
+                message?: {
+                    uid?: string;
+                };
+                participants?: components["schemas"]["PendingGroupParticipantResult"][];
+                invite_link?: string;
+                group?: {
+                    uid?: string;
+                    name?: string | null;
+                };
+            } | null;
+            /** @description Why it failed, when `status` is `failed`. */
+            reason: string | null;
+            /** Format: date-time */
+            created_at: string | null;
+            /** Format: date-time */
+            started_at: string | null;
+            /** Format: date-time */
+            completed_at: string | null;
+            /** Format: date-time */
+            failed_at: string | null;
+        };
+        /**
+         * @description Meta's quality of the template. `NOT_APPLICABLE` unless the template is approved or paused.
+         * @enum {string}
+         */
+        PendingTemplateQuality: "GREEN" | "YELLOW" | "RED" | "UNKNOWN" | "NOT_APPLICABLE";
     };
     responses: {
         /** @description Unauthenticated */
@@ -15702,6 +16115,33 @@ export interface operations {
             404: components["responses"]["CommunitiesModelNotFoundException"];
         };
     };
+    "pendingGroups.sendMessage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The WhatsApp uid of the group (`…@g.us`), the `uid` of `GET /api/v1/groups`. */
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PendingGroupMessageCreate"];
+            };
+        };
+        responses: {
+            /** @description Queued. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingGroupActionAccepted"];
+                };
+            };
+        };
+    };
     "group.scheduledMessages": {
         parameters: {
             query?: {
@@ -20077,6 +20517,31 @@ export interface operations {
             };
         };
     };
+    "pendingGroups.action": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The `action_id` the action returned. */
+                action: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PendingGroupAction"];
+                    };
+                };
+            };
+        };
+    };
     "webhook.group_created": {
         parameters: {
             query?: never;
@@ -20119,126 +20584,6 @@ export interface operations {
                  *           "name": "Campaña de ejemplo"
                  *         },
                  *         "source": "created"
-                 *       }
-                 *     }
-                 */
-                "application/json": Record<string, unknown>;
-            };
-        };
-        responses: {
-            /** @description Respondé con cualquier 2xx dentro de 10 segundos para confirmar la recepción. */
-            "2XX": {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    "webhook.group_participant_joined": {
-        parameters: {
-            query?: never;
-            header: {
-                /**
-                 * @description Tipo del evento; igual al `type` del cuerpo.
-                 * @example group_participant.joined
-                 */
-                "X-Funnelchat-Event": string;
-                /**
-                 * @description UUID de este intento de entrega; cambia en cada reintento. Para deduplicar usá el `id` del cuerpo.
-                 * @example 00000000-0000-4000-8000-000000000001
-                 */
-                "X-Funnelchat-Delivery": string;
-                /**
-                 * @description Firma `t=<unix>,v1=<hex>`: HMAC-SHA256 de `t + "." + cuerpo` con el secreto completo `whsec_…`.
-                 * @example t=1790856000,v1=0000000000000000000000000000000000000000000000000000000000000000
-                 */
-                "X-Funnelchat-Signature": string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                /**
-                 * @example {
-                 *       "id": "evt_00000000000000000000000000000002",
-                 *       "type": "group_participant.joined",
-                 *       "version": 1,
-                 *       "occurred_at": "2026-10-01T12:00:00Z",
-                 *       "data": {
-                 *         "group": {
-                 *           "uid": "120363000000000001@g.us",
-                 *           "name": "Grupo de ejemplo"
-                 *         },
-                 *         "campaign": {
-                 *           "uuid": "00000000-0000-4000-8000-000000000001"
-                 *         },
-                 *         "participant": {
-                 *           "identity": "+5491100000000",
-                 *           "identity_type": "phone",
-                 *           "name": "Ana Pérez"
-                 *         }
-                 *       }
-                 *     }
-                 */
-                "application/json": Record<string, unknown>;
-            };
-        };
-        responses: {
-            /** @description Respondé con cualquier 2xx dentro de 10 segundos para confirmar la recepción. */
-            "2XX": {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    "webhook.group_participant_left": {
-        parameters: {
-            query?: never;
-            header: {
-                /**
-                 * @description Tipo del evento; igual al `type` del cuerpo.
-                 * @example group_participant.left
-                 */
-                "X-Funnelchat-Event": string;
-                /**
-                 * @description UUID de este intento de entrega; cambia en cada reintento. Para deduplicar usá el `id` del cuerpo.
-                 * @example 00000000-0000-4000-8000-000000000001
-                 */
-                "X-Funnelchat-Delivery": string;
-                /**
-                 * @description Firma `t=<unix>,v1=<hex>`: HMAC-SHA256 de `t + "." + cuerpo` con el secreto completo `whsec_…`.
-                 * @example t=1790856000,v1=0000000000000000000000000000000000000000000000000000000000000000
-                 */
-                "X-Funnelchat-Signature": string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                /**
-                 * @example {
-                 *       "id": "evt_00000000000000000000000000000003",
-                 *       "type": "group_participant.left",
-                 *       "version": 1,
-                 *       "occurred_at": "2026-10-01T12:00:00Z",
-                 *       "data": {
-                 *         "group": {
-                 *           "uid": "120363000000000001@g.us",
-                 *           "name": "Grupo de ejemplo"
-                 *         },
-                 *         "campaign": {
-                 *           "uuid": "00000000-0000-4000-8000-000000000001"
-                 *         },
-                 *         "participant": {
-                 *           "identity": "+5491100000000",
-                 *           "identity_type": "phone",
-                 *           "name": "Ana Pérez"
-                 *         }
                  *       }
                  *     }
                  */

@@ -15,7 +15,7 @@ export interface RouteInfo {
   readonly pending: boolean;
 }
 
-/** Every operation of the spec (264), sorted by path. */
+/** Every operation of the spec (266), sorted by path. */
 export const routes: readonly RouteInfo[] = [
   {"method":"GET","path":"/api/v1/agents","operationId":"user.index","domain":"conversations","permission":"conversations:read","tag":"User","summary":"Listar agentes","pending":false},
   {"method":"GET","path":"/api/v1/agents/{user}","operationId":"user.show","domain":"conversations","permission":"conversations:read","tag":"User","summary":"Ver un agente","pending":false},
@@ -192,9 +192,11 @@ export const routes: readonly RouteInfo[] = [
   {"method":"GET","path":"/api/v1/groups/{group}","operationId":"group.show","domain":"communities","permission":"communities:read","tag":"Grupos","summary":"Ver un grupo","pending":false},
   {"method":"GET","path":"/api/v1/groups/{group}/actions","operationId":"group.actions","domain":"communities","permission":"communities:read","tag":"Grupos","summary":"Listar las acciones de sesión sobre un grupo","pending":false},
   {"method":"GET","path":"/api/v1/groups/{group}/messages","operationId":"group.messages","domain":"communities","permission":"communities:read","tag":"Grupos","summary":"Listar los mensajes enviados a un grupo","pending":false},
+  {"method":"POST","path":"/api/v1/groups/{group}/messages","operationId":"pendingGroups.sendMessage","domain":"communities","permission":"communities:send","tag":"GroupAction","summary":"Send a message to a group","pending":true},
   {"method":"GET","path":"/api/v1/groups/{group}/participant-events","operationId":"group.participantEvents","domain":"communities","permission":"communities:read","tag":"Participantes","summary":"Listar entradas y salidas de un grupo","pending":false},
   {"method":"GET","path":"/api/v1/groups/{group}/scheduled-messages","operationId":"group.scheduledMessages","domain":"communities","permission":"communities:read","tag":"Grupos","summary":"Listar los envíos programados que incluyen un grupo","pending":false},
   {"method":"GET","path":"/api/v1/groups/{groupUid}/metadata","operationId":"groupMetadata.show","domain":"communities","permission":"communities:read","tag":"Grupos","summary":"Ver los datos actuales de un grupo en WhatsApp","pending":false},
+  {"method":"GET","path":"/api/v1/groups/actions/{action}","operationId":"pendingGroups.action","domain":"communities","permission":"communities:read","tag":"GroupAction","summary":"A group action","pending":true},
   {"method":"GET","path":"/api/v1/groups/participants","operationId":"group.participants","domain":"communities","permission":"communities:read","tag":"Participantes","summary":"Listar los participantes de un grupo","pending":false},
   {"method":"GET","path":"/api/v1/kanban-settings","operationId":"kanbanSetting.index","domain":"conversations","permission":"conversations:read","tag":"KanbanSetting","summary":"Listar tableros","pending":false},
   {"method":"POST","path":"/api/v1/kanban-settings","operationId":"kanbanSetting.store","domain":"conversations","permission":"conversations:write","tag":"KanbanSetting","summary":"Crear un tablero","pending":false},

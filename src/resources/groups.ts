@@ -1,13 +1,22 @@
-import type { PathParams, Query, RequestOptions } from '../core/types.js';
+import type { Body, PathParams, Query, RequestOptions } from '../core/types.js';
 import { Resource } from './base.js';
 
 type GroupId = PathParams<'/api/v1/groups/{group}', 'GET'>['group'];
 type GroupUid = PathParams<'/api/v1/groups/{groupUid}/metadata', 'GET'>['groupUid'];
 type DeviceId = PathParams<'/api/v1/devices/{device}/groups', 'GET'>['device'];
+type SendGroup = PathParams<'/api/v1/groups/{group}/messages', 'POST'>['group'];
+type ActionId = PathParams<'/api/v1/groups/actions/{action}', 'GET'>['action'];
 
-/** WhatsApp groups (communities area): read them, their participants, events and messages. Permission: **Groups and campaigns → View**. */
+/**
+ * WhatsApp groups (communities area): read them, their participants, events and messages, and send a
+ * message to a group. Reading needs **Groups and campaigns → View**; sending,
+ * **Groups and campaigns → Send**.
+ *
+ * Whoever joins or leaves a group arrives by the `group_participant.joined` and
+ * `group_participant.left` events.
+ */
 export class Groups extends Resource {
-  /** `GET /api/v1/groups`, paginated. */
+  /** `GET /api/v1/groups`, paginated. Each group's `uid` (`…@g.us`) is what {@link Groups.sendMessage} takes. */
   list(query?: Query<'/api/v1/groups'>, options?: RequestOptions) {
     return this.client.paginate('/api/v1/groups', { ...options, query });
   }
@@ -50,5 +59,30 @@ export class Groups extends Resource {
   /** `GET /api/v1/groups/{group}/actions`, paginated. */
   listActions(group: GroupId, query?: Query<'/api/v1/groups/{group}/actions'>, options?: RequestOptions) {
     return this.client.paginate('/api/v1/groups/{group}/actions', { ...options, path: { group }, query });
+  }
+
+  /**
+   * `POST /api/v1/groups/{group}/messages`: sends a text (`type: 'text'`) or one file (`image`,
+   * `video`, `audio` or `document`, by its `https` `media_url`) to the group, from `device_id`. It
+   * answers `202` with `{ action_id, status: 'queued' }` and goes out in the background: the result
+   * arrives by `group_action.completed` (or `group_action.failed`), with the same `action_id` in
+   * `action.uuid`, or with {@link Groups.action}; `result.message.uid` is the id of the message in
+   * WhatsApp.
+   *
+   * `group` is the `uid` of the group (`…@g.us`). A QR number must be admin of the group; an official
+   * number, the one the group belongs to. Rejections: `GROUP_ACTION_ERROR_CODES`. While the group
+   * actions are turned off for the API, it answers `403 route_not_available`. Like every send, it is
+   * never retried automatically.
+   */
+  sendMessage(group: SendGroup, body: Body<'/api/v1/groups/{group}/messages', 'POST'>, options?: RequestOptions) {
+    return this.client.request('POST', '/api/v1/groups/{group}/messages', { ...options, path: { group }, body });
+  }
+
+  /**
+   * `GET /api/v1/groups/actions/{action}`: where a group action, such as a message sent with
+   * {@link Groups.sendMessage}, is (`queued`, `running`, `completed` or `failed`) and its `result`.
+   */
+  action(action: ActionId, options?: RequestOptions) {
+    return this.client.request('GET', '/api/v1/groups/actions/{action}', { ...options, path: { action } });
   }
 }

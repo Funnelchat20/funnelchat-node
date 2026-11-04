@@ -14,7 +14,7 @@ export interface WebhookEventInfo {
   readonly description: string | null;
 }
 
-/** Every webhook event type known to the spec (55). */
+/** Every webhook event type known to the spec (59). */
 export const webhookEvents = [
   {"type":"account.blocked","domains":["accounts"],"status":"live","pending":true,"description":"The account was blocked by usage: the 24-hour grace period after using up the monthly active contacts ended."},
   {"type":"ai_quota.low_balance","domains":["accounts"],"status":"planned","pending":true,"description":"The AI message quota is about to run out. Planned: not emitted yet."},
@@ -35,16 +35,20 @@ export const webhookEvents = [
   {"type":"conversation.closed","domains":["conversations"],"status":"live","pending":false,"description":"Una conversación pasó a cerrada.\n\nSe envía cuando una conversación pasa de abierta a cerrada. No se envía si la conversación ya estaba cerrada ni cuando se reabre."},
   {"type":"daily_report.generated","domains":["communities"],"status":"live","pending":true,"description":"The daily report of the account was generated (clicks, joins and leaves)."},
   {"type":"device.connected","domains":["accounts"],"status":"live","pending":true,"description":"One of the numbers of the account got connected: by scanning the QR code, by finishing the sign-up of a WhatsApp Cloud number, or through a connect link."},
-  {"type":"device.deleted","domains":["accounts"],"status":"planned","pending":true,"description":"A number of the account was deleted: its slot of the plan is free again."},
+  {"type":"device.deleted","domains":["accounts"],"status":"live","pending":true,"description":"A number of the account was deleted (from the panel, the API, or because a connect link expired without connecting it): its slot of the plan is free again."},
   {"type":"device.disconnected","domains":["accounts"],"status":"live","pending":true,"description":"One of the numbers of the account disconnected and can no longer send or receive: a QR session that closed or was protected from a shadow ban, an official number that failed its re-registration, or one disconnected from the panel."},
-  {"type":"device.health_changed","domains":["accounts"],"status":"planned","pending":true,"description":"The health of an official number changed (what Meta lets it do). Emitted only when the overall state changes."},
+  {"type":"device.display_name_reviewed","domains":["accounts"],"status":"live","pending":true,"description":"Meta approved or rejected the display name of an official number."},
+  {"type":"device.health_changed","domains":["accounts"],"status":"live","pending":true,"description":"The health of an official number changed (what Meta lets it do). Emitted only when the overall state changes."},
+  {"type":"device.messaging_limit_changed","domains":["accounts"],"status":"live","pending":true,"description":"The messaging limit Meta gives an official number changed: how many different people it can start a conversation with per day (`TIER_250`, `TIER_1K`, `TIER_2K`, `TIER_10K`, `TIER_100K` or `TIER_UNLIMITED`). Meta sets it per business: one notice per number of the account that changed."},
+  {"type":"device.quality_changed","domains":["accounts"],"status":"live","pending":true,"description":"The quality Meta gives an official number changed (`GREEN`, `YELLOW` or `RED`, as Meta sends them). If it drops, slow down the sends of that number before Meta limits it. Once per change; not when Meta has no quality data."},
   {"type":"flow.completed","domains":["conversations"],"status":"live","pending":false,"description":"Un contacto terminó un flujo de automatización.\n\nSe envía una sola vez por cada ejecución de un flujo, cuando termina con éxito. No se envía si la ejecución se cortó, se canceló, quedó bloqueada o falló. `contact` es `null` si la ejecución no tiene un contacto asociado. Un flujo muy usado puede generar muchos eventos seguidos."},
   {"type":"flow.failed","domains":["conversations"],"status":"live","pending":false,"description":"La ejecución de un flujo para un contacto terminó por un error.\n\nSe envía una sola vez por cada ejecución de un flujo que termina por un error, no porque llegó al final. `reason` indica el motivo y toma uno de estos valores: `node_missing` (el paso a ejecutar ya no existe), `unknown_node_type` (el paso es de un tipo no reconocido), `missing_subflow` (el flujo que debía ejecutarse dentro de otro ya no existe), `malformed_node` (el paso tiene una configuración dañada), `loop_detected` (la ejecución dio vueltas sin esperar nada) y `execution_error` (un error inesperado detuvo la ejecución). No se envía si la ejecución se canceló, quedó bloqueada o se cortó porque se editó el flujo o se unieron contactos. `contact` es `null` si la ejecución no tiene un contacto asociado."},
+  {"type":"group_action.completed","domains":["communities"],"status":"live","pending":true,"description":"A group action asked through the API finished, such as a message to a group. `action.uuid` is the `action_id` it returned; sending, `result.message.uid` is the id of the message in WhatsApp."},
   {"type":"group_action.failed","domains":["communities"],"status":"live","pending":true,"description":"An action on a group of a campaign failed."},
   {"type":"group_join_request.created","domains":["communities"],"status":"live","pending":true,"description":"Someone asked to join a group that requires approval."},
   {"type":"group_join_request.revoked","domains":["communities"],"status":"live","pending":true,"description":"Someone withdrew their request to join a group."},
-  {"type":"group_participant.joined","domains":["communities"],"status":"live","pending":false,"description":"Una persona entró a un grupo de una campaña."},
-  {"type":"group_participant.left","domains":["communities"],"status":"live","pending":false,"description":"Una persona salió de un grupo de una campaña."},
+  {"type":"group_participant.joined","domains":["communities"],"status":"live","pending":true,"description":"A person joined one of the account's groups."},
+  {"type":"group_participant.left","domains":["communities"],"status":"live","pending":true,"description":"A person left one of the account's groups."},
   {"type":"group.blocked","domains":["communities"],"status":"live","pending":false,"description":"Un grupo quedó inoperable: sin administrador conectado, con el link de invitación inválido o suspendido por WhatsApp."},
   {"type":"group.created","domains":["communities"],"status":"live","pending":false,"description":"Se creó o se importó un grupo dentro de una campaña de la cuenta."},
   {"type":"group.full","domains":["communities"],"status":"live","pending":true,"description":"A group went from not full to full."},
@@ -56,7 +60,7 @@ export const webhookEvents = [
   {"type":"mac.expiring","domains":["accounts"],"status":"live","pending":true,"description":"Some monthly active contacts expire in the next 7 days."},
   {"type":"mac.usage_100","domains":["accounts"],"status":"live","pending":true,"description":"The account used up its monthly active contacts of the cycle; a 24-hour grace period starts."},
   {"type":"mac.usage_80","domains":["accounts"],"status":"live","pending":true,"description":"The account reached 80% of its monthly active contacts of the cycle."},
-  {"type":"message.received","domains":["conversations"],"status":"live","pending":false,"description":"Un contacto le escribió a un número de WhatsApp de la cuenta."},
+  {"type":"message.received","domains":["conversations"],"status":"live","pending":true,"description":"A contact wrote to one of the WhatsApp numbers of the account."},
   {"type":"message.status_changed","domains":["conversations"],"status":"live","pending":true,"description":"The delivery status of a message you sent with the API changed. One notice per transition, never one that goes back; `queued` is not reported. It must be asked for explicitly in `events`."},
   {"type":"pipeline.finished","domains":["communities"],"status":"live","pending":false,"description":"Terminó un pipeline de operaciones sobre grupos, con su resultado agregado."},
   {"type":"poll.voted","domains":["communities"],"status":"live","pending":false,"description":"Un participante votó en una encuesta enviada a un grupo, o cambió su voto."},
@@ -241,31 +245,64 @@ export interface WebhookEventDataMap {
     device: components["schemas"]["PendingWebhookDevice"];
     connected_at: string;
     /** The connect link of this connection, or `null` when it did not come from a link. */
-    connect_link_id?: number | null;
+    connect_link_id: number | null;
   };
-  /** `device.deleted` (planned, pending of the spec; typed from: schema). A number of the account was deleted: its slot of the plan is free again. */
+  /** `device.deleted` (live, pending of the spec; typed from: schema). A number of the account was deleted (from the panel, the API, or because a connect link expired without connecting it): its slot of the plan is free again. */
   "device.deleted": {
     device: components["schemas"]["PendingWebhookDevice"];
     deleted_at: string;
     /** The connect link that last connected the number, or `null`. */
-    connect_link_id?: number | null;
+    connect_link_id: number | null;
   };
   /** `device.disconnected` (live, pending of the spec; typed from: schema). One of the numbers of the account disconnected and can no longer send or receive: a QR session that closed or was protected from a shadow ban, an official number that failed its re-registration, or one disconnected from the panel. */
   "device.disconnected": {
     device: components["schemas"]["PendingWebhookDevice"];
     disconnected_at: string;
-    reason?: "qr_logged_out" | "meta_account_not_registered" | "shadow_ban_protection" | "provider_error" | "unknown" | "disconnected_by_user";
+    reason: "qr_logged_out" | "meta_account_not_registered" | "shadow_ban_protection" | "provider_error" | "unknown" | "disconnected_by_user";
     /** The connect link that last connected the number, or `null`. */
-    connect_link_id?: number | null;
+    connect_link_id: number | null;
   };
-  /** `device.health_changed` (planned, pending of the spec; typed from: schema). The health of an official number changed (what Meta lets it do). Emitted only when the overall state changes. */
+  /** `device.display_name_reviewed` (live, pending of the spec; typed from: schema). Meta approved or rejected the display name of an official number. */
+  "device.display_name_reviewed": {
+    device: components["schemas"]["PendingWebhookDevice"];
+    decision: "approved" | "rejected";
+    /** As Meta sends it. */
+    previous_status: string;
+    /** `APPROVED` or `DECLINED`, as Meta sends it. */
+    status: string;
+    verified_name: string | null;
+    /** Meta's reason in a rejection, or `null`. */
+    rejection_reason: string | null;
+    reviewed_at: string;
+    /** The connect link that last connected the number, or `null`. */
+    connect_link_id: number | null;
+  };
+  /** `device.health_changed` (live, pending of the spec; typed from: schema). The health of an official number changed (what Meta lets it do). Emitted only when the overall state changes. */
   "device.health_changed": {
     device: components["schemas"]["PendingWebhookDevice"];
     previous_state: "available" | "limited" | "blocked" | "unknown";
     state: "available" | "limited" | "blocked" | "unknown";
     changed_at: string;
     /** The connect link that last connected the number, or `null`. */
-    connect_link_id?: number | null;
+    connect_link_id: number | null;
+  };
+  /** `device.messaging_limit_changed` (live, pending of the spec; typed from: schema). The messaging limit Meta gives an official number changed: how many different people it can start a conversation with per day (`TIER_250`, `TIER_1K`, `TIER_2K`, `TIER_10K`, `TIER_100K` or `TIER_UNLIMITED`). Meta sets it per business: one notice per number of the account that changed. */
+  "device.messaging_limit_changed": {
+    device: components["schemas"]["PendingWebhookDevice"];
+    previous: string;
+    current: string;
+    changed_at: string;
+    /** The connect link that last connected the number, or `null`. */
+    connect_link_id: number | null;
+  };
+  /** `device.quality_changed` (live, pending of the spec; typed from: schema). The quality Meta gives an official number changed (`GREEN`, `YELLOW` or `RED`, as Meta sends them). If it drops, slow down the sends of that number before Meta limits it. Once per change; not when Meta has no quality data. */
+  "device.quality_changed": {
+    device: components["schemas"]["PendingWebhookDevice"];
+    previous: string;
+    current: string;
+    changed_at: string;
+    /** The connect link that last connected the number, or `null`. */
+    connect_link_id: number | null;
   };
   /** `flow.completed` (live; typed from: example). Un contacto terminó un flujo de automatización. Se envía una sola vez por cada ejecución de un flujo, cuando termina con éxito. No se envía si la ejecución se cortó, se canceló, quedó bloqueada o falló. `contact` es `null` si la ejecución no tiene un contacto asociado. Un flujo muy usado puede generar muchos eventos seguidos. */
   "flow.completed": {
@@ -291,6 +328,29 @@ export interface WebhookEventDataMap {
       phone: string;
     };
     reason: string;
+  };
+  /** `group_action.completed` (live, pending of the spec; typed from: schema). A group action asked through the API finished, such as a message to a group. `action.uuid` is the `action_id` it returned; sending, `result.message.uid` is the id of the message in WhatsApp. */
+  "group_action.completed": {
+    action: {
+      uuid: string;
+      type: string;
+    };
+    group: ({
+      uid: string;
+      name: string | null;
+    }) | null;
+    campaign: ({
+      uuid: string;
+      name: string | null;
+    }) | null;
+    /** Sending: `message.uid`; with phones: `participants`; creating or renewing the link: `invite_link`; the rest, empty. */
+    result: {
+      message?: {
+        uid?: string;
+      };
+      participants?: components["schemas"]["PendingGroupParticipantResult"][];
+      invite_link?: string;
+    };
   };
   /** `group_action.failed` (live, pending of the spec; typed from: schema). An action on a group of a campaign failed. */
   "group_action.failed": {
@@ -337,34 +397,38 @@ export interface WebhookEventDataMap {
       name: string | null;
     };
   };
-  /** `group_participant.joined` (live; typed from: example). Una persona entró a un grupo de una campaña. */
+  /** `group_participant.joined` (live, pending of the spec; typed from: schema). A person joined one of the account's groups. */
   "group_participant.joined": {
     group: {
       uid: string;
-      name: string;
+      name: string | null;
     };
+    /** `null` when the group is not of a campaign. */
     campaign: {
       uuid: string;
-    };
+    } | null;
     participant: {
+      /** The phone, or a `…@lid` when WhatsApp does not show it. */
       identity: string;
-      identity_type: string;
-      name: string;
+      identity_type: "phone" | "whatsapp_user";
+      name: string | null;
     };
   };
-  /** `group_participant.left` (live; typed from: example). Una persona salió de un grupo de una campaña. */
+  /** `group_participant.left` (live, pending of the spec; typed from: schema). A person left one of the account's groups. */
   "group_participant.left": {
     group: {
       uid: string;
-      name: string;
+      name: string | null;
     };
+    /** `null` when the group is not of a campaign. */
     campaign: {
       uuid: string;
-    };
+    } | null;
     participant: {
+      /** The phone, or a `…@lid` when WhatsApp does not show it. */
       identity: string;
-      identity_type: string;
-      name: string;
+      identity_type: "phone" | "whatsapp_user";
+      name: string | null;
     };
   };
   /** `group.blocked` (live; typed from: example). Un grupo quedó inoperable: sin administrador conectado, con el link de invitación inválido o suspendido por WhatsApp. */
@@ -505,22 +569,31 @@ export interface WebhookEventDataMap {
     percentage: number;
     cycle_started_at: string;
   };
-  /** `message.received` (live; typed from: example + schema). Un contacto le escribió a un número de WhatsApp de la cuenta. */
+  /** `message.received` (live, pending of the spec; typed from: schema). A contact wrote to one of the WhatsApp numbers of the account. */
   "message.received": {
     message: {
+      /** The id of the message in the history of the contact. */
       id: number;
-      type: "text" | "image" | "video" | "document" | "sticker" | "contact" | "audio" | "note" | "action" | "invalid" | "interactive" | "location" | "voice_call" | "video_call" | "event" | "button" | "template" | "notification" | "option_list" | "template_button_reply" | "poll" | "whatsapp_form" | "call_permission_request" | "call_permission_reply";
-      text: string;
-      media: unknown;
+      type: "text" | "image" | "video" | "document" | "sticker" | "contact" | "audio" | "note" | "action" | "invalid" | "interactive" | "location" | "voice_call" | "video_call" | "event" | "button" | "template" | "notification" | "option_list" | "template_button_reply" | "poll" | "whatsapp_form" | "call_permission_request" | "call_permission_reply" | "request_contact_info";
+      /** `null` when the message has no text (a file without caption, say). */
+      text: string | null;
+      media: {
+        /** The URL of the file. */
+        file: string;
+      } | null;
     };
     contact: {
-      id: number;
-      name: string;
-      phone: string;
+      id: number | null;
+      name: string | null;
+      /** `+` and digits, or `null` when the contact has no phone (a `@lid`, say). */
+      phone: string | null;
     };
     receiver: {
-      phone: string;
+      /** The phone of your number that received it, `+` and digits. */
+      phone: string | null;
     };
+    /** The number of your account that received the message: the same `device_id` you send to reply through it. `null` when the message has no number. */
+    device_id: number | null;
   };
   /** `message.status_changed` (live, pending of the spec; typed from: schema). The delivery status of a message you sent with the API changed. One notice per transition, never one that goes back; `queued` is not reported. It must be asked for explicitly in `events`. */
   "message.status_changed": {

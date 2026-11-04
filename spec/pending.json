@@ -1,7 +1,7 @@
 {
   "x-fc-pending": {
     "title": "Pending of the spec",
-    "description": "Routes, fields and events the API in production already has, or that a contract adds and accounts is building (see `sources`), but the snapshot in spec/funnelchat.json does not describe yet. scripts/generate.mjs adds them to the spec before generating the types, only while the snapshot lacks them: when a new snapshot brings them, generation uses the snapshot and lists the entries of this file that can be deleted.",
+    "description": "Routes, fields and events the API in production already has (see `sources`, each one with the release it was read in) but the snapshot in spec/funnelchat.json does not describe yet. scripts/generate.mjs adds them to the spec before generating the types, only while the snapshot lacks them: when a new snapshot brings them, generation uses the snapshot and lists the entries of this file that can be deleted.",
     "rules": {
       "paths": "An operation (method + path) is added only if the snapshot does not have it.",
       "operationPatches": "A patch adds properties to the body, or `parameters`, to a snapshot operation. With `while`, only while that operation matches it; without `while`, each one only while the operation lacks it.",
@@ -11,13 +11,16 @@
       "schemaPatches": "A patch adds properties to a snapshot schema, each one only while the schema lacks it."
     },
     "sources": {
-      "accounts-webhooks": "accounts v1.4.24 (300cc843, in production on 22-10): back/routes/api/webhooks.php:87-111, back/config/platform-gate.php:244-299 (routes open to keys and the Notifications (webhooks) permissions), Http/Requests/*WebhookSubscriptionRequest.php, Http/Resources/WebhookSubscription*Resource.php, Services/WebhookPermissionRules.php and Catalogs/Areas/*Events.php.",
-      "accounts-devices": "accounts v1.4.24 (300cc843, in production on 22-10): back/app/Modules/Device/Http/Resources/DeviceResource.php:65-123 and back/app/Modules/Device/Support/DeviceCapabilities.php:82-194.",
-      "conversations-send": "conversations v1.18.10 (a580a3d0, in production on 22-10): sending with an API key (back/app/Modules/Message/Services/ApiSendGuard.php, Support/ApiKeySendResponse.php, Support/ClientReference.php, Support/SendFileType.php, Http/Resources/PublicMessageResource.php, Support/PublicMessageStatus.php) and GET contacts/{contact}/messages/{message} (Http/Controllers/ShowMessageController.php).",
-      "conversations-status": "conversations v1.18.10 (a580a3d0, in production on 22-10): data of message.status_changed (back/app/Modules/Webhook/Payloads/MessageStatusChangedPayload.php:161-189).",
-      "conversations-forms": "conversations v1.18.10 (a580a3d0, in production on 22-10): WhatsApp forms (back/routes/api/whatsapp-forms.php, WhatsappForm/Http/Controllers/WhatsappFormController.php, WhatsappFormSendController.php, Http/Resources/WhatsappFormResource.php, Webhook/Payloads/WhatsappFormCompletedPayload.php:118-136).",
-      "communities-events": "communities v2.34.52 (6f32f0b4, in production on 22-10): data of the group events (back/app/Modules/Shared/Support/PlatformEvents/PlatformEventCatalog.php:250-309 and Services/*EventPublisher.php), relayed by the unified catalog of accounts v1.4.24 (300cc843, in production on 22-10).",
-      "accounts-number-signup": "accounts in production: the API of contract 1022-alta-de-numeros v0.2 (#1315, af2c345e2, first in v1.4.38), the optional `country` (#1319, 6cfe4c6de, v1.4.39) and the QR every 5 seconds (#1335, aa4779e94, v1.4.42); read in accounts origin/main dc2907b44 on 25-10-2026 (not run): back/app/Modules/Device/Http/Requests/StoreDeviceRequest.php, StoreConnectLinkRequest.php, Http/Resources/ConnectLinkResource.php, Http/Controllers/DeviceProvisioningController.php and config/services.php (`connect_links.qr_refresh_seconds` 5). The official sign-up by link (`type: meta`) is off in production (`503 meta_connect_disabled`) until the domain is registered with Meta. Earlier checked against feat/alta-de-numeros-api 52d49b319 and 8852b3fad: DeviceResource.php:134-135 and Webhook/Services/DeviceWebhookEmitter.php:243-335. The fields the events add are optional here, as they were before the deploy. The base payload of device.connected and device.disconnected (device id, name, number and the timestamp) is the one of accounts v1.4.24 (300cc843, in production on 22-10). Not in the published spec yet: its OpenAPI will replace these entries."
+      "accounts-webhooks": "accounts v1.4.24 (300cc843, in production on 22-10): back/routes/api/webhooks.php:87-111, back/config/platform-gate.php:244-299 (routes open to keys and the Notifications (webhooks) permissions), Http/Requests/*WebhookSubscriptionRequest.php, Http/Resources/WebhookSubscription*Resource.php, Services/WebhookPermissionRules.php and Catalogs/Areas/*Events.php. Read again in the releases in production on 04-11-2026 (accounts v1.5.97 558332bcf, conversations v1.19.7 4e35ddb83, communities v2.35.5 2be913d4): same routes, bodies and resources in accounts v1.5.97; since then a subscription belongs to the workspace of the key that creates it, and the cap of 50 counts per workspace (Webhook/Http/Controllers/WebhookSubscriptionController.php, `inActiveWorkspace()`).",
+      "accounts-devices": "accounts v1.4.24 (300cc843, in production on 22-10): back/app/Modules/Device/Http/Resources/DeviceResource.php:65-123 and back/app/Modules/Device/Support/DeviceCapabilities.php:82-194. Read again in the releases in production on 04-11-2026 (accounts v1.5.97 558332bcf, conversations v1.19.7 4e35ddb83, communities v2.35.5 2be913d4): unchanged in accounts v1.5.97.",
+      "conversations-send": "conversations v1.18.10 (a580a3d0, in production on 22-10): sending with an API key (back/app/Modules/Message/Services/ApiSendGuard.php, Support/ApiKeySendResponse.php, Support/ClientReference.php, Support/SendFileType.php, Http/Resources/PublicMessageResource.php, Support/PublicMessageStatus.php) and GET contacts/{contact}/messages/{message} (Http/Controllers/ShowMessageController.php). Read again in the releases in production on 04-11-2026 (accounts v1.5.97 558332bcf, conversations v1.19.7 4e35ddb83, communities v2.35.5 2be913d4): every file above is byte-identical in conversations v1.19.7 except ShowMessageController.php, which only resolves the owner through the workspace of the key.",
+      "conversations-status": "conversations v1.18.10 (a580a3d0, in production on 22-10): data of message.status_changed (back/app/Modules/Webhook/Payloads/MessageStatusChangedPayload.php:161-189). Read again in the releases in production on 04-11-2026 (accounts v1.5.97 558332bcf, conversations v1.19.7 4e35ddb83, communities v2.35.5 2be913d4): byte-identical in conversations v1.19.7.",
+      "conversations-forms": "conversations v1.18.10 (a580a3d0, in production on 22-10): WhatsApp forms (back/routes/api/whatsapp-forms.php, WhatsappForm/Http/Controllers/WhatsappFormController.php, WhatsappFormSendController.php, Http/Resources/WhatsappFormResource.php, Webhook/Payloads/WhatsappFormCompletedPayload.php:118-136). Read again in the releases in production on 04-11-2026 (accounts v1.5.97 558332bcf, conversations v1.19.7 4e35ddb83, communities v2.35.5 2be913d4): the payload is byte-identical in conversations v1.19.7; the send route also checks that the contact is of the key's workspace.",
+      "communities-events": "communities v2.34.52 (6f32f0b4, in production on 22-10): data of the group events (back/app/Modules/Shared/Support/PlatformEvents/PlatformEventCatalog.php:250-309 and Services/*EventPublisher.php), relayed by the unified catalog of accounts v1.4.24 (300cc843). Read again in the releases in production on 04-11-2026 (accounts v1.5.97 558332bcf, conversations v1.19.7 4e35ddb83, communities v2.35.5 2be913d4): group_participant.joined and .left as communities v2.35.5 records them (Shared/Services/GroupWebhookService.php:217-269, `campaign` null for a group without a campaign; Shared/Support/PlatformEvents/PlatformEventParticipant.php) and group_action.completed as the catalog of accounts v1.5.97 relays it (Webhook/Catalogs/Areas/CommunitiesEvents.php:218).",
+      "accounts-number-signup": "accounts v1.5.97 (558332bcf, in production on 04-11-2026): back/app/Modules/Device/Http/Requests/StoreDeviceRequest.php, StoreConnectLinkRequest.php, Http/Resources/ConnectLinkResource.php, Http/Resources/DeviceResource.php (`connection` and `external_reference`), Http/Controllers/DeviceProvisioningController.php and config/services.php `connect_links` (the QR every 5 seconds, 10 minutes to scan it from the page, and `meta_enabled`, false by default in production: the official sign-up by link answers `503 meta_connect_disabled` there). The device.* events: Webhook/Services/DeviceWebhookEmitter.php:355-552 (the same `device` block in all of them, `connect_link_id` and `reason`) and Webhook/Catalogs/Areas/AccountsEvents.php:27-81 (all seven active). First read in accounts origin/main dc2907b44 on 25-10 (contract 1022-alta-de-numeros v0.2, first in v1.4.38). Not in the published spec yet: its OpenAPI will replace these entries.",
+      "communities-group-send": "communities v2.35.5 (2be913d4, in production on 04-11-2026): back/app/Modules/GroupManagement/routes.php:351-387, Controllers/Api/V2/ApiGroupActionController.php:48 (show) and :128 (sendMessage), Requests/ApiGroupActions/SendGroupMessageRequest.php, Resources/ApiGroupActionAcceptedResource.php, Resources/ApiGroupActionResource.php, Services/ApiGroupActions/ApiGroupActionTargetResolver.php and OfficialActionPreconditions.php (the rejections), Shared/Catalog/ApiRouteCatalog.php:116 and :417 (open to keys, **Groups and campaigns → Send**). Behind the switch `API_GROUP_ACTIONS_ENABLED` of communities (Shared/Support/ApiGroupActionsSwitch.php, off by default): while it is off both routes answer `403 route_not_available`. It was off in production on 21-10; its value on 04-11 is not in any repository.",
+      "conversations-received": "conversations v1.19.7 (4e35ddb83, in production on 04-11-2026): data of message.received (back/app/Modules/Webhook/Payloads/MessageReceivedPayload.php:130-193: `text` and `media` null when absent, phones as `+` and digits or null, `device_id` last).",
+      "conversations-templates": "conversations v1.19.7 (4e35ddb83, in production on 04-11-2026): the quality of a template and whether it can be sent (back/app/Modules/Message/Http/Resources/TemplateResource.php:31-38 and :77-82)."
     }
   },
   "components": {
@@ -442,12 +445,106 @@
           "connection": { "$ref": "#/components/schemas/PendingDeviceConnection" },
           "external_reference": { "$ref": "#/components/schemas/PendingExternalReference" }
         },
-        "required": ["id", "name", "number"]
+        "required": ["id", "name", "number", "connection", "external_reference"]
       },
       "PendingCountry": {
         "type": ["string", "null"],
         "pattern": "^[A-Za-z]{2}$",
         "description": "The country of the phone that will scan the QR code (ISO 3166-1 alpha-2, two letters, any case): the WhatsApp session is opened from there. Without it, Funnelchat chooses one."
+      },
+      "PendingGroupMessageCreate": {
+        "type": "object",
+        "description": "A text or one file, sent to the group right away. Polls, events, stickers, contacts and locations are not accepted.",
+        "properties": {
+          "device_id": { "type": "integer", "description": "The number of your account that sends it. A QR number must be admin of the group; an official number, the one the group belongs to." },
+          "type": { "type": "string", "enum": ["text", "image", "video", "audio", "document"] },
+          "text": { "type": "string", "minLength": 1, "maxLength": 4096, "description": "Only with `type: text`, and required there." },
+          "media_url": { "type": "string", "maxLength": 255, "description": "A public `https` URL that ends in an extension of the type. Required with a file; not with `type: text`." },
+          "caption": { "type": ["string", "null"], "maxLength": 1024, "description": "Image or video only." },
+          "file_name": { "type": ["string", "null"], "maxLength": 255, "description": "Document only." }
+        },
+        "required": ["device_id", "type"]
+      },
+      "PendingGroupActionAccepted": {
+        "type": "object",
+        "description": "The action is queued. Follow it with `GET /api/v1/groups/actions/{action}` or with the events `group_action.completed` and `group_action.failed`.",
+        "properties": {
+          "action_id": { "type": "string", "format": "uuid" },
+          "status": { "type": "string", "enum": ["queued"] }
+        },
+        "required": ["action_id", "status"]
+      },
+      "PendingGroupParticipantResult": {
+        "type": "object",
+        "properties": {
+          "identity": { "type": "string", "description": "The phone in digits, without `+`, or a `…@lid`." },
+          "identity_type": { "type": "string", "enum": ["phone", "whatsapp_user"] },
+          "status": { "type": "string", "enum": ["added", "invited", "removed", "promoted", "demoted", "approved", "rejected", "failed"] },
+          "reason": { "type": ["string", "null"] }
+        },
+        "required": ["identity", "identity_type", "status", "reason"]
+      },
+      "PendingGroupAction": {
+        "type": "object",
+        "properties": {
+          "action_id": { "type": "string", "format": "uuid" },
+          "type": { "type": "string", "description": "`send_message` for a message to the group." },
+          "status": { "type": "string", "enum": ["queued", "running", "completed", "failed"] },
+          "device_id": { "type": ["integer", "null"] },
+          "group": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "uid": { "type": "string" },
+                  "name": { "type": ["string", "null"] }
+                },
+                "required": ["uid", "name"]
+              },
+              { "type": "null" }
+            ]
+          },
+          "result": {
+            "description": "`{}` while it is open. Sending: `{message: {uid}}`, the id of the message in WhatsApp. Other actions: `{participants: [...]}`, `{group, invite_link}` or `{invite_link}`.",
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "object",
+                    "properties": {
+                      "uid": { "type": "string" }
+                    }
+                  },
+                  "participants": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/PendingGroupParticipantResult" }
+                  },
+                  "invite_link": { "type": "string" },
+                  "group": {
+                    "type": "object",
+                    "properties": {
+                      "uid": { "type": "string" },
+                      "name": { "type": ["string", "null"] }
+                    }
+                  }
+                }
+              },
+              { "type": "null" }
+            ]
+          },
+          "reason": { "type": ["string", "null"], "description": "Why it failed, when `status` is `failed`." },
+          "created_at": { "type": ["string", "null"], "format": "date-time" },
+          "started_at": { "type": ["string", "null"], "format": "date-time" },
+          "completed_at": { "type": ["string", "null"], "format": "date-time" },
+          "failed_at": { "type": ["string", "null"], "format": "date-time" }
+        },
+        "required": ["action_id", "type", "status", "device_id", "group", "result", "reason", "created_at", "started_at", "completed_at", "failed_at"]
+      },
+      "PendingTemplateQuality": {
+        "type": "string",
+        "enum": ["GREEN", "YELLOW", "RED", "UNKNOWN", "NOT_APPLICABLE"],
+        "description": "Meta's quality of the template. `NOT_APPLICABLE` unless the template is approved or paused."
       }
     }
   },
@@ -1942,6 +2039,80 @@
           "204": { "description": "No Content" }
         }
       }
+    },
+    "/api/v1/groups/{group}/messages": {
+      "post": {
+        "operationId": "pendingGroups.sendMessage",
+        "summary": "Send a message to a group",
+        "tags": ["GroupAction"],
+        "x-fc-domain": "communities",
+        "x-fc-permission": "communities:send",
+        "x-fc-pending": "communities-group-send",
+        "description": "Sends a text or one file to the group now, from one of your numbers. Asynchronous: it answers `202` with `action_id`; the result arrives in `GET /api/v1/groups/actions/{action}` (`result.message.uid` is the id of the message in WhatsApp) and in the events `group_action.completed` and `group_action.failed`. A QR number goes out at the pace of the scheduled messages; an official number checks the 24-hour window and its quality first. It needs **Groups and campaigns → Send** and the group actions turned on for the API: while they are off, the route answers `403 route_not_available` (it was off in production on 21-10). Rejections: `404 device_not_found`, `404 group_not_found`, `422 unsupported_group_type`, `422 device_not_connected`, `422 device_not_group_admin` (a QR number that is not admin), `422 device_not_group_number` (an official group of another number), `422 provider_unsupported`, `422 window_closed`, `422 number_restricted`, `422 unsupported_type` and `429 too_many_pending_actions`.",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "The WhatsApp uid of the group (`…@g.us`), the `uid` of `GET /api/v1/groups`."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PendingGroupMessageCreate" }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Queued.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PendingGroupActionAccepted" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/groups/actions/{action}": {
+      "get": {
+        "operationId": "pendingGroups.action",
+        "summary": "A group action",
+        "tags": ["GroupAction"],
+        "x-fc-domain": "communities",
+        "x-fc-permission": "communities:read",
+        "x-fc-pending": "communities-group-send",
+        "description": "Where an action is (`queued`, `running`, `completed` or `failed`) and its `result`. An action of another key's workspace, or that does not exist, is `404 action_not_found`. Turned off with the group actions, like `POST /api/v1/groups/{group}/messages`.",
+        "parameters": [
+          {
+            "name": "action",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "The `action_id` the action returned."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/PendingGroupAction" }
+                  },
+                  "required": ["data"]
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "operationPatches": [
@@ -2070,7 +2241,19 @@
       "properties": {
         "connection": { "$ref": "#/components/schemas/PendingDeviceConnection" },
         "external_reference": { "$ref": "#/components/schemas/PendingExternalReference" }
-      }
+      },
+      "required": ["connection", "external_reference"]
+    },
+    {
+      "schema": "TemplateResource",
+      "x-fc-pending": "conversations-templates",
+      "properties": {
+        "quality_score": { "type": ["string", "null"], "enum": ["GREEN", "YELLOW", "RED", "UNKNOWN", null], "description": "Meta's last quality score of the template, as stored." },
+        "quality_updated_at": { "type": ["string", "null"], "description": "When Meta last reported it." },
+        "quality": { "$ref": "#/components/schemas/PendingTemplateQuality" },
+        "available": { "type": "boolean", "description": "`false` when Meta paused or disabled the template: it cannot be sent." }
+      },
+      "required": ["quality_score", "quality_updated_at", "quality", "available"]
     }
   ],
   "responsePatches": [
@@ -2277,7 +2460,7 @@
                       "connected_at": { "type": "string", "format": "date-time" },
                       "connect_link_id": { "type": ["integer", "null"], "description": "The connect link of this connection, or `null` when it did not come from a link." }
                     },
-                    "required": ["device", "connected_at"]
+                    "required": ["device", "connected_at", "connect_link_id"]
                   }
                 }
               }
@@ -2307,7 +2490,7 @@
                       "reason": { "type": "string", "enum": ["qr_logged_out", "meta_account_not_registered", "shadow_ban_protection", "provider_error", "unknown", "disconnected_by_user"] },
                       "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
                     },
-                    "required": ["device", "disconnected_at"]
+                    "required": ["device", "disconnected_at", "connect_link_id", "reason"]
                   }
                 }
               }
@@ -3038,8 +3221,8 @@
     "device.deleted": {
       "post": {
         "summary": "device.deleted",
-        "description": "A number of the account was deleted: its slot of the plan is free again.",
-        "x-fc-status": "planned",
+        "description": "A number of the account was deleted (from the panel, the API, or because a connect link expired without connecting it): its slot of the plan is free again.",
+        "x-fc-status": "live",
         "x-fc-domain": "accounts",
         "x-fc-pending": "accounts-number-signup",
         "requestBody": {
@@ -3055,7 +3238,7 @@
                       "deleted_at": { "type": "string", "format": "date-time" },
                       "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
                     },
-                    "required": ["device", "deleted_at"]
+                    "required": ["device", "deleted_at", "connect_link_id"]
                   }
                 }
               }
@@ -3068,7 +3251,7 @@
       "post": {
         "summary": "device.health_changed",
         "description": "The health of an official number changed (what Meta lets it do). Emitted only when the overall state changes.",
-        "x-fc-status": "planned",
+        "x-fc-status": "live",
         "x-fc-domain": "accounts",
         "x-fc-pending": "accounts-number-signup",
         "requestBody": {
@@ -3086,8 +3269,526 @@
                       "changed_at": { "type": "string", "format": "date-time" },
                       "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
                     },
-                    "required": ["device", "previous_state", "state", "changed_at"]
+                    "required": ["device", "previous_state", "state", "changed_at", "connect_link_id"]
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "device.quality_changed": {
+      "post": {
+        "summary": "device.quality_changed",
+        "description": "The quality Meta gives an official number changed (`GREEN`, `YELLOW` or `RED`, as Meta sends them). If it drops, slow down the sends of that number before Meta limits it. Once per change; not when Meta has no quality data.",
+        "x-fc-status": "live",
+        "x-fc-domain": "accounts",
+        "x-fc-pending": "accounts-number-signup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "device": { "$ref": "#/components/schemas/PendingWebhookDevice" },
+                      "previous": { "type": "string" },
+                      "current": { "type": "string" },
+                      "changed_at": { "type": "string", "format": "date-time" },
+                      "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
+                    },
+                    "required": ["device", "previous", "current", "changed_at", "connect_link_id"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "device.messaging_limit_changed": {
+      "post": {
+        "summary": "device.messaging_limit_changed",
+        "description": "The messaging limit Meta gives an official number changed: how many different people it can start a conversation with per day (`TIER_250`, `TIER_1K`, `TIER_2K`, `TIER_10K`, `TIER_100K` or `TIER_UNLIMITED`). Meta sets it per business: one notice per number of the account that changed.",
+        "x-fc-status": "live",
+        "x-fc-domain": "accounts",
+        "x-fc-pending": "accounts-number-signup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "device": { "$ref": "#/components/schemas/PendingWebhookDevice" },
+                      "previous": { "type": "string" },
+                      "current": { "type": "string" },
+                      "changed_at": { "type": "string", "format": "date-time" },
+                      "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
+                    },
+                    "required": ["device", "previous", "current", "changed_at", "connect_link_id"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "device.display_name_reviewed": {
+      "post": {
+        "summary": "device.display_name_reviewed",
+        "description": "Meta approved or rejected the display name of an official number.",
+        "x-fc-status": "live",
+        "x-fc-domain": "accounts",
+        "x-fc-pending": "accounts-number-signup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "device": { "$ref": "#/components/schemas/PendingWebhookDevice" },
+                      "decision": { "type": "string", "enum": ["approved", "rejected"] },
+                      "previous_status": { "type": "string", "description": "As Meta sends it." },
+                      "status": { "type": "string", "description": "`APPROVED` or `DECLINED`, as Meta sends it." },
+                      "verified_name": { "type": ["string", "null"] },
+                      "rejection_reason": { "type": ["string", "null"], "description": "Meta's reason in a rejection, or `null`." },
+                      "reviewed_at": { "type": "string", "format": "date-time" },
+                      "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
+                    },
+                    "required": ["device", "decision", "previous_status", "status", "verified_name", "rejection_reason", "reviewed_at", "connect_link_id"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "group_action.completed": {
+      "post": {
+        "summary": "group_action.completed",
+        "description": "A group action asked through the API finished, such as a message to a group. `action.uuid` is the `action_id` it returned; sending, `result.message.uid` is the id of the message in WhatsApp.",
+        "x-fc-status": "live",
+        "x-fc-domain": "communities",
+        "x-fc-pending": "communities-events",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "type": "object",
+                        "properties": {
+                          "uuid": { "type": "string" },
+                          "type": { "type": "string" }
+                        },
+                        "required": ["uuid", "type"]
+                      },
+                      "group": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "uid": { "type": "string" },
+                              "name": { "type": ["string", "null"] }
+                            },
+                            "required": ["uid", "name"]
+                          },
+                          { "type": "null" }
+                        ]
+                      },
+                      "campaign": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "uuid": { "type": "string" },
+                              "name": { "type": ["string", "null"] }
+                            },
+                            "required": ["uuid", "name"]
+                          },
+                          { "type": "null" }
+                        ]
+                      },
+                      "result": {
+                        "type": "object",
+                        "description": "Sending: `message.uid`; with phones: `participants`; creating or renewing the link: `invite_link`; the rest, empty.",
+                        "properties": {
+                          "message": {
+                            "type": "object",
+                            "properties": {
+                              "uid": { "type": "string" }
+                            }
+                          },
+                          "participants": {
+                            "type": "array",
+                            "items": { "$ref": "#/components/schemas/PendingGroupParticipantResult" }
+                          },
+                          "invite_link": { "type": "string" }
+                        }
+                      }
+                    },
+                    "required": ["action", "group", "campaign", "result"]
+                  }
+                }
+              },
+              "example": {
+                "data": {
+                  "action": { "uuid": "9b2f0a8e-1c3d-4e5f-8a7b-6c5d4e3f2a10", "type": "send_message" },
+                  "group": { "uid": "120363000000000001@g.us", "name": "Example group" },
+                  "campaign": null,
+                  "result": {
+                    "message": { "uid": "3EB0C767D26A1D4E5F6A" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "message.received": {
+      "post": {
+        "summary": "message.received",
+        "description": "A contact wrote to one of the WhatsApp numbers of the account.",
+        "x-fc-status": "live",
+        "x-fc-domain": "conversations",
+        "x-fc-pending": "conversations-received",
+        "x-fc-replace-while": {
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "text",
+                                "image",
+                                "video",
+                                "document",
+                                "sticker",
+                                "contact",
+                                "audio",
+                                "note",
+                                "action",
+                                "invalid",
+                                "interactive",
+                                "location",
+                                "voice_call",
+                                "video_call",
+                                "event",
+                                "button",
+                                "template",
+                                "notification",
+                                "option_list",
+                                "template_button_reply",
+                                "poll",
+                                "whatsapp_form",
+                                "call_permission_request",
+                                "call_permission_reply"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "id": "evt_000000000000000000000001",
+                  "type": "message.received",
+                  "version": 1,
+                  "occurred_at": "2026-10-01T12:00:00Z",
+                  "data": {
+                    "message": { "id": 1001, "type": "text", "text": "Hola, quiero más información", "media": null },
+                    "contact": { "id": 2001, "name": "Contacto de ejemplo", "phone": "+5491100000000" },
+                    "receiver": { "phone": "+5491100000001" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "message": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer", "description": "The id of the message in the history of the contact." },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "image",
+                              "video",
+                              "document",
+                              "sticker",
+                              "contact",
+                              "audio",
+                              "note",
+                              "action",
+                              "invalid",
+                              "interactive",
+                              "location",
+                              "voice_call",
+                              "video_call",
+                              "event",
+                              "button",
+                              "template",
+                              "notification",
+                              "option_list",
+                              "template_button_reply",
+                              "poll",
+                              "whatsapp_form",
+                              "call_permission_request",
+                              "call_permission_reply",
+                              "request_contact_info"
+                            ]
+                          },
+                          "text": { "type": ["string", "null"], "description": "`null` when the message has no text (a file without caption, say)." },
+                          "media": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "file": { "type": "string", "description": "The URL of the file." }
+                                },
+                                "required": ["file"]
+                              },
+                              { "type": "null" }
+                            ]
+                          }
+                        },
+                        "required": ["id", "type", "text", "media"]
+                      },
+                      "contact": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": ["integer", "null"] },
+                          "name": { "type": ["string", "null"] },
+                          "phone": { "type": ["string", "null"], "description": "`+` and digits, or `null` when the contact has no phone (a `@lid`, say)." }
+                        },
+                        "required": ["id", "name", "phone"]
+                      },
+                      "receiver": {
+                        "type": "object",
+                        "properties": {
+                          "phone": { "type": ["string", "null"], "description": "The phone of your number that received it, `+` and digits." }
+                        },
+                        "required": ["phone"]
+                      },
+                      "device_id": {
+                        "type": ["integer", "null"],
+                        "description": "The number of your account that received the message: the same `device_id` you send to reply through it. `null` when the message has no number."
+                      }
+                    },
+                    "required": ["message", "contact", "receiver", "device_id"]
+                  }
+                }
+              },
+              "example": {
+                "data": {
+                  "message": { "id": 1001, "type": "text", "text": "Hi, I want more information", "media": null },
+                  "contact": { "id": 2001, "name": "Example contact", "phone": "+5491100000000" },
+                  "receiver": { "phone": "+5491100000001" },
+                  "device_id": 3
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "group_participant.joined": {
+      "post": {
+        "summary": "group_participant.joined",
+        "description": "A person joined one of the account's groups.",
+        "x-fc-status": "live",
+        "x-fc-domain": "communities",
+        "x-fc-pending": "communities-events",
+        "x-fc-replace-while": {
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": { "type": "object" },
+                "example": {
+                  "id": "evt_00000000000000000000000000000002",
+                  "type": "group_participant.joined",
+                  "version": 1,
+                  "occurred_at": "2026-10-01T12:00:00Z",
+                  "data": {
+                    "group": { "uid": "120363000000000001@g.us", "name": "Grupo de ejemplo" },
+                    "campaign": { "uuid": "00000000-0000-4000-8000-000000000001" },
+                    "participant": { "identity": "+5491100000000", "identity_type": "phone", "name": "Ana Pérez" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "group": {
+                        "type": "object",
+                        "properties": {
+                          "uid": { "type": "string" },
+                          "name": { "type": ["string", "null"] }
+                        },
+                        "required": ["uid", "name"]
+                      },
+                      "campaign": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "uuid": { "type": "string" }
+                            },
+                            "required": ["uuid"]
+                          },
+                          { "type": "null" }
+                        ],
+                        "description": "`null` when the group is not of a campaign."
+                      },
+                      "participant": {
+                        "type": "object",
+                        "properties": {
+                          "identity": { "type": "string", "description": "The phone, or a `…@lid` when WhatsApp does not show it." },
+                          "identity_type": { "type": "string", "enum": ["phone", "whatsapp_user"] },
+                          "name": { "type": ["string", "null"] }
+                        },
+                        "required": ["identity", "identity_type", "name"]
+                      }
+                    },
+                    "required": ["group", "campaign", "participant"]
+                  }
+                }
+              },
+              "example": {
+                "data": {
+                  "group": { "uid": "120363000000000001@g.us", "name": "Example group" },
+                  "campaign": null,
+                  "participant": { "identity": "5491100000000", "identity_type": "phone", "name": "Ana" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "group_participant.left": {
+      "post": {
+        "summary": "group_participant.left",
+        "description": "A person left one of the account's groups.",
+        "x-fc-status": "live",
+        "x-fc-domain": "communities",
+        "x-fc-pending": "communities-events",
+        "x-fc-replace-while": {
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": { "type": "object" },
+                "example": {
+                  "id": "evt_00000000000000000000000000000003",
+                  "type": "group_participant.left",
+                  "version": 1,
+                  "occurred_at": "2026-10-01T12:00:00Z",
+                  "data": {
+                    "group": { "uid": "120363000000000001@g.us", "name": "Grupo de ejemplo" },
+                    "campaign": { "uuid": "00000000-0000-4000-8000-000000000001" },
+                    "participant": { "identity": "+5491100000000", "identity_type": "phone", "name": "Ana Pérez" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "group": {
+                        "type": "object",
+                        "properties": {
+                          "uid": { "type": "string" },
+                          "name": { "type": ["string", "null"] }
+                        },
+                        "required": ["uid", "name"]
+                      },
+                      "campaign": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "uuid": { "type": "string" }
+                            },
+                            "required": ["uuid"]
+                          },
+                          { "type": "null" }
+                        ],
+                        "description": "`null` when the group is not of a campaign."
+                      },
+                      "participant": {
+                        "type": "object",
+                        "properties": {
+                          "identity": { "type": "string", "description": "The phone, or a `…@lid` when WhatsApp does not show it." },
+                          "identity_type": { "type": "string", "enum": ["phone", "whatsapp_user"] },
+                          "name": { "type": ["string", "null"] }
+                        },
+                        "required": ["identity", "identity_type", "name"]
+                      }
+                    },
+                    "required": ["group", "campaign", "participant"]
+                  }
+                }
+              },
+              "example": {
+                "data": {
+                  "group": { "uid": "120363000000000001@g.us", "name": "Example group" },
+                  "campaign": null,
+                  "participant": { "identity": "5491100000000", "identity_type": "phone", "name": "Ana" }
                 }
               }
             }

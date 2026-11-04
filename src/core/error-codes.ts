@@ -2,12 +2,14 @@
  * The stable `error` codes of the API (`APIError.code`), with their HTTP status. Decide by `status`
  * and `code`, never by `message`: its text and language change by area.
  *
- * Sources (production, 22-10): platform-gate v0.8.0 as pinned by accounts v1.4.24; api-edge v0.3.0
- * (src/index.ts); conversations v1.18.10 (Message/Services/ApiSendGuard.php,
- * Message/Support/ApiKeySendResponse.php, WhatsappForm/Support/FormSendPreflight.php). The spec
- * does not document most of them yet; when it does, this list can be generated. The codes of
- * creating and connecting numbers come from contract 1022-alta-de-numeros v0.1 (23-10-2026, with
- * its amendment from accounts feat/alta-de-numeros-api 52d49b319), not from production yet.
+ * Sources (production on 04-11-2026): platform-gate v0.9.1 as pinned by accounts v1.5.97 (a key
+ * whose workspace cannot be read is `503 gate_unavailable`, no new code); api-edge 975d815, deployed
+ * to production on 25-10 (src/index.ts; its latest tag, v0.3.0, is older); conversations v1.19.7
+ * (Message/Services/ApiSendGuard.php and Message/Support/ApiKeySendResponse.php, byte-identical to
+ * v1.18.10, and WhatsappForm/Support/FormSendPreflight.php); accounts v1.5.97 (creating and
+ * connecting numbers, contract 1022-alta-de-numeros); communities v2.35.5 (the callers of
+ * GroupManagement/Exceptions/ApiGroupActionRejected.php). The spec does not document most of them
+ * yet; when it does, this list can be generated.
  */
 
 /** Errors of the API entry and of the key gate, on any route. */
@@ -59,6 +61,8 @@ export const SEND_ERROR_CODES = {
   not_sent: 422,
   /** 422: the contact cannot be reached on WhatsApp (forms). */
   recipient_unreachable: 422,
+  /** 422: the contact is blocked on that number (forms). Unblock it in the panel to write to them again. */
+  contact_blocked: 422,
   /** 422: a template variable points to a field that does not exist (`placeholders`, `count`). */
   template_unresolved_placeholder: 422,
   /** 404: the template is not one this account can send. */
@@ -122,6 +126,38 @@ export const NUMBER_ERROR_CODES = {
   credentials_not_allowed: 403,
 } as const;
 
+/**
+ * Rejections of a message to a group (`groups.sendMessage`) and of reading a group action
+ * (`groups.action`): nothing was queued. A number or group of another workspace is answered as one
+ * that does not exist.
+ */
+export const GROUP_ACTION_ERROR_CODES = {
+  /** 404: `device_id` is not a number of the key's workspace. */
+  device_not_found: 404,
+  /** 404: the group is not one of the key's workspace (`group` is the `uid`, `…@g.us`). */
+  group_not_found: 404,
+  /** 404: `groups.action` of an action that does not exist or is of another workspace. */
+  action_not_found: 404,
+  /** 422: the `uid` is a community or a channel, not a group. */
+  unsupported_group_type: 422,
+  /** 422: the number is not connected. */
+  device_not_connected: 422,
+  /** 422: a QR number that is not admin of the group. */
+  device_not_group_admin: 422,
+  /** 422: an official group that belongs to another number. */
+  device_not_group_number: 422,
+  /** 422: the number cannot do it (`provider` and maybe `requires` in the body). */
+  provider_unsupported: 422,
+  /** 422: an official number outside the 24-hour window of the group. */
+  window_closed: 422,
+  /** 422: Meta restricted the official number. */
+  number_restricted: 422,
+  /** 422: that `type` cannot be sent to this group by this number. */
+  unsupported_type: 422,
+  /** 429: the number has 50 group actions open. Wait for some to finish; not worth retrying. */
+  too_many_pending_actions: 429,
+} as const;
+
 /** Rejections of a create sent with `idempotencyKey`. */
 export const IDEMPOTENCY_ERROR_CODES = {
   /** 422: the key was already used with another body. Use a new key for a new resource. */
@@ -138,8 +174,10 @@ export type SendErrorCode = keyof typeof SEND_ERROR_CODES;
 /** An error code of creating a number or a connect link (`APIError.code`). */
 export type NumberErrorCode = keyof typeof NUMBER_ERROR_CODES;
 export type IdempotencyErrorCode = keyof typeof IDEMPOTENCY_ERROR_CODES;
+/** An error code of a message to a group or of reading a group action (`APIError.code`). */
+export type GroupActionErrorCode = keyof typeof GROUP_ACTION_ERROR_CODES;
 /** Every `error` code the SDK knows. The API can send others: treat `code` as a `string`. */
-export type KnownErrorCode = AccessErrorCode | SendErrorCode | NumberErrorCode | IdempotencyErrorCode;
+export type KnownErrorCode = AccessErrorCode | SendErrorCode | NumberErrorCode | IdempotencyErrorCode | GroupActionErrorCode;
 
 const has = (table: object, code: string | undefined): boolean => code !== undefined && Object.prototype.hasOwnProperty.call(table, code);
 
@@ -164,8 +202,14 @@ export function isNumberQuotaError(
 }
 
 /**
- * Codes that a retry would only repeat: a `429` for the monthly active contacts or for the open
- * connect links is not a pace, and `503 meta_connect_disabled` is a switch, not an outage; so they
- * are never retried automatically.
+ * Codes that a retry would only repeat: a `429` for the monthly active contacts, the open connect
+ * links or the open group actions is not a pace, and `503 meta_connect_disabled` is a switch, not an
+ * outage; so they are never retried automatically.
  */
-export const NOT_RETRYABLE_CODES: ReadonlySet<string> = new Set(['mac_lockout_24h', 'mac_limit_reached', 'too_many_open_links', 'meta_connect_disabled']);
+export const NOT_RETRYABLE_CODES: ReadonlySet<string> = new Set([
+  'mac_lockout_24h',
+  'mac_limit_reached',
+  'too_many_open_links',
+  'too_many_pending_actions',
+  'meta_connect_disabled',
+]);
