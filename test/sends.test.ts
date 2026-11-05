@@ -69,6 +69,13 @@ describe('sends return what the API answers', () => {
     expect(result.message.id).toBe(1002);
   });
 
+  it('messages.sendDirect sends by phone, without contact_id, and the answer says which contact it is', async () => {
+    const { fetch, calls } = mockFetch({ status: 200, body: { message: { ...queued, contact_id: 2002 } } });
+    const { message } = await client(fetch).messages.sendDirect({ device_id: 3, phone: '5491155550000', text: 'Hola' });
+    expect(JSON.parse(calls[0]?.body ?? '{}')).toEqual({ device_id: 3, phone: '5491155550000', text: 'Hola' });
+    expect(message.contact_id).toBe(2002);
+  });
+
   it('messages.sendForm sends a form by its family id and resolves to { message }', async () => {
     const { fetch, calls } = mockFetch({ status: 200, body: { message: { ...queued, type: 'whatsapp_form' } } });
     const result = await client(fetch).messages.sendForm(2001, { form_id: 12, device_id: 3, client_reference: 'encuesta-1' });

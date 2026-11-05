@@ -1,17 +1,17 @@
 {
   "description": "Where spec/funnelchat.json came from. Written by `npm run generate -- --spec <file>`; do not edit it by hand.",
   "file": "spec/funnelchat.json",
-  "sha256": "0f451feaba59418f3a556f58856f841f12570973fd6525103e8cc0128ab64374",
-  "bytes": 1168453,
+  "sha256": "8228ea7369daed0655b779ca6af381355a6c1cc13dd702ed6e9c322779bafe94",
+  "bytes": 1214988,
   "source": {
     "repository": "git@github.com:Funnelchat20/developers-portal.git",
     "path": "generated/specs/funnelchat-completa.json",
     "branch": "main",
-    "commit": "c90565e4f1aaaa8fe8ee6fb7fc24c4e8e274103d",
-    "commit_date": "2026-11-04T20:42:40Z",
+    "commit": "f54645166d7746edca84c272b5e2dd9a22bafe7c",
+    "commit_date": "2026-11-05T16:55:58Z",
     "file_tracked_in_git": false,
     "tracked_files_clean": null,
-    "file_modified_at": "2026-11-04T21:06:16.945Z",
+    "file_modified_at": "2026-11-05T16:59:01.577Z",
     "declared": [
       "repository",
       "path",
@@ -22,27 +22,27 @@
     ],
     "declared_note": "The fields in `declared` were given on the command line (`--source`), not read from git: the file was imported from outside a checkout of its repository."
   },
-  "imported_at": "2026-11-04T21:08:51.954Z",
+  "imported_at": "2026-11-05T17:00:17.942Z",
   "spec": {
     "openapi": "3.1.0",
     "title": "Funnelchat API",
     "version": "v0",
-    "paths": 203,
-    "operations": 248,
+    "paths": 217,
+    "operations": 264,
     "webhooks": 29,
     "domains": [
       {
         "domain": "conversations",
-        "sha": "4e35ddb83",
-        "branch": "snapshot/v1.19.7",
-        "snapshot_at": "2026-11-04T16:58:05-03:00",
+        "sha": "f2937a713",
+        "branch": "snapshot/f2937a71",
+        "snapshot_at": "2026-11-05T13:42:00-03:00",
         "declared": true
       },
       {
         "domain": "communities",
         "sha": "2be913d4",
         "branch": "snapshot/v2.35.5",
-        "snapshot_at": "2026-11-04T16:58:09-03:00",
+        "snapshot_at": "2026-11-05T10:21:06-03:00",
         "declared": true
       },
       {

@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 0f451feaba59418f…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 8228ea7369daed06…) + spec/pending.json.
  */
 
 /** One operation of the public API. `pending` = taken from spec/pending.json, not from the snapshot. */
@@ -15,7 +15,7 @@ export interface RouteInfo {
   readonly pending: boolean;
 }
 
-/** Every operation of the spec (269), sorted by path. */
+/** Every operation of the spec (283), sorted by path. */
 export const routes: readonly RouteInfo[] = [
   {"method":"GET","path":"/api/v1/agents","operationId":"user.index","domain":"conversations","permission":"conversations:read","tag":"User","summary":"Listar agentes","pending":false},
   {"method":"GET","path":"/api/v1/agents/{user}","operationId":"user.show","domain":"conversations","permission":"conversations:read","tag":"User","summary":"Ver un agente","pending":false},
@@ -189,14 +189,28 @@ export const routes: readonly RouteInfo[] = [
   {"method":"GET","path":"/api/v1/forms/families/{familyId}/versions","operationId":"pendingForms.versions","domain":"conversations","permission":"conversations:read","tag":"WhatsappForm","summary":"The versions of a form","pending":true},
   {"method":"GET","path":"/api/v1/forms/templates","operationId":"pendingForms.templates","domain":"conversations","permission":"conversations:read","tag":"WhatsappForm","summary":"Templates to start a form","pending":true},
   {"method":"GET","path":"/api/v1/groups","operationId":"group.index","domain":"communities","permission":"communities:read","tag":"Grupos","summary":"Listar grupos","pending":false},
+  {"method":"POST","path":"/api/v1/groups","operationId":"apiGroupAction.create","domain":"communities","permission":"communities:operate","tag":"Acciones de grupo","summary":"Crea un grupo","pending":false},
   {"method":"GET","path":"/api/v1/groups/{group}","operationId":"group.show","domain":"communities","permission":"communities:read","tag":"Grupos","summary":"Ver un grupo","pending":false},
   {"method":"GET","path":"/api/v1/groups/{group}/actions","operationId":"group.actions","domain":"communities","permission":"communities:read","tag":"Grupos","summary":"Listar las acciones de sesión sobre un grupo","pending":false},
+  {"method":"POST","path":"/api/v1/groups/{group}/admins","operationId":"apiGroupAction.promoteAdmins","domain":"communities","permission":"communities:operate","tag":"Acciones de grupo","summary":"Promueve teléfonos a administrador","pending":false},
+  {"method":"POST","path":"/api/v1/groups/{group}/admins/remove","operationId":"apiGroupAction.demoteAdmins","domain":"communities","permission":"communities:operate","tag":"Acciones de grupo","summary":"Quita el rol de administrador a teléfonos","pending":false},
+  {"method":"PUT","path":"/api/v1/groups/{group}/description","operationId":"apiGroupAction.updateDescription","domain":"communities","permission":"communities:operate","tag":"Acciones de grupo","summary":"Cambia la descripción del grupo","pending":false},
+  {"method":"GET","path":"/api/v1/groups/{group}/invite-link/live","operationId":"apiGroupAction.inviteLink","domain":"communities","permission":"communities:read","tag":"Acciones de grupo","summary":"Link de invitación vigente del grupo","pending":false},
+  {"method":"POST","path":"/api/v1/groups/{group}/invite-link/renew","operationId":"apiGroupAction.renewInviteLink","domain":"communities","permission":"communities:operate","tag":"Acciones de grupo","summary":"Renueva el link de invitación del grupo","pending":false},
+  {"method":"GET","path":"/api/v1/groups/{group}/join-requests","operationId":"apiGroupAction.joinRequests","domain":"communities","permission":"communities:read","tag":"Acciones de grupo","summary":"Solicitudes pendientes para unirse al grupo","pending":false},
+  {"method":"POST","path":"/api/v1/groups/{group}/join-requests/approve","operationId":"apiGroupAction.approveJoinRequests","domain":"communities","permission":"communities:operate","tag":"Acciones de grupo","summary":"Aprueba solicitudes para unirse al grupo","pending":false},
+  {"method":"POST","path":"/api/v1/groups/{group}/join-requests/reject","operationId":"apiGroupAction.rejectJoinRequests","domain":"communities","permission":"communities:operate","tag":"Acciones de grupo","summary":"Rechaza solicitudes para unirse al grupo","pending":false},
   {"method":"GET","path":"/api/v1/groups/{group}/messages","operationId":"group.messages","domain":"communities","permission":"communities:read","tag":"Grupos","summary":"Listar los mensajes enviados a un grupo","pending":false},
-  {"method":"POST","path":"/api/v1/groups/{group}/messages","operationId":"pendingGroups.sendMessage","domain":"communities","permission":"communities:send","tag":"GroupAction","summary":"Send a message to a group","pending":true},
+  {"method":"POST","path":"/api/v1/groups/{group}/messages","operationId":"apiGroupAction.sendMessage","domain":"communities","permission":"communities:send","tag":"Acciones de grupo","summary":"Mandar un mensaje a un grupo","pending":false},
+  {"method":"PUT","path":"/api/v1/groups/{group}/name","operationId":"apiGroupAction.updateName","domain":"communities","permission":"communities:operate","tag":"Acciones de grupo","summary":"Cambia el nombre del grupo","pending":false},
   {"method":"GET","path":"/api/v1/groups/{group}/participant-events","operationId":"group.participantEvents","domain":"communities","permission":"communities:read","tag":"Participantes","summary":"Listar entradas y salidas de un grupo","pending":false},
+  {"method":"POST","path":"/api/v1/groups/{group}/participants","operationId":"apiGroupAction.addParticipants","domain":"communities","permission":"communities:operate","tag":"Acciones de grupo","summary":"Suma participantes al grupo","pending":false},
+  {"method":"POST","path":"/api/v1/groups/{group}/participants/remove","operationId":"apiGroupAction.removeParticipants","domain":"communities","permission":"communities:operate","tag":"Acciones de grupo","summary":"Saca participantes del grupo","pending":false},
+  {"method":"PUT","path":"/api/v1/groups/{group}/photo","operationId":"apiGroupAction.updatePhoto","domain":"communities","permission":"communities:operate","tag":"Acciones de grupo","summary":"Cambia la foto del grupo","pending":false},
   {"method":"GET","path":"/api/v1/groups/{group}/scheduled-messages","operationId":"group.scheduledMessages","domain":"communities","permission":"communities:read","tag":"Grupos","summary":"Listar los envíos programados que incluyen un grupo","pending":false},
+  {"method":"PUT","path":"/api/v1/groups/{group}/settings","operationId":"apiGroupAction.updateSettings","domain":"communities","permission":"communities:operate","tag":"Acciones de grupo","summary":"Cambia si los miembros pueden escribir","pending":false},
   {"method":"GET","path":"/api/v1/groups/{groupUid}/metadata","operationId":"groupMetadata.show","domain":"communities","permission":"communities:read","tag":"Grupos","summary":"Ver los datos actuales de un grupo en WhatsApp","pending":false},
-  {"method":"GET","path":"/api/v1/groups/actions/{action}","operationId":"pendingGroups.retrieveAction","domain":"communities","permission":"communities:read","tag":"GroupAction","summary":"A group action","pending":true},
+  {"method":"GET","path":"/api/v1/groups/actions/{action}","operationId":"apiGroupAction.show","domain":"communities","permission":"communities:read","tag":"Acciones de grupo","summary":"Ver cómo salió una acción de grupo","pending":true},
   {"method":"GET","path":"/api/v1/groups/participants","operationId":"group.participants","domain":"communities","permission":"communities:read","tag":"Participantes","summary":"Listar los participantes de un grupo","pending":false},
   {"method":"GET","path":"/api/v1/kanban-settings","operationId":"kanbanSetting.index","domain":"conversations","permission":"conversations:read","tag":"KanbanSetting","summary":"Listar tableros","pending":false},
   {"method":"POST","path":"/api/v1/kanban-settings","operationId":"kanbanSetting.store","domain":"conversations","permission":"conversations:write","tag":"KanbanSetting","summary":"Crear un tablero","pending":false},

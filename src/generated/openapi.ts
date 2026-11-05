@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 0f451feaba59418f…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 8228ea7369daed06…) + spec/pending.json.
  */
 /* eslint-disable */
 export interface paths {
@@ -1540,6 +1540,8 @@ export interface paths {
         /**
          * Enviar un mensaje
          * @description **Permiso requerido:** **Contactos y conversaciones → Enviar**
+         *
+         *     Indica a quién envías con `phone`: el teléfono con código de país, por ejemplo `5491122334455`. No hace falta crear el contacto antes: si ese teléfono todavía no es un contacto de tu cuenta, se crea en el workspace de tu clave, igual que con `POST /contacts/update-or-create` y con el mismo permiso, que **Enviar** ya incluye. La respuesta trae su id en `message.contact_id`, el mismo que llevan los avisos `message.status_changed`. Si el teléfono no es válido, o ya es un contacto de otro workspace de tu cuenta, la respuesta es la misma que daría `POST /contacts/update-or-create`: 422, o 404 sin datos de ese contacto. Con un número oficial de WhatsApp (API Cloud) también puedes indicar `whatsapp_id`, el BSUID que envía Meta (por ejemplo `US.13491208655302741918`), en lugar de `phone`; usado así con un número conectado por QR, responde 422. En un número oficial, el primer mensaje a un contacto nuevo tiene que ser una plantilla: un mensaje libre solo sale dentro de las 24 horas desde que el contacto te escribió. Si ya tienes el `contact_id`, puedes seguir enviándolo: si junto con él mandas `phone` o `whatsapp_id`, tienen que ser de ese mismo contacto (si no, 422 `recipient_mismatch`). En `send-template`, `phone` o `whatsapp_id` va siempre, con o sin `contact_id`.
          */
         post: operations["message.sendMessage"];
         delete?: never;
@@ -1652,6 +1654,8 @@ export interface paths {
         /**
          * Enviar una plantilla
          * @description **Permiso requerido:** **Contactos y conversaciones → Enviar**
+         *
+         *     Indica a quién envías con `phone`: el teléfono con código de país, por ejemplo `5491122334455`. No hace falta crear el contacto antes: si ese teléfono todavía no es un contacto de tu cuenta, se crea en el workspace de tu clave, igual que con `POST /contacts/update-or-create` y con el mismo permiso, que **Enviar** ya incluye. La respuesta trae su id en `message.contact_id`, el mismo que llevan los avisos `message.status_changed`. Si el teléfono no es válido, o ya es un contacto de otro workspace de tu cuenta, la respuesta es la misma que daría `POST /contacts/update-or-create`: 422, o 404 sin datos de ese contacto. Con un número oficial de WhatsApp (API Cloud) también puedes indicar `whatsapp_id`, el BSUID que envía Meta (por ejemplo `US.13491208655302741918`), en lugar de `phone`; usado así con un número conectado por QR, responde 422. En un número oficial, el primer mensaje a un contacto nuevo tiene que ser una plantilla: un mensaje libre solo sale dentro de las 24 horas desde que el contacto te escribió. Si ya tienes el `contact_id`, puedes seguir enviándolo: si junto con él mandas `phone` o `whatsapp_id`, tienen que ser de ese mismo contacto (si no, 422 `recipient_mismatch`). En `send-template`, `phone` o `whatsapp_id` va siempre, con o sin `contact_id`.
          */
         post: operations["messageTemplate.send"];
         delete?: never;
@@ -2448,7 +2452,13 @@ export interface paths {
          */
         get: operations["group.index"];
         put?: never;
-        post?: never;
+        /**
+         * Crea un grupo
+         * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
+         *
+         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Hasta 20 participantes iniciales, sin contar al propio número. Con un número QR la descripción se pone justo después de crear el grupo, y las creaciones respetan la espera entre creaciones del número. El resultado trae el grupo y su link de invitación. Con un número oficial, `join_approval_required: true` crea el grupo pidiendo aprobación para entrar (no se puede cambiar después); con un número QR responde `422 provider_unsupported`.
+         */
+        post: operations["apiGroupAction.create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2599,10 +2609,12 @@ export interface paths {
         get: operations["group.messages"];
         put?: never;
         /**
-         * Send a message to a group
-         * @description Sends a text or one file to the group now, from one of your numbers. Asynchronous: it answers `202` with `action_id`; the result arrives in `GET /api/v1/groups/actions/{action}` (`result.message.uid` is the id of the message in WhatsApp) and in the events `group_action.completed` and `group_action.failed`. A QR number goes out at the pace of the scheduled messages; an official number checks the 24-hour window and its quality first. It needs **Groups and campaigns → Send**. Rejections: `404 device_not_found`, `404 group_not_found`, `422 unsupported_group_type`, `422 device_not_connected`, `422 device_not_group_admin` (a QR number that is not admin), `422 device_not_group_number` (an official group of another number), `422 provider_unsupported`, `422 window_closed`, `422 number_restricted`, `422 unsupported_type` and `429 too_many_pending_actions`.
+         * Mandar un mensaje a un grupo
+         * @description **Permiso requerido:** **Grupos y campañas → Enviar**
+         *
+         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}` (`result.message.uid` es el id del mensaje en WhatsApp). `type`: `text`, `image`, `video`, `audio` o `document`. Con un número QR sale al ritmo de los mensajes programados de velocidad Low, que el integrador no puede cambiar. Con un número oficial se verifican, antes de aceptar, la ventana de servicio de 24 horas y la calidad del número. No tiene tope de volumen del plan.
          */
-        post: operations["pendingGroups.sendMessage"];
+        post: operations["apiGroupAction.sendMessage"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2625,6 +2637,312 @@ export interface paths {
         get: operations["group.scheduledMessages"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/actions/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver cómo salió una acción de grupo
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
+         */
+        get: operations["apiGroupAction.show"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/participants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suma participantes al grupo
+         * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
+         *
+         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Hasta 20 teléfonos por pedido. Con un número QR cada teléfono se agrega por separado, uno tras otro, al ritmo de las campañas. El resultado informa cada persona como `added` o `failed`.
+         */
+        post: operations["apiGroupAction.addParticipants"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/participants/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Saca participantes del grupo
+         * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
+         *
+         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Hasta 20 teléfonos por pedido, sacados en una sola operación de WhatsApp. No admite el teléfono del propio número que ejecuta.
+         */
+        post: operations["apiGroupAction.removeParticipants"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/admins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Promueve teléfonos a administrador
+         * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
+         *
+         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Hasta 20 teléfonos por pedido, en una sola operación de WhatsApp. Un teléfono que no está en el grupo se agrega primero. Solo con números QR. Se ejecuta al ritmo de las campañas del número.
+         */
+        post: operations["apiGroupAction.promoteAdmins"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/admins/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Quita el rol de administrador a teléfonos
+         * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
+         *
+         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Hasta 20 teléfonos por pedido, en una sola operación de WhatsApp. No admite el teléfono del propio número que ejecuta. Solo con números QR. Se ejecuta al ritmo de las campañas del número.
+         */
+        post: operations["apiGroupAction.demoteAdmins"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/name": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Cambia el nombre del grupo
+         * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
+         *
+         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. El nombre se envía tal cual, sin numeración de campaña. Hasta 100 caracteres. Se ejecuta al ritmo de las campañas del número.
+         */
+        put: operations["apiGroupAction.updateName"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/description": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Cambia la descripción del grupo
+         * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
+         *
+         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Hasta 2048 caracteres; una descripción vacía la borra. Se ejecuta al ritmo de las campañas del número.
+         */
+        put: operations["apiGroupAction.updateDescription"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Cambia la foto del grupo
+         * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
+         *
+         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. `photo_url` debe ser una URL `https` de una imagen jpg, jpeg o png. Solo con números QR. Se ejecuta al ritmo de las campañas del número.
+         */
+        put: operations["apiGroupAction.updatePhoto"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Cambia si los miembros pueden escribir
+         * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
+         *
+         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. `members_can_send_messages`; bloquear la escritura también deja a solo los administradores editando la información del grupo. Solo con números QR. Se ejecuta al ritmo de las campañas del número.
+         */
+        put: operations["apiGroupAction.updateSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/invite-link/renew": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Renueva el link de invitación del grupo
+         * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
+         *
+         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Con un número QR relee el link vigente y NO lo revoca (los proveedores QR de WhatsApp no exponen revocación acá); con un número oficial revoca el link y WhatsApp genera uno nuevo. El resultado trae `invite_link`.
+         */
+        post: operations["apiGroupAction.renewInviteLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/invite-link/live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Link de invitación vigente del grupo
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
+         *
+         *     **Nota:** Se lee en vivo del proveedor con el número indicado en `device_id`. Límite: 30 pedidos por minuto.
+         */
+        get: operations["apiGroupAction.inviteLink"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/join-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Solicitudes pendientes para unirse al grupo
+         * @description **Permiso requerido:** **Grupos y campañas → Ver**
+         *
+         *     **Nota:** Solo números oficiales con la beta de grupos de la API oficial; un número QR recibe `422 provider_unsupported`. Se lee en vivo del proveedor con el número indicado en `device_id`; devuelve hasta 100 solicitudes, en el orden del proveedor, y omite las que no traen teléfono (no hay BSUID). Límite: 30 pedidos por minuto.
+         */
+        get: operations["apiGroupAction.joinRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/join-requests/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Aprueba solicitudes para unirse al grupo
+         * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
+         *
+         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Solo números oficiales con la beta de grupos de la API oficial y con la habilitación de decisiones; si no, `422 provider_unsupported`. Verifica que los teléfonos entren en los lugares libres del grupo (`capacity_full`). El resultado es por persona.
+         */
+        post: operations["apiGroupAction.approveJoinRequests"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/join-requests/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rechaza solicitudes para unirse al grupo
+         * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
+         *
+         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Solo números oficiales con la beta de grupos de la API oficial y con la habilitación de decisiones; si no, `422 provider_unsupported`. El resultado es por persona.
+         */
+        post: operations["apiGroupAction.rejectJoinRequests"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5040,26 +5358,6 @@ export interface paths {
         };
         /** The funnel of a form: sent, opened, completed */
         get: operations["pendingForms.metrics"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/groups/actions/{action}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * A group action
-         * @description Where an action is (`queued`, `running`, `completed` or `failed`) and its `result`. An action of another key's workspace, or that does not exist, is `404 action_not_found`.
-         */
-        get: operations["pendingGroups.retrieveAction"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8173,6 +8471,65 @@ export interface components {
             action: string;
             enabled: boolean;
         };
+        /** ApiGroupActionAcceptedResource */
+        ApiGroupActionAcceptedResource: {
+            action_id: string;
+            /** @constant */
+            status: "queued";
+        };
+        /**
+         * ApiGroupDescriptionRequest
+         * @description Cuerpo de `PUT /groups/{group}/description`: una descripción vacía la borra, salvo con un número oficial,
+         *     en el que WhatsApp no permite borrarla. Los campos que no figuran se ignoran.
+         */
+        ApiGroupDescriptionRequest: {
+            device_id: number;
+            description: string | null;
+        };
+        /**
+         * ApiGroupNameRequest
+         * @description Cuerpo de `PUT /groups/{group}/name`: el nombre se envía a WhatsApp tal cual, sin numeración de campaña.
+         *     Los campos que no figuran se ignoran.
+         */
+        ApiGroupNameRequest: {
+            device_id: number;
+            name: string;
+        };
+        /**
+         * ApiGroupPhonesRequest
+         * @description Cuerpo de las acciones de grupo que reciben una lista de teléfonos (`device_id` y `phones`).
+         *     Los teléfonos se normalizan y se quitan los repetidos antes de contarlos contra el máximo por pedido.
+         *     Los campos que no figuran se ignoran.
+         */
+        ApiGroupPhonesRequest: {
+            device_id: number;
+            phones: string[];
+        };
+        /**
+         * ApiGroupPhotoRequest
+         * @description Cuerpo de `PUT /groups/{group}/photo`: una URL `https` de una imagen jpg, jpeg o png.
+         *     Los campos que no figuran se ignoran.
+         */
+        ApiGroupPhotoRequest: {
+            device_id: number;
+            photo_url: string;
+        };
+        /**
+         * ApiGroupRenewLinkRequest
+         * @description Cuerpo de la renovación del link de invitación (`device_id`).
+         */
+        ApiGroupRenewLinkRequest: {
+            device_id: number;
+        };
+        /**
+         * ApiGroupSettingsRequest
+         * @description Cuerpo de `PUT /groups/{group}/settings`: el único ajuste es si los miembros pueden enviar mensajes.
+         *     Los campos que no figuran se ignoran.
+         */
+        ApiGroupSettingsRequest: {
+            device_id: number;
+            members_can_send_messages: boolean;
+        };
         /** App.Modules.ScheduledMessages.Resources.MessageTemplateResource */
         "App.Modules.ScheduledMessages.Resources.MessageTemplateResource": {
             id: string;
@@ -8403,6 +8760,10 @@ export interface components {
                 number_brake_lifted_at: string;
                 template_name: string;
                 template_status: string;
+                quality_risk_accepted: {
+                    at: string | null;
+                    quality: string | null;
+                };
             } | string;
             number_brake_until: string | null;
             failure_reason: {
@@ -8863,6 +9224,19 @@ export interface components {
             advisor_scope: string;
             created_at: string;
             updated_at: string | "";
+        };
+        /**
+         * CreateApiGroupRequest
+         * @description Cuerpo de `POST /groups`: `device_id`, `name`, `description` opcional y `participants` (con un número QR,
+         *     de 1 al máximo permitido, teléfonos distintos y nunca el del propio número que crea el grupo).
+         *     Los teléfonos se normalizan y se quitan los repetidos antes de contarlos. Los campos que no figuran se ignoran.
+         */
+        CreateApiGroupRequest: {
+            device_id: number;
+            name: string;
+            description?: string | null;
+            join_approval_required?: boolean;
+            participants: string[];
         };
         /** CustomDomainResource */
         CustomDomainResource: {
@@ -9514,7 +9888,7 @@ export interface components {
          * PaymentEventTypeEnum
          * @enum {string}
          */
-        PaymentEventTypeEnum: "approved" | "pending" | "rejected" | "cancelled" | "refunded" | "chargeback";
+        PaymentEventTypeEnum: "approved" | "pending" | "rejected" | "cancelled" | "refunded" | "chargeback" | "abandoned_cart";
         /** PaymentProductResource */
         PaymentProductResource: {
             external_product_id: string;
@@ -9665,7 +10039,9 @@ export interface components {
         SendDirectMessageRequest: {
             device_id: number;
             text?: string;
-            contact_id: number;
+            contact_id?: number | null;
+            phone?: string | null;
+            whatsapp_id?: string | null;
             /** @description Archivo del mensaje: el nombre de un archivo ya subido a tu cuenta o la URL pública de un archivo (te recomendamos `https://`), que WhatsApp o el proveedor descarga; admite hasta 4096 caracteres. Si empieza con `http`, en mayúsculas o minúsculas, tiene que ser una URL `http://` o `https://`; si no, la respuesta es 422. Consulta la sección «Enviar un archivo por URL». */
             file?: string;
             /**
@@ -9680,6 +10056,21 @@ export interface components {
             note?: boolean;
             mentions?: number[] | null;
             client_reference?: string | null;
+        };
+        /**
+         * SendGroupMessageRequest
+         * @description Cuerpo de `POST /groups/{group}/messages`: un texto o un solo archivo multimedia, que se envía en el momento.
+         *     No admite encuestas, eventos, stickers, contactos ni ubicaciones. Los campos que no figuran (por ejemplo,
+         *     `shipping_speed`) se ignoran.
+         */
+        SendGroupMessageRequest: {
+            device_id: number;
+            /** @enum {string} */
+            type: "text" | "image" | "video" | "audio" | "document";
+            text?: string;
+            media_url?: string;
+            caption?: string;
+            file_name?: string;
         };
         /** SendMessageRequest */
         SendMessageRequest: {
@@ -10440,28 +10831,6 @@ export interface components {
             connection: components["schemas"]["PendingDeviceConnection"];
             external_reference: components["schemas"]["PendingExternalReference"];
         };
-        /** @description A text or one file, sent to the group right away. Polls, events, stickers, contacts and locations are not accepted. */
-        PendingGroupMessageCreate: {
-            /** @description The number of your account that sends it. A QR number must be admin of the group; an official number, the one the group belongs to. */
-            device_id: number;
-            /** @enum {string} */
-            type: "text" | "image" | "video" | "audio" | "document";
-            /** @description Only with `type: text`, and required there. */
-            text?: string;
-            /** @description A public `https` URL that ends in an extension of the type. Required with a file; not with `type: text`. */
-            media_url?: string;
-            /** @description Image or video only. */
-            caption?: string | null;
-            /** @description Document only. */
-            file_name?: string | null;
-        };
-        /** @description The action is queued. Follow it with `GET /api/v1/groups/actions/{action}` or with the events `group_action.completed` and `group_action.failed`. */
-        PendingGroupActionAccepted: {
-            /** Format: uuid */
-            action_id: string;
-            /** @enum {string} */
-            status: "queued";
-        };
         PendingGroupParticipantResult: {
             /** @description The phone in digits, without `+`, or a `…@lid`. */
             identity: string;
@@ -10470,6 +10839,13 @@ export interface components {
             /** @enum {string} */
             status: "added" | "invited" | "removed" | "promoted" | "demoted" | "approved" | "rejected" | "failed";
             reason: string | null;
+        };
+        PendingDeviceQr: {
+            connected: boolean;
+            /** @description A PNG image as a data URI, or `null` when the number is already connected. */
+            qr_code: string | null;
+            /** @description Seconds after which to ask for it again: 5 with a QR, 3 while the session starts, 0 once connected. WhatsApp changes the code every few seconds and an old one no longer links: show the latest one and have it scanned right away; do not store or forward a QR. */
+            expires_in: number;
         };
         PendingGroupAction: {
             /** Format: uuid */
@@ -10505,13 +10881,6 @@ export interface components {
             completed_at: string | null;
             /** Format: date-time */
             failed_at: string | null;
-        };
-        PendingDeviceQr: {
-            connected: boolean;
-            /** @description A PNG image as a data URI, or `null` when the number is already connected. */
-            qr_code: string | null;
-            /** @description Seconds after which to ask for it again: 5 with a QR, 3 while the session starts, 0 once connected. WhatsApp changes the code every few seconds and an old one no longer links: show the latest one and have it scanned right away; do not store or forward a QR. */
-            expires_in: number;
         };
     };
     responses: {
@@ -13052,7 +13421,7 @@ export interface operations {
     "flow.activeContacts": {
         parameters: {
             query?: {
-                payment_event_type?: "approved" | "pending" | "rejected" | "cancelled" | "refunded" | "chargeback";
+                payment_event_type?: "approved" | "pending" | "rejected" | "cancelled" | "refunded" | "chargeback" | "abandoned_cart";
             };
             header?: never;
             path: {
@@ -14330,6 +14699,8 @@ export interface operations {
                         /** @enum {string} */
                         status: "error";
                         error: string;
+                    } | {
+                        message: string;
                     };
                 };
             };
@@ -14346,7 +14717,7 @@ export interface operations {
                         };
                     } | {
                         /** @enum {string} */
-                        error: "window_closed" | "antiblock_duplicate_content" | "antiblock_unanswered_limit" | "recipient_unsupported";
+                        error: "window_closed" | "antiblock_duplicate_content" | "antiblock_unanswered_limit" | "recipient_mismatch" | "recipient_unsupported";
                         message: string;
                     } | {
                         /** @enum {string} */
@@ -14692,11 +15063,12 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
                 "application/json": {
-                    phone: string;
-                    contact_id: number;
+                    contact_id?: number | null;
+                    phone?: string | null;
+                    whatsapp_id?: string | null;
                     template_variables?: {
                         body?: (string | null)[];
                     };
@@ -16579,6 +16951,33 @@ export interface operations {
             422: components["responses"]["CommunitiesValidationException"];
         };
     };
+    "apiGroupAction.create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateApiGroupRequest"];
+            };
+        };
+        responses: {
+            /** @description `ApiGroupActionAcceptedResource` */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiGroupActionAcceptedResource"];
+                };
+            };
+            401: components["responses"]["CommunitiesAuthenticationException"];
+            403: components["responses"]["CommunitiesAuthorizationException"];
+            422: components["responses"]["CommunitiesValidationException"];
+        };
+    };
     "group.groups": {
         parameters: {
             query?: {
@@ -16964,31 +17363,33 @@ export interface operations {
             404: components["responses"]["CommunitiesModelNotFoundException"];
         };
     };
-    "pendingGroups.sendMessage": {
+    "apiGroupAction.sendMessage": {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description The WhatsApp uid of the group (`…@g.us`), the `uid` of `GET /api/v1/groups`. */
                 group: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PendingGroupMessageCreate"];
+                "application/json": components["schemas"]["SendGroupMessageRequest"];
             };
         };
         responses: {
-            /** @description Queued. */
+            /** @description `ApiGroupActionAcceptedResource` */
             202: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PendingGroupActionAccepted"];
+                    "application/json": components["schemas"]["ApiGroupActionAcceptedResource"];
                 };
             };
+            401: components["responses"]["CommunitiesAuthenticationException"];
+            403: components["responses"]["CommunitiesAuthorizationException"];
+            422: components["responses"]["CommunitiesValidationException"];
         };
     };
     "group.scheduledMessages": {
@@ -17047,6 +17448,410 @@ export interface operations {
             401: components["responses"]["CommunitiesAuthenticationException"];
             403: components["responses"]["CommunitiesAuthorizationException"];
             404: components["responses"]["CommunitiesModelNotFoundException"];
+            422: components["responses"]["CommunitiesValidationException"];
+        };
+    };
+    "apiGroupAction.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The action. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PendingGroupAction"];
+                    };
+                };
+            };
+            401: components["responses"]["CommunitiesAuthenticationException"];
+            403: components["responses"]["CommunitiesAuthorizationException"];
+        };
+    };
+    "apiGroupAction.addParticipants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiGroupPhonesRequest"];
+            };
+        };
+        responses: {
+            /** @description `ApiGroupActionAcceptedResource` */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiGroupActionAcceptedResource"];
+                };
+            };
+            401: components["responses"]["CommunitiesAuthenticationException"];
+            403: components["responses"]["CommunitiesAuthorizationException"];
+            422: components["responses"]["CommunitiesValidationException"];
+        };
+    };
+    "apiGroupAction.removeParticipants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiGroupPhonesRequest"];
+            };
+        };
+        responses: {
+            /** @description `ApiGroupActionAcceptedResource` */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiGroupActionAcceptedResource"];
+                };
+            };
+            401: components["responses"]["CommunitiesAuthenticationException"];
+            403: components["responses"]["CommunitiesAuthorizationException"];
+            422: components["responses"]["CommunitiesValidationException"];
+        };
+    };
+    "apiGroupAction.promoteAdmins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiGroupPhonesRequest"];
+            };
+        };
+        responses: {
+            /** @description `ApiGroupActionAcceptedResource` */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiGroupActionAcceptedResource"];
+                };
+            };
+            401: components["responses"]["CommunitiesAuthenticationException"];
+            403: components["responses"]["CommunitiesAuthorizationException"];
+            422: components["responses"]["CommunitiesValidationException"];
+        };
+    };
+    "apiGroupAction.demoteAdmins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiGroupPhonesRequest"];
+            };
+        };
+        responses: {
+            /** @description `ApiGroupActionAcceptedResource` */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiGroupActionAcceptedResource"];
+                };
+            };
+            401: components["responses"]["CommunitiesAuthenticationException"];
+            403: components["responses"]["CommunitiesAuthorizationException"];
+            422: components["responses"]["CommunitiesValidationException"];
+        };
+    };
+    "apiGroupAction.updateName": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiGroupNameRequest"];
+            };
+        };
+        responses: {
+            /** @description `ApiGroupActionAcceptedResource` */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiGroupActionAcceptedResource"];
+                };
+            };
+            401: components["responses"]["CommunitiesAuthenticationException"];
+            403: components["responses"]["CommunitiesAuthorizationException"];
+            422: components["responses"]["CommunitiesValidationException"];
+        };
+    };
+    "apiGroupAction.updateDescription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiGroupDescriptionRequest"];
+            };
+        };
+        responses: {
+            /** @description `ApiGroupActionAcceptedResource` */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiGroupActionAcceptedResource"];
+                };
+            };
+            401: components["responses"]["CommunitiesAuthenticationException"];
+            403: components["responses"]["CommunitiesAuthorizationException"];
+            422: components["responses"]["CommunitiesValidationException"];
+        };
+    };
+    "apiGroupAction.updatePhoto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiGroupPhotoRequest"];
+            };
+        };
+        responses: {
+            /** @description `ApiGroupActionAcceptedResource` */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiGroupActionAcceptedResource"];
+                };
+            };
+            401: components["responses"]["CommunitiesAuthenticationException"];
+            403: components["responses"]["CommunitiesAuthorizationException"];
+            422: components["responses"]["CommunitiesValidationException"];
+        };
+    };
+    "apiGroupAction.updateSettings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiGroupSettingsRequest"];
+            };
+        };
+        responses: {
+            /** @description `ApiGroupActionAcceptedResource` */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiGroupActionAcceptedResource"];
+                };
+            };
+            401: components["responses"]["CommunitiesAuthenticationException"];
+            403: components["responses"]["CommunitiesAuthorizationException"];
+            422: components["responses"]["CommunitiesValidationException"];
+        };
+    };
+    "apiGroupAction.renewInviteLink": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiGroupRenewLinkRequest"];
+            };
+        };
+        responses: {
+            /** @description `ApiGroupActionAcceptedResource` */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiGroupActionAcceptedResource"];
+                };
+            };
+            401: components["responses"]["CommunitiesAuthenticationException"];
+            403: components["responses"]["CommunitiesAuthorizationException"];
+            422: components["responses"]["CommunitiesValidationException"];
+        };
+    };
+    "apiGroupAction.inviteLink": {
+        parameters: {
+            query: {
+                device_id: number;
+            };
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description El link de invitación vigente del grupo. Una lectura exitosa se reutiliza durante unos segundos. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            invite_link: string;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["CommunitiesAuthenticationException"];
+            403: components["responses"]["CommunitiesAuthorizationException"];
+            422: components["responses"]["CommunitiesValidationException"];
+        };
+    };
+    "apiGroupAction.joinRequests": {
+        parameters: {
+            query: {
+                device_id: number;
+            };
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown[];
+                    };
+                };
+            };
+            401: components["responses"]["CommunitiesAuthenticationException"];
+            403: components["responses"]["CommunitiesAuthorizationException"];
+            422: components["responses"]["CommunitiesValidationException"];
+        };
+    };
+    "apiGroupAction.approveJoinRequests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiGroupPhonesRequest"];
+            };
+        };
+        responses: {
+            /** @description `ApiGroupActionAcceptedResource` */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiGroupActionAcceptedResource"];
+                };
+            };
+            401: components["responses"]["CommunitiesAuthenticationException"];
+            403: components["responses"]["CommunitiesAuthorizationException"];
+            422: components["responses"]["CommunitiesValidationException"];
+        };
+    };
+    "apiGroupAction.rejectJoinRequests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiGroupPhonesRequest"];
+            };
+        };
+        responses: {
+            /** @description `ApiGroupActionAcceptedResource` */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiGroupActionAcceptedResource"];
+                };
+            };
+            401: components["responses"]["CommunitiesAuthenticationException"];
+            403: components["responses"]["CommunitiesAuthorizationException"];
             422: components["responses"]["CommunitiesValidationException"];
         };
     };
@@ -22149,31 +22954,6 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: unknown;
-                    };
-                };
-            };
-        };
-    };
-    "pendingGroups.retrieveAction": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The `action_id` the action returned. */
-                action: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["PendingGroupAction"];
                     };
                 };
             };
