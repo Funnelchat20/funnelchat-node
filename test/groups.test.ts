@@ -60,7 +60,7 @@ describe('a message to a group', () => {
 
   it('is a send: the route table carries Send and it is never retried on its own', async () => {
     const route = routes.find((r) => r.method === 'POST' && r.path === '/api/v1/groups/{group}/messages');
-    expect(route).toMatchObject({ domain: 'communities', permission: 'communities:send', pending: true });
+    expect(route).toMatchObject({ domain: 'communities', permission: 'communities:send', pending: false });
     expect(isSendRequest('POST', `/api/v1/groups/${encodeURIComponent(GROUP)}/messages`)).toBe(true);
     expect(isSendRequest('GET', `/api/v1/groups/${encodeURIComponent(GROUP)}/messages`)).toBe(false);
 

@@ -32,9 +32,8 @@ async function readmeFirstUse(funnelchat: Funnelchat, event: WebhookEvent, show:
   expectTypeOf(link.url).toEqualTypeOf<string>();
 
   // 3. Send a message
-  const contact = await funnelchat.contacts.create({ phone: '5491100000000', name: 'Ana' });
-
-  const { message } = await funnelchat.messages.sendDirect({ device_id: device.id, contact_id: contact.id, text: 'Hi Ana!' });
+  const { message } = await funnelchat.messages.sendDirect({ device_id: device.id, phone: '5491100000000', text: 'Hi Ana!' });
+  expectTypeOf(message.contact_id).toEqualTypeOf<number | null>();
   expectTypeOf(message.status).toEqualTypeOf<'queued' | 'sent' | 'delivered' | 'read' | 'failed' | null>();
 
   // 4. Know when it was read
@@ -46,7 +45,7 @@ async function readmeFirstUse(funnelchat: Funnelchat, event: WebhookEvent, show:
   if (event.type === 'message.status_changed' && event.data.status === 'read') {
     expectTypeOf(event.data.message_id).toEqualTypeOf<number>();
   }
-  expectTypeOf((await funnelchat.messages.get(contact.id, message.id)).status).toEqualTypeOf<'queued' | 'sent' | 'delivered' | 'read' | 'failed' | null>();
+  expectTypeOf((await funnelchat.messages.get(message.contact_id ?? 0, message.id)).status).toEqualTypeOf<'queued' | 'sent' | 'delivered' | 'read' | 'failed' | null>();
 
   // Receive messages
   if (event.type === 'message.received') {

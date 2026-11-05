@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 0f451feaba59418f…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 8228ea7369daed06…) + spec/pending.json.
  */
 import type { components } from './openapi.js';
 

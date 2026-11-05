@@ -40,16 +40,14 @@ Is the phone someone else's? Send them a page that shows the QR instead: `const 
 
 ### 3. Send a message
 
-The contact goes first; then the text, from your number:
+One call, from your number to a phone (with country code, digits only):
 
 ```ts
-const contact = await funnelchat.contacts.create({ phone: '5491100000000', name: 'Ana' }); // with country code, digits only
-
-const { message } = await funnelchat.messages.sendDirect({ device_id: device.id, contact_id: contact.id, text: 'Hi Ana!' });
-console.log(message.id, message.status); // 1002 'queued'
+const { message } = await funnelchat.messages.sendDirect({ device_id: device.id, phone: '5491100000000', text: 'Hi Ana!' });
+console.log(message.id, message.contact_id, message.status); // 1002 2001 'queued'
 ```
 
-The answer is the queued message: accepted is not delivered yet. With an official number, free text only goes within 24 hours of the contact's last message; after that, an [approved template](#templates).
+If that phone is not a contact yet, it is created in the workspace of your key; `message.contact_id` is its id. The answer is the queued message: accepted is not delivered yet. With an official number, free text only goes within 24 hours of the contact's last message, so the first message to a new contact is an [approved template](#templates).
 
 ### 4. Know when it was read
 
@@ -71,7 +69,7 @@ app.post('/hooks/funnelchat', express.raw({ type: 'application/json' }), (req, r
 });
 ```
 
-The status goes `sent`, `delivered`, `read` (or `failed`, with `error`). You can also ask for it: `(await funnelchat.messages.get(contact.id, message.id)).status`. More in [Webhooks](#webhooks).
+The status goes `sent`, `delivered`, `read` (or `failed`, with `error`). You can also ask for it: `funnelchat.messages.get(contactId, messageId)`, with `message.contact_id` and `message.id`. More in [Webhooks](#webhooks).
 
 ## Receive messages
 
@@ -191,10 +189,10 @@ if (window.is_open) {
 }
 ```
 
-- `contacts.create({ phone })` (7 to 15 digits) answers the existing contact when that phone is already there. A contact has to exist before you send it anything.
+- **By phone, without `contact_id`:** `sendDirect` and `templates.send` take `phone` (7 to 15 digits, with country code) and create the contact in the workspace of your key when it does not exist yet, as `contacts.upsert` would; the contact stays even if a rule then stops the send. With an official number you can send `whatsapp_id` (Meta's id of the person, such as `US.13491208655302741918`) instead of `phone`; with a QR number that is a `422`. A phone that is a contact of another workspace of your account answers `404`, and nothing is created or sent. With `contact_id` too, `phone` or `whatsapp_id` must be that contact's: otherwise `422 recipient_mismatch`. Creating the contact takes **Contacts and conversations → Edit**, which **Send** includes.
 - `message.id` is the same `message_id` of `message.status_changed`. With it, `funnelchat.messages.get(2001, message.id)` tells you how it is going: `status` moves from `queued` to `sent`, `delivered`, `read` or `failed`, and a `failed` one carries `error` (`code`, `title` and `reason`).
 - `client_reference` (1 to 64 visible ASCII characters, no spaces) comes back in the history of the contact and in `message.status_changed`.
-- `send` is `POST /api/v1/contacts/{contact}/message` and checks the `phone` (or `whatsapp_id`) of the body against the contact of the route: when it does not match, `422 recipient_mismatch`. `sendDirect` is `POST /api/v1/message/send-message`, with `device_id` and `contact_id` in the body.
+- `send` is `POST /api/v1/contacts/{contact}/message` and checks the `phone` (or `whatsapp_id`) of the body against the contact of the route: when it does not match, `422 recipient_mismatch`. `sendDirect` is `POST /api/v1/message/send-message`, with `device_id` and the recipient (`phone`, `whatsapp_id` or `contact_id`) in the body.
 - Contact cards (`sendContactCard`) return `{ messages }`, one per card; a forward (`forward`) one item per destination with its `message` (or `null` when that destination was blocked); a template (`templates.send`) and a form (`sendForm`) `{ message }`.
 
 **A file by URL.** `file` is the URL of the file. When it does not end in a known extension (a signed URL, or one without extension), say what it is with `file_type` and, for a document, the name it arrives with:
@@ -217,8 +215,7 @@ Without `file_type`, a URL without a known extension answers `422` with `errors.
 
 ```ts
 const { message } = await funnelchat.templates.send(3, '45', {
-  phone: '5491100000000',
-  contact_id: 2001,
+  phone: '5491100000000',                  // a new phone becomes a contact, as with sendDirect
   template_variables: { body: ['Lucía'] }, // the body variables, in order
 });
 ```
