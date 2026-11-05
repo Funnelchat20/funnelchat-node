@@ -59,7 +59,7 @@ async function readmeFirstUse(funnelchat: Funnelchat, event: WebhookEvent, show:
   }
 
   // Groups
-  for await (const group of funnelchat.groups.list()) {
+  for await (const group of funnelchat.groups.listByDevice(device.id)) {
     expectTypeOf(group.uid).toEqualTypeOf<string>();
   }
   const { action_id } = await funnelchat.groups.sendMessage('120363000000000001@g.us', {
@@ -68,6 +68,8 @@ async function readmeFirstUse(funnelchat: Funnelchat, event: WebhookEvent, show:
     text: 'Hi everyone!',
   });
   expectTypeOf((await funnelchat.groups.retrieveAction(action_id)).data.result).not.toBeUnknown();
+  const { data: followed } = await funnelchat.groups.follow('120363000000000001@g.us', { device_id: device.id });
+  expectTypeOf(followed.is_admin).toEqualTypeOf<boolean>();
 
   // Workspaces
   expectTypeOf(event.data.workspace_id).toEqualTypeOf<number | null>();

@@ -38,6 +38,16 @@ describe('a message to a group', () => {
     expect(JSON.parse(calls[0]?.body ?? '')).toEqual({ device_id: 4, type: 'text', text: 'Hi everyone' });
   });
 
+  it('follows a group of a number, and is not taken for a send', async () => {
+    const { fetch, calls } = mockFetch({ status: 201, body: { data: { uid: GROUP, name: 'Example group', imported: true, is_admin: true } } });
+    const { data } = await client(fetch).groups.follow(GROUP, { device_id: 4 });
+    expect(calls[0]?.method).toBe('POST');
+    expect(calls[0]?.url).toBe(`${BASE}/groups/120363000000000001%40g.us/import`);
+    expect(JSON.parse(calls[0]?.body ?? '')).toEqual({ device_id: 4 });
+    expect(data).toEqual({ uid: GROUP, name: 'Example group', imported: true, is_admin: true });
+    expect(isSendRequest('POST', `/api/v1/groups/${encodeURIComponent(GROUP)}/import`)).toBe(false);
+  });
+
   it('reads the action with the action_id', async () => {
     const action = {
       action_id: ACTION,

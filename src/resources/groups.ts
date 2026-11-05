@@ -6,6 +6,7 @@ type GroupUid = PathParams<'/api/v1/groups/{groupUid}/metadata', 'GET'>['groupUi
 type DeviceId = PathParams<'/api/v1/devices/{device}/groups', 'GET'>['device'];
 type SendGroup = PathParams<'/api/v1/groups/{group}/messages', 'POST'>['group'];
 type ActionId = PathParams<'/api/v1/groups/actions/{action}', 'GET'>['action'];
+type FollowGroup = PathParams<'/api/v1/groups/{group}/import', 'POST'>['group'];
 
 /**
  * WhatsApp groups (communities area): read them, their participants, events and messages, and send a
@@ -26,7 +27,11 @@ export class Groups extends Resource {
     return this.client.request('GET', '/api/v1/groups/{group}', { ...options, path: { group } });
   }
 
-  /** `GET /api/v1/devices/{device}/groups`, paginated (`page`, `pageSize`): the groups of one number. */
+  /**
+   * `GET /api/v1/devices/{device}/groups`, paginated (`page`, `pageSize`): the groups of one number,
+   * read live from WhatsApp (for a key, reused for a minute per number). A group that is already in
+   * the account brings `device_id`; any other can be followed with {@link Groups.follow}.
+   */
   listByDevice(device: DeviceId, query?: Query<'/api/v1/devices/{device}/groups'>, options?: RequestOptions) {
     return this.client.paginate('/api/v1/devices/{device}/groups', { ...options, path: { device }, query });
   }
@@ -75,6 +80,21 @@ export class Groups extends Resource {
    */
   sendMessage(group: SendGroup, body: Body<'/api/v1/groups/{group}/messages', 'POST'>, options?: RequestOptions) {
     return this.client.request('POST', '/api/v1/groups/{group}/messages', { ...options, path: { group }, body });
+  }
+
+  /**
+   * `POST /api/v1/groups/{group}/import`: follows a WhatsApp group of a QR number (`device_id`), as
+   * importing it in the panel does: from then on its joins and leaves arrive by
+   * `group_participant.joined` and `group_participant.left`. Resolves to `{ data: { uid, name,
+   * imported, is_admin } }`: `imported` is `false` when the group was already in the account, and
+   * `is_admin` says whether the number administers it (without that it cannot write to it). Needs
+   * **Groups and campaigns → Manage groups** (`403 import_permission_required`); up to 5 groups
+   * per number per minute (`429 import_rate_limited`, with `retryAfter`); an official number is
+   * `422 provider_unsupported`. {@link Groups.sendMessage} follows the group itself when it is not in
+   * the account yet.
+   */
+  follow(group: FollowGroup, body: Body<'/api/v1/groups/{group}/import', 'POST'>, options?: RequestOptions) {
+    return this.client.request('POST', '/api/v1/groups/{group}/import', { ...options, path: { group }, body });
   }
 
   /**

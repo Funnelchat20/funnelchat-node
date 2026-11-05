@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 8228ea7369daed06…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 0ffaad2b25733d28…) + spec/pending.json.
  */
 /* eslint-disable */
 export interface paths {
@@ -2476,6 +2476,8 @@ export interface paths {
          * Listar los grupos que administra un número
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
+         *     **Nota:** La lista se lee de WhatsApp y, para una API key, se reutiliza durante un minuto por número: un grupo recién creado en WhatsApp puede tardar hasta un minuto en aparecer. Si un grupo ya está en la cuenta, trae `device_id`. Para importar uno: `POST /groups/{group}/import`.
+         *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `pageSize` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
          */
         get: operations["group.groups"];
@@ -2551,6 +2553,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/groups/{group}/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Importar un grupo de un número
+         * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
+         *
+         *     **Nota:** Importa a la cuenta un grupo del número indicado en `device_id`, igual que importarlo desde el panel: queda visible en el panel, se sincronizan sus participantes y desde entonces genera los avisos `group_participant.joined` y `group_participant.left`. Los datos del grupo y si el número es administrador se leen de WhatsApp en la misma llamada. Responde `201` si lo importó y `200` si ya estaba en la cuenta, con `is_admin`. Solo números QR: con un número oficial responde `422 provider_unsupported`. Si el grupo no es del número responde `404 group_not_found`. Cada número importa hasta 5 grupos por minuto (`429 import_rate_limited`, con `retry_after` en segundos). Dos pedidos a la vez por el mismo grupo lo importan una sola vez. Un grupo que ya está en otro workspace de la cuenta no se puede importar en este.
+         */
+        post: operations["v2.apiGroupImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/groups/{group}": {
         parameters: {
             query?: never;
@@ -2612,7 +2636,7 @@ export interface paths {
          * Mandar un mensaje a un grupo
          * @description **Permiso requerido:** **Grupos y campañas → Enviar**
          *
-         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}` (`result.message.uid` es el id del mensaje en WhatsApp). `type`: `text`, `image`, `video`, `audio` o `document`. Con un número QR sale al ritmo de los mensajes programados de velocidad Low, que el integrador no puede cambiar. Con un número oficial se verifican, antes de aceptar, la ventana de servicio de 24 horas y la calidad del número. No tiene tope de volumen del plan.
+         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}` (`result.message.uid` es el id del mensaje en WhatsApp). `type`: `text`, `image`, `video`, `audio` o `document`. Con un número QR sale al ritmo de los mensajes programados de velocidad Low, que el integrador no puede cambiar. Con un número oficial se verifican, antes de aceptar, la ventana de servicio de 24 horas y la calidad del número. No tiene tope de volumen del plan. Si el grupo todavía no está en la cuenta y el número es QR, primero se importa como en `POST /groups/{group}/import` (pide además **Grupos y campañas → Administrar grupos**, `403 import_permission_required` sin él) y el envío sigue con las mismas reglas: si el número no es administrador del grupo no se importa nada y responde `422 device_not_group_admin`. Esa importación cuenta en el tope de 5 por minuto del número.
          */
         post: operations["apiGroupAction.sendMessage"];
         delete?: never;
@@ -8485,6 +8509,25 @@ export interface components {
         ApiGroupDescriptionRequest: {
             device_id: number;
             description: string | null;
+        };
+        /**
+         * ApiGroupDeviceRequest
+         * @description `device_id` of the number that acts (query string of the live invite-link read, body of the renew
+         *     action).
+         */
+        ApiGroupDeviceRequest: {
+            device_id: number;
+        };
+        /** ApiGroupImportResource */
+        ApiGroupImportResource: {
+            /** @description Identificador del grupo en WhatsApp. */
+            uid: string;
+            /** @description Nombre del grupo. */
+            name: string | null;
+            /** @description `true` si esta llamada lo importó; `false` si ya estaba en la cuenta. */
+            imported: boolean;
+            /** @description Si el número indicado es administrador del grupo, según WhatsApp. Sin serlo no puede enviarle mensajes ni hacer acciones de grupo. */
+            is_admin: boolean;
         };
         /**
          * ApiGroupNameRequest
@@ -17223,6 +17266,49 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "v2.apiGroupImport": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Identificador del grupo en WhatsApp, como lo lista `GET /v1/devices/{device}/groups`. */
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiGroupDeviceRequest"];
+            };
+        };
+        responses: {
+            /** @description El grupo ya estaba en la cuenta: no se importó de nuevo. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ApiGroupImportResource"];
+                    };
+                };
+            };
+            /** @description El grupo se importó en esta llamada. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ApiGroupImportResource"];
+                    };
+                };
+            };
+            401: components["responses"]["CommunitiesAuthenticationException"];
+            403: components["responses"]["CommunitiesAuthorizationException"];
+            422: components["responses"]["CommunitiesValidationException"];
         };
     };
     "group.show": {

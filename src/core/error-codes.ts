@@ -7,7 +7,7 @@
  * to production on 25-10 (src/index.ts; its latest tag, v0.3.0, is older); conversations v1.19.7
  * (Message/Services/ApiSendGuard.php and Message/Support/ApiKeySendResponse.php, byte-identical to
  * v1.18.10, and WhatsappForm/Support/FormSendPreflight.php); accounts v1.5.97 (creating and
- * connecting numbers, contract 1022-alta-de-numeros); communities v2.35.5 (the callers of
+ * connecting numbers, contract 1022-alta-de-numeros); communities v2.35.5 and v2.35.7 (the callers of
  * GroupManagement/Exceptions/ApiGroupActionRejected.php). The full unified spec of developers-portal
  * c90565e4 enumerates only the send rules of conversations (and the read receipt and typing routes,
  * which have no method here); the rest is not documented there yet. When it is, this list can be
@@ -129,9 +129,9 @@ export const NUMBER_ERROR_CODES = {
 } as const;
 
 /**
- * Rejections of a message to a group (`groups.sendMessage`) and of reading a group action
- * (`groups.retrieveAction`): nothing was queued. A number or group of another workspace is answered as one
- * that does not exist.
+ * Rejections of a message to a group (`groups.sendMessage`), of following a group (`groups.follow`)
+ * and of reading a group action (`groups.retrieveAction`): nothing was queued or imported. A number
+ * or group of another workspace is answered as one that does not exist.
  */
 export const GROUP_ACTION_ERROR_CODES = {
   /** 404: `device_id` is not a number of the key's workspace. */
@@ -158,6 +158,12 @@ export const GROUP_ACTION_ERROR_CODES = {
   unsupported_type: 422,
   /** 429: the number has 50 group actions open. Wait for some to finish; not worth retrying. */
   too_many_pending_actions: 429,
+  /** 403: following a group (also by writing to one not in the account) needs **Groups and campaigns → Manage groups**. */
+  import_permission_required: 403,
+  /** 429, with `Retry-After`: the number already followed 5 groups this minute. */
+  import_rate_limited: 429,
+  /** 409: another call is following the same group right now. */
+  import_in_progress: 409,
 } as const;
 
 /** Rejections of a create sent with `idempotencyKey`. */
