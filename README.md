@@ -88,10 +88,10 @@ if (event.type === 'message.received') {
 
 ## Groups
 
-List the groups of your numbers and send a message to one by its `uid`:
+Start from the groups your number is in, read live from WhatsApp, and write to one by its `uid`:
 
 ```ts
-for await (const group of funnelchat.groups.list()) {
+for await (const group of funnelchat.groups.listByDevice(device.id)) {
   console.log(group.uid, group.name); // '120363000000000001@g.us', 'Customers'
 }
 
@@ -102,9 +102,18 @@ const { action_id } = await funnelchat.groups.sendMessage('120363000000000001@g.
 });
 ```
 
+To learn who joins and leaves a group, follow it once:
+
+```ts
+const { data: followed } = await funnelchat.groups.follow('120363000000000001@g.us', { device_id: device.id });
+console.log(followed.imported, followed.is_admin); // true, true
+```
+
+- The live list is reused for a minute per number, so a group just created in WhatsApp can take that long to show. A group already in your account brings `device_id`; `funnelchat.groups.list()` lists those.
+- Writing to a group that is not in your account follows it first, with the same rules: a number that is not admin of the group answers `422 device_not_group_admin` and nothing is imported. Following needs **Groups and campaigns → Manage groups** (`403 import_permission_required`), takes up to 5 groups per number per minute (`429 import_rate_limited`, with `retryAfter`) and works with QR numbers only (`422 provider_unsupported` with an official one). `followed.imported` is `false` when the group was already in your account.
 - The message goes out in the background: `group_action.completed` (with `action.uuid` equal to `action_id`) or `funnelchat.groups.retrieveAction(action_id)` tell you how it went. A file goes as `type: 'image'` (or `video`, `audio`, `document`) with its `https` `media_url`.
-- Who joins or leaves arrives by `group_participant.joined` and `group_participant.left`: `group`, `participant` (`identity`, `identity_type`, `name`) and `campaign`, `null` for a group without a campaign.
-- Permissions: **Groups and campaigns → View** to read and **Groups and campaigns → Send** to send.
+- Who joins or leaves a followed group arrives by `group_participant.joined` and `group_participant.left`: `group`, `participant` (`identity`, `identity_type`, `name`) and `campaign`, `null` for a group without a campaign.
+- Permissions: **Groups and campaigns → View** to read, **Groups and campaigns → Send** to send and **Groups and campaigns → Manage groups** to follow.
 
 ## Workspaces
 
@@ -146,7 +155,7 @@ CommonJS: `const { Funnelchat } = require('@funnelchat-hq/sdk');`. Every request
 | `funnelchat.contacts` | `list`, `create`, `upsert`, `retrieve`, `update`, `delete`, the tags and fields of a contact, `metaWindow` (the 24-hour window), notes. |
 | `funnelchat.messages` | `send`, `sendDirect`, `sendForm`, `sendContactCard`, `forward`, `get` (one message by id), `list` (the history of a contact), `react`, `removeReaction`. |
 | `funnelchat.templates` | `list`, `create`, `retrieve`, `update`, `quickReplyButtons`, `send`, `delete`. |
-| `funnelchat.groups` | `list`, `retrieve`, `listByDevice`, participants and their joins and leaves, messages, `sendMessage` and `retrieveAction`. |
+| `funnelchat.groups` | `listByDevice` (a number's live groups), `follow`, `list`, `retrieve`, participants and their joins and leaves, messages, `sendMessage` and `retrieveAction`. |
 | `funnelchat.webhooks` | Subscriptions (`list`, `create`, `retrieve`, `update`, `delete`, `test`, `listDeliveries`), the catalog (`events`), `verify` and `constructEvent`. |
 | `funnelchat.conversations` | `list`, `update`, counters, mark everything as read or unread. |
 | `funnelchat.forms` | WhatsApp forms: `list`, `templates`, `create`, `retrieve`, `update`, `delete`, `createVersion`, `sync`, `publish`, numbers, `versions`, answers and `metrics`. |
@@ -166,7 +175,8 @@ A key has the permissions ticked when it was created. The panel groups them by a
 | Create contacts | **Contacts and conversations → Edit** |
 | Send messages and templates | **Contacts and conversations → Send** |
 | Read groups | **Groups and campaigns → View** |
-| Send to a group | **Groups and campaigns → Send** |
+| Send to a group | **Groups and campaigns → Send** (and **Groups and campaigns → Manage groups** for one not in the account yet) |
+| Follow a group | **Groups and campaigns → Manage groups** |
 | Webhook subscriptions | **Notifications (webhooks) → View** to read, **Notifications (webhooks) → Manage** for the rest, plus **View** of the area of each event |
 
 ### Send a message
@@ -524,12 +534,11 @@ const funnelchat = new Funnelchat({ apiKey: '1|fc_live_sandbox', baseUrl: 'http:
 
 ### Pending of the spec
 
-The types come from the full unified spec of the developer portal (`spec/funnelchat.json`; where it came from, in `spec/procedencia.json`: developers-portal c90565e4 of 04-11-2026, with the areas at accounts v1.5.97, conversations v1.19.7 and communities v2.35.5). What production has and that spec does not describe, or describes otherwise than production answers, lives in a separate layer, `spec/pending.json`, which generation applies **only while the spec does not bring it**, or still says exactly what the entry corrects; each entry cites the production code it was read in:
+The types come from the full unified spec of the developer portal (`spec/funnelchat.json`; where it came from, in `spec/procedencia.json`: developers-portal 99928866 of 05-11-2026, with the areas at accounts v1.5.97, conversations v1.19.21 and communities v2.35.7). What production has and that spec does not describe, or describes otherwise than production answers, lives in a separate layer, `spec/pending.json`, which generation applies **only while the spec does not bring it**, or still says exactly what the entry corrects; each entry cites the production code it was read in:
 
-- a message to a group and its action (`groups.sendMessage`, `groups.retrieveAction`, `group_action.completed`): the spec was built with the group actions off;
-- the events of the account (`device.*`, billing, subscriptions, monthly active contacts) and some of groups (`group.message_received`, `group.reaction_added`, `group.full`, `group_action.failed`, the join requests): the API publishes them in its catalog (`webhooks.events()`), not in the spec;
+- the events of the account (`device.*`, billing, subscriptions, monthly active contacts) and some of groups (`group.message_received`, `group.reaction_added`, `group.full`, `group_action.completed` and `.failed`, the join requests): the API publishes them in its catalog (`webhooks.events()`), not in the spec;
 - WhatsApp forms (except sending one) and `webhooks.rotateSecret`;
-- where the spec contradicts production: what a send answers (`{ message }`, never `null`), the body of `devices.qr`, the items of `templates.list`, the answer of `webhooks.update`, and the events the spec only shows by one example (`message.received`, `message.status_changed`, `whatsapp_form.completed`, `group_participant.joined` and `.left`).
+- where the spec contradicts production: what a send answers (`{ message }`, never `null`), the body of `devices.qr`, the items of `templates.list`, the answer of `webhooks.update` and of `groups.retrieveAction`, and the events the spec only shows by one example (`message.received`, `message.status_changed`, `whatsapp_form.completed`, `group_participant.joined` and `.left`).
 
 `src/pending/` has what is not OpenAPI (the `workspace_id` of every event) and `src/core/error-codes.ts` the error codes.
 

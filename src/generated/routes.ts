@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 8228ea7369daed06…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 0ffaad2b25733d28…) + spec/pending.json.
  */
 
 /** One operation of the public API. `pending` = taken from spec/pending.json, not from the snapshot. */
@@ -15,7 +15,7 @@ export interface RouteInfo {
   readonly pending: boolean;
 }
 
-/** Every operation of the spec (283), sorted by path. */
+/** Every operation of the spec (284), sorted by path. */
 export const routes: readonly RouteInfo[] = [
   {"method":"GET","path":"/api/v1/agents","operationId":"user.index","domain":"conversations","permission":"conversations:read","tag":"User","summary":"Listar agentes","pending":false},
   {"method":"GET","path":"/api/v1/agents/{user}","operationId":"user.show","domain":"conversations","permission":"conversations:read","tag":"User","summary":"Ver un agente","pending":false},
@@ -195,6 +195,7 @@ export const routes: readonly RouteInfo[] = [
   {"method":"POST","path":"/api/v1/groups/{group}/admins","operationId":"apiGroupAction.promoteAdmins","domain":"communities","permission":"communities:operate","tag":"Acciones de grupo","summary":"Promueve teléfonos a administrador","pending":false},
   {"method":"POST","path":"/api/v1/groups/{group}/admins/remove","operationId":"apiGroupAction.demoteAdmins","domain":"communities","permission":"communities:operate","tag":"Acciones de grupo","summary":"Quita el rol de administrador a teléfonos","pending":false},
   {"method":"PUT","path":"/api/v1/groups/{group}/description","operationId":"apiGroupAction.updateDescription","domain":"communities","permission":"communities:operate","tag":"Acciones de grupo","summary":"Cambia la descripción del grupo","pending":false},
+  {"method":"POST","path":"/api/v1/groups/{group}/import","operationId":"v2.apiGroupImport","domain":"communities","permission":"communities:operate","tag":"Grupos","summary":"Importar un grupo de un número","pending":false},
   {"method":"GET","path":"/api/v1/groups/{group}/invite-link/live","operationId":"apiGroupAction.inviteLink","domain":"communities","permission":"communities:read","tag":"Acciones de grupo","summary":"Link de invitación vigente del grupo","pending":false},
   {"method":"POST","path":"/api/v1/groups/{group}/invite-link/renew","operationId":"apiGroupAction.renewInviteLink","domain":"communities","permission":"communities:operate","tag":"Acciones de grupo","summary":"Renueva el link de invitación del grupo","pending":false},
   {"method":"GET","path":"/api/v1/groups/{group}/join-requests","operationId":"apiGroupAction.joinRequests","domain":"communities","permission":"communities:read","tag":"Acciones de grupo","summary":"Solicitudes pendientes para unirse al grupo","pending":false},
