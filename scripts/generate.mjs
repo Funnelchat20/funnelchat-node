@@ -7,6 +7,13 @@
  *                                             from in spec/procedencia.json, then regenerate
  *   node scripts/generate.mjs --check         regenerate in memory and fail if src/generated/* differs
  *
+ * With --spec, when the file is not inside a checkout of the repository it was built from (a copy,
+ * or a build output git ignores), say where it came from: `--source key=value` (repository, path,
+ * branch, commit, commit_date, file_tracked_in_git), recorded in spec/procedencia.json as declared,
+ * not read from git; `--domain <domain>=<sha>@<branch>@<snapshot_at>` for the snapshot of an area
+ * the spec does not date itself (`x-fc-sources` without `sha`); and `--expect-sha256 <hex>` to
+ * refuse a file that is not the one announced.
+ *
  * Steps:
  *   1. (with --spec) copy the spec and write spec/procedencia.json (repository, branch, commit, sha256).
  *   2. Merge spec/pending.json (the "pending of the spec" layer) into the snapshot: paths, operation
@@ -41,16 +48,43 @@ const OUT_DIR = resolve(ROOT, 'src/generated');
 const HTTP_METHODS = ['get', 'put', 'post', 'delete', 'patch'];
 
 function parseArgs(argv) {
-  const args = { spec: null, check: false };
+  const args = { spec: null, check: false, source: {}, domains: {}, expectSha256: null };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--check') args.check = true;
     else if (arg === '--spec') args.spec = argv[++i];
     else if (arg.startsWith('--spec=')) args.spec = arg.slice('--spec='.length);
+    else if (arg === '--source') addSource(args.source, argv[++i]);
+    else if (arg === '--domain') addDomain(args.domains, argv[++i]);
+    else if (arg === '--expect-sha256') args.expectSha256 = argv[++i]?.toLowerCase();
     else throw new Error(`Unknown argument: ${arg}`);
   }
   if (args.spec === undefined) throw new Error('--spec needs the path of the file');
+  if ((Object.keys(args.source).length || Object.keys(args.domains).length || args.expectSha256) && !args.spec) {
+    throw new Error('--source, --domain and --expect-sha256 go with --spec');
+  }
   return args;
+}
+
+const DECLARABLE_SOURCE_KEYS = new Set(['repository', 'path', 'branch', 'commit', 'commit_date', 'file_tracked_in_git']);
+
+/** `--source commit=c90565e4…`: one field of where the spec came from, declared by whoever imports it. */
+function addSource(source, pair) {
+  const at = pair?.indexOf('=') ?? -1;
+  const key = at > 0 ? pair.slice(0, at) : null;
+  if (!key || !DECLARABLE_SOURCE_KEYS.has(key)) {
+    throw new Error(`--source takes key=value, with key one of: ${[...DECLARABLE_SOURCE_KEYS].join(', ')}`);
+  }
+  const value = pair.slice(at + 1);
+  source[key] = key === 'file_tracked_in_git' ? value === 'true' : value;
+}
+
+/** `--domain accounts=558332bcf@snapshot/v1.5.97@2026-11-04T16:58:11-03:00`. */
+function addDomain(domains, pair) {
+  const match = /^([a-z-]+)=([0-9a-f]{7,40})@([^@]+)@([^@]+)$/.exec(pair ?? '');
+  if (!match) throw new Error('--domain takes <domain>=<sha>@<branch>@<snapshot_at>');
+  const [, domain, sha, branch, snapshotAt] = match;
+  domains[domain] = { sha, branch, snapshot_at: snapshotAt };
 }
 
 const sha256 = (buffer) => createHash('sha256').update(buffer).digest('hex');
@@ -70,9 +104,12 @@ function countOperations(spec) {
 }
 
 /** Step 1: copy a new spec into the repo and record its provenance. */
-function importSpec(source) {
+function importSpec(source, declared = {}, declaredDomains = {}, expectSha256 = null) {
   const sourcePath = resolve(source);
   const bytes = readFileSync(sourcePath);
+  if (expectSha256 && sha256(bytes) !== expectSha256) {
+    throw new Error(`${source}: its sha256 is ${sha256(bytes)}, not the expected ${expectSha256}.`);
+  }
   const spec = JSON.parse(bytes.toString('utf8'));
   const dir = dirname(sourcePath);
   const top = git(dir, 'rev-parse', '--show-toplevel');
@@ -104,14 +141,28 @@ function importSpec(source) {
       paths: Object.keys(spec.paths ?? {}).length,
       operations: countOperations(spec),
       webhooks: Object.keys(spec.webhooks ?? {}).length,
-      domains: (spec['x-fc-sources'] ?? []).map((s) => ({
-        domain: s.domain,
-        sha: s.sha,
-        branch: s.branch,
-        snapshot_at: s.snapshot_at,
-      })),
+      domains: (spec['x-fc-sources'] ?? []).map((s) => {
+        const given = s.sha ? null : declaredDomains[s.domain];
+        return {
+          domain: s.domain,
+          sha: s.sha ?? given?.sha ?? null,
+          branch: s.branch ?? given?.branch ?? null,
+          snapshot_at: s.snapshot_at ?? given?.snapshot_at ?? null,
+          ...(given ? { declared: true } : {}),
+        };
+      }),
     },
   };
+
+  const declaredKeys = Object.keys(declared);
+  if (declaredKeys.length) {
+    Object.assign(provenance.source, declared);
+    // What git did not say, it did not check either: only the fields read from a checkout are git's.
+    if (!top) provenance.source.tracked_files_clean = null;
+    provenance.source.declared = declaredKeys;
+    provenance.source.declared_note =
+      'The fields in `declared` were given on the command line (`--source`), not read from git: the file was imported from outside a checkout of its repository.';
+  }
 
   mkdirSync(dirname(SPEC_FILE), { recursive: true });
   writeFileSync(SPEC_FILE, bytes);
@@ -119,9 +170,23 @@ function importSpec(source) {
   console.log(`spec: copied from ${relPath ?? sourcePath} (${provenance.source.branch ?? '?'} @ ${provenance.source.commit?.slice(0, 7) ?? '?'})`);
 }
 
+/**
+ * Whether `target` matches every entry of `condition`. A key is a property of `target`, or, when it
+ * starts with `/`, a JSON Pointer into it (RFC 6901: `/responses/200/content/application~1json/schema`),
+ * so a patch can wait for one exact place of the snapshot to change.
+ */
 function matches(target, condition) {
   if (!condition) return true;
-  return Object.entries(condition).every(([key, value]) => JSON.stringify(target?.[key]) === JSON.stringify(value));
+  return Object.entries(condition).every(([key, value]) => JSON.stringify(pointer(target, key)) === JSON.stringify(value));
+}
+
+function pointer(target, key) {
+  if (!key.startsWith('/')) return target?.[key];
+  return key
+    .slice(1)
+    .split('/')
+    .map((part) => part.replace(/~1/g, '/').replace(/~0/g, '~'))
+    .reduce((node, part) => node?.[part], target);
 }
 
 /** The event type a `webhooks` key stands for: "webhook.test (conversations)" -> "webhook.test". */
@@ -581,7 +646,7 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.spec) {
     if (args.check) throw new Error('--check and --spec cannot be combined');
-    importSpec(args.spec);
+    importSpec(args.spec, args.source, args.domains, args.expectSha256);
   }
   if (!existsSync(SPEC_FILE)) throw new Error('Missing spec/funnelchat.json: run `npm run generate -- --spec <file>`.');
 

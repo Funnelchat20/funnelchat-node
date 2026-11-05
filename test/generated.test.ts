@@ -28,8 +28,17 @@ const operationsOf = (paths: PathItems = {}) =>
 const key = (method: string, path: string) => `${method.toUpperCase()} ${path}`;
 const routeKeys = new Map(routes.map((r) => [key(r.method, r.path), r]));
 const snapshotOp = (method: string, path: string) => snapshot.paths?.[path]?.[method];
+/** A key of `while` is a property of the operation, or a JSON Pointer into it when it starts with `/`. */
+const at = (op: Operation, key: string): unknown =>
+  key.startsWith('/')
+    ? key
+        .slice(1)
+        .split('/')
+        .map((part) => part.replace(/~1/g, '/').replace(/~0/g, '~'))
+        .reduce<unknown>((node, part) => (node as Record<string, unknown> | undefined)?.[part], op)
+    : op[key];
 const matches = (op: Operation | undefined, condition: Record<string, unknown> = {}) =>
-  op !== undefined && Object.entries(condition).every(([k, v]) => JSON.stringify(op[k]) === JSON.stringify(v));
+  op !== undefined && Object.entries(condition).every(([k, v]) => JSON.stringify(at(op, k)) === JSON.stringify(v));
 const eventType = (k: string) => k.replace(/\s*\(.*\)\s*$/, '');
 
 describe('generated layer and the pending-of-the-spec layer', () => {

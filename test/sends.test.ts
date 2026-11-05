@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { type APIError, Funnelchat, UnprocessableEntityError, UnsupportedMediaTypeError, routes, type components } from '../src/index.js';
 import { TEST_API_KEY, mockFetch } from './helpers.js';
 
-type PublicMessage = components['schemas']['PendingPublicMessage'];
+type PublicMessage = components['schemas']['PublicMessageResource'];
 
 const client = (fetchImpl: typeof fetch) => new Funnelchat({ apiKey: TEST_API_KEY, fetch: fetchImpl });
 
@@ -124,11 +124,11 @@ describe('messages.get', () => {
     expect(message.status).toBe('delivered');
   });
 
-  it('is in the route table, flagged as pending of the spec (the snapshot does not have it yet)', () => {
+  it('is in the route table, now from the spec', () => {
     expect(routes.find((r) => r.method === 'GET' && r.path === '/api/v1/contacts/{contact}/messages/{message}')).toMatchObject({
       domain: 'conversations',
       permission: 'conversations:read',
-      pending: true,
+      pending: false,
     });
   });
 });

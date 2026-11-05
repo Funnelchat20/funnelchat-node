@@ -4,13 +4,75 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { APIError, APIPromise, Funnelchat, KnownErrorCode, Page, WebhookEvent, WebhookEventOf, WebhookEventType, components } from '../src/index.js';
 
-type PublicMessage = components['schemas']['PendingPublicMessage'];
+type PublicMessage = components['schemas']['PublicMessageResource'];
 
 describe('types', () => {
   it('compile (the checks below run in `npm run typecheck`)', () => {
     expect(typeof typeChecks).toBe('function');
+    expect(typeof readmeFirstUse).toBe('function');
   });
 });
+
+/**
+ * The code of the README's first use, receive messages, groups and workspaces, as written there
+ * (only `show` and the webhook handler's arguments are stand-ins). Never called: it only has to
+ * compile, so the README cannot drift from the types.
+ */
+async function readmeFirstUse(funnelchat: Funnelchat, event: WebhookEvent, show: (qrCode: string | null) => void) {
+  // 2. Connect a number
+  const { data: device } = await funnelchat.devices.create({ connection: 'qr' });
+
+  while (true) {
+    const { data: qr } = await funnelchat.devices.qr(device.id);
+    if (qr.connected) break;
+    show(qr.qr_code);
+    await new Promise((resolve) => setTimeout(resolve, qr.expires_in * 1000));
+  }
+  const { data: link } = await funnelchat.connectLinks.create({ type: 'qr' });
+  expectTypeOf(link.url).toEqualTypeOf<string>();
+
+  // 3. Send a message
+  const contact = await funnelchat.contacts.create({ phone: '5491100000000', name: 'Ana' });
+
+  const { message } = await funnelchat.messages.sendDirect({ device_id: device.id, contact_id: contact.id, text: 'Hi Ana!' });
+  expectTypeOf(message.status).toEqualTypeOf<'queued' | 'sent' | 'delivered' | 'read' | 'failed' | null>();
+
+  // 4. Know when it was read
+  const subscription = await funnelchat.webhooks.create({
+    url: 'https://your-app.example/hooks/funnelchat',
+    events: ['message.status_changed'],
+  });
+  expectTypeOf(subscription.secret).toEqualTypeOf<string>();
+  if (event.type === 'message.status_changed' && event.data.status === 'read') {
+    expectTypeOf(event.data.message_id).toEqualTypeOf<number>();
+  }
+  expectTypeOf((await funnelchat.messages.get(contact.id, message.id)).status).toEqualTypeOf<'queued' | 'sent' | 'delivered' | 'read' | 'failed' | null>();
+
+  // Receive messages
+  if (event.type === 'message.received') {
+    const { message: received, contact: sender, device_id } = event.data;
+    expectTypeOf(received.text ?? received.type).toEqualTypeOf<string>();
+    expectTypeOf(sender.phone).toEqualTypeOf<string | null>();
+
+    if (device_id && sender.id) {
+      await funnelchat.messages.sendDirect({ device_id, contact_id: sender.id, text: 'Got it, thanks!' });
+    }
+  }
+
+  // Groups
+  for await (const group of funnelchat.groups.list()) {
+    expectTypeOf(group.uid).toEqualTypeOf<string>();
+  }
+  const { action_id } = await funnelchat.groups.sendMessage('120363000000000001@g.us', {
+    device_id: device.id,
+    type: 'text',
+    text: 'Hi everyone!',
+  });
+  expectTypeOf((await funnelchat.groups.retrieveAction(action_id)).data.result).not.toBeUnknown();
+
+  // Workspaces
+  expectTypeOf(event.data.workspace_id).toEqualTypeOf<number | null>();
+}
 
 /** Never called: it only has to compile. */
 function typeChecks(client: Funnelchat) {
@@ -51,17 +113,20 @@ function typeChecks(client: Funnelchat) {
     // Each call returns an APIPromise: withResponse() brings the X-Request-Id.
     expectTypeOf(client.contacts.retrieve(1)).toMatchTypeOf<APIPromise<unknown>>();
     expectTypeOf<Awaited<ReturnType<ReturnType<typeof client.messages.get>['withResponse']>>['requestId']>().toEqualTypeOf<string | undefined>();
-    // The capabilities of a number.
-    expectTypeOf<Awaited<ReturnType<typeof client.devices.retrieve>>['capabilities']['statuses']>().toEqualTypeOf<('sent' | 'delivered' | 'read' | 'failed')[]>();
+    // The capabilities of a number (the spec types the statuses as strings: sent, delivered, read, failed).
+    expectTypeOf<Awaited<ReturnType<typeof client.devices.retrieve>>['capabilities']['statuses']>().toEqualTypeOf<string[]>();
     expectTypeOf(client.forms.create).parameter(0).toHaveProperty('template_key');
     // Creating and connecting numbers.
-    // The new fields of a number are optional: production does not send them until the deploy.
-    expectTypeOf<Awaited<ReturnType<typeof client.devices.create>>['data']['connection']>().toEqualTypeOf<'qr' | 'coexistence' | 'dedicated' | null | undefined>();
+    // Production sends how a number connects and your reference since accounts v1.4.38.
+    expectTypeOf<Awaited<ReturnType<typeof client.devices.create>>['data']['connection']>().toEqualTypeOf<'qr' | 'coexistence' | 'dedicated' | null>();
+    expectTypeOf<Awaited<ReturnType<typeof client.devices.retrieve>>['external_reference']>().toEqualTypeOf<string | null>();
     expectTypeOf<Awaited<ReturnType<typeof client.devices.qr>>['data']['qr_code']>().toEqualTypeOf<string | null>();
     expectTypeOf<Awaited<ReturnType<typeof client.connectLinks.create>>['data']['url']>().toEqualTypeOf<string>();
-    expectTypeOf<Awaited<ReturnType<typeof client.connectLinks.get>>['data']['status']>().toEqualTypeOf<'pending' | 'completed' | 'failed' | 'expired' | 'revoked'>();
-    // @ts-expect-error a meta link needs allowed_connection_types
-    void (() => client.connectLinks.create({ type: 'meta' }));
+    // The spec types the status of a link as a string: pending, completed, failed, expired or revoked.
+    expectTypeOf<Awaited<ReturnType<typeof client.connectLinks.get>>['data']['status']>().toEqualTypeOf<string>();
+    // The spec no longer ties the fields of a link to its type: the API still answers 422 to a meta link
+    // without allowed_connection_types, and to a country on a meta link.
+    void (() => client.connectLinks.create({ type: 'meta', allowed_connection_types: ['dedicated'] }));
     // @ts-expect-error only qr numbers are created directly
     void (() => client.devices.create({ connection: 'coexistence' }));
     void (() => client.devices.list({ external_reference: 'customer-81' }));
@@ -69,14 +134,21 @@ function typeChecks(client: Funnelchat) {
     // The country of the phone that scans the QR: on a QR number and a QR link, which returns it.
     void (() => client.devices.create({ connection: 'qr', country: 'br' }));
     void (() => client.connectLinks.create({ type: 'qr', country: 'br' }));
-    // @ts-expect-error country only goes with a QR link
-    void (() => client.connectLinks.create({ type: 'meta', allowed_connection_types: ['dedicated'], country: 'br' }));
     expectTypeOf<Awaited<ReturnType<typeof client.connectLinks.get>>['data']['country']>().toEqualTypeOf<string | null>();
     // The 0.1.2 signature `list(options)` still compiles.
     void (() => client.devices.list({ maxRetries: 0, signal: AbortSignal.timeout(1000) }));
     expectTypeOf(client.devices.delete).parameter(0).toEqualTypeOf<number>();
     // A route whose spec documents no body still returns whatever the API answers.
     expectTypeOf<Awaited<ReturnType<typeof client.webhooks.delete>>>().toBeUnknown();
+    // A message to a group: queued, followed by its action.
+    expectTypeOf<Awaited<ReturnType<typeof client.groups.sendMessage>>>().toEqualTypeOf<{ action_id: string; status: 'queued' }>();
+    expectTypeOf(client.groups.sendMessage).parameter(0).toEqualTypeOf<string>();
+    expectTypeOf<Parameters<typeof client.groups.sendMessage>[1]['type']>().toEqualTypeOf<'text' | 'image' | 'video' | 'audio' | 'document'>();
+    // @ts-expect-error device_id is required
+    void (() => client.groups.sendMessage('120363000000000001@g.us', { type: 'text', text: 'Hi' }));
+    expectTypeOf<Awaited<ReturnType<typeof client.groups.retrieveAction>>['data']['status']>().toEqualTypeOf<'queued' | 'running' | 'completed' | 'failed'>();
+    // Whether a template can be sent.
+    expectTypeOf<Awaited<ReturnType<typeof client.templates.retrieve>>['available']>().toEqualTypeOf<boolean>();
   }
 
   {
@@ -90,9 +162,21 @@ function typeChecks(client: Funnelchat) {
         expectTypeOf(event.data.client_reference).toEqualTypeOf<string | null>();
       }
       if (event.type === 'message.received') {
-        expectTypeOf(event.data.contact.phone).toEqualTypeOf<string>();
+        // As production sends it: no text for a file without caption, no phone for a `@lid`.
+        expectTypeOf(event.data.contact.phone).toEqualTypeOf<string | null>();
+        expectTypeOf(event.data.message.text).toEqualTypeOf<string | null>();
+        expectTypeOf(event.data.message.media).toEqualTypeOf<{ file: string } | null>();
         expectTypeOf(event.data.device_id).toEqualTypeOf<number | null>();
       }
+      if (event.type === 'group_participant.joined' || event.type === 'group_participant.left') {
+        expectTypeOf(event.data.campaign).toEqualTypeOf<{ uuid: string } | null>();
+        expectTypeOf(event.data.participant.identity_type).toEqualTypeOf<'phone' | 'whatsapp_user'>();
+      }
+      if (event.type === 'group_action.completed') {
+        expectTypeOf(event.data.action.uuid).toEqualTypeOf<string>();
+      }
+      // Every event says which workspace it belongs to.
+      expectTypeOf(event.data.workspace_id).toEqualTypeOf<number | null>();
       if (event.type === 'whatsapp_form.completed') {
         expectTypeOf(event.data.form.id).toEqualTypeOf<number>();
         expectTypeOf(event.data.answers[0]!.value).toEqualTypeOf<boolean | number | string | string[] | null>();
@@ -106,18 +190,20 @@ function typeChecks(client: Funnelchat) {
     };
     void handle;
     expectTypeOf<WebhookEventOf<'device.connected'>['data']['device']['id']>().toEqualTypeOf<number>();
-    // What the events add is optional until the deploy; connect_link_id is in the four.
-    expectTypeOf<WebhookEventOf<'device.connected'>['data']['connect_link_id']>().toEqualTypeOf<number | null | undefined>();
-    expectTypeOf<WebhookEventOf<'device.disconnected'>['data']['connect_link_id']>().toEqualTypeOf<number | null | undefined>();
-    expectTypeOf<WebhookEventOf<'device.deleted'>['data']['connect_link_id']>().toEqualTypeOf<number | null | undefined>();
-    expectTypeOf<WebhookEventOf<'device.health_changed'>['data']['connect_link_id']>().toEqualTypeOf<number | null | undefined>();
-    expectTypeOf<WebhookEventOf<'device.connected'>['data']['device']['external_reference']>().toEqualTypeOf<string | null | undefined>();
+    // In production since accounts v1.4.38, so no longer optional: connect_link_id is in all of them.
+    expectTypeOf<WebhookEventOf<'device.connected'>['data']['connect_link_id']>().toEqualTypeOf<number | null>();
+    expectTypeOf<WebhookEventOf<'device.disconnected'>['data']['connect_link_id']>().toEqualTypeOf<number | null>();
+    expectTypeOf<WebhookEventOf<'device.deleted'>['data']['connect_link_id']>().toEqualTypeOf<number | null>();
+    expectTypeOf<WebhookEventOf<'device.health_changed'>['data']['connect_link_id']>().toEqualTypeOf<number | null>();
+    expectTypeOf<WebhookEventOf<'device.quality_changed'>['data']['connect_link_id']>().toEqualTypeOf<number | null>();
+    expectTypeOf<WebhookEventOf<'device.connected'>['data']['device']['external_reference']>().toEqualTypeOf<string | null>();
+    expectTypeOf<WebhookEventOf<'device.connected'>['data']['workspace_id']>().toEqualTypeOf<number | null>();
     expectTypeOf<WebhookEventOf<'device.disconnected'>['data']['reason']>().toEqualTypeOf<
-      'qr_logged_out' | 'meta_account_not_registered' | 'shadow_ban_protection' | 'provider_error' | 'unknown' | 'disconnected_by_user' | undefined
+      'qr_logged_out' | 'meta_account_not_registered' | 'shadow_ban_protection' | 'provider_error' | 'unknown' | 'disconnected_by_user'
     >();
     expectTypeOf<WebhookEventOf<'device.disconnected'>['data']['disconnected_at']>().toEqualTypeOf<string>();
     expectTypeOf<WebhookEventOf<'device.health_changed'>['data']['state']>().toEqualTypeOf<'available' | 'limited' | 'blocked' | 'unknown'>();
-    expectTypeOf<WebhookEventOf<'device.deleted'>['data']['device']['connection']>().toEqualTypeOf<'qr' | 'coexistence' | 'dedicated' | null | undefined>();
+    expectTypeOf<WebhookEventOf<'device.deleted'>['data']['device']['connection']>().toEqualTypeOf<'qr' | 'coexistence' | 'dedicated' | null>();
     expectTypeOf<'group.reaction_added'>().toMatchTypeOf<WebhookEventType>();
     expectTypeOf<'group_join_request.created'>().toMatchTypeOf<WebhookEventType>();
   }
@@ -130,6 +216,7 @@ function typeChecks(client: Funnelchat) {
     expectTypeOf<'idempotency_key_mismatch'>().toMatchTypeOf<KnownErrorCode>();
     expectTypeOf<'pending_number_exists'>().toMatchTypeOf<KnownErrorCode>();
     expectTypeOf<'credentials_not_allowed'>().toMatchTypeOf<KnownErrorCode>();
+    expectTypeOf<'device_not_group_admin'>().toMatchTypeOf<KnownErrorCode>();
     expectTypeOf<'something_new'>().toMatchTypeOf<NonNullable<APIError['code']>>();
   }
 }
