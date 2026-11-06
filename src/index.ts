@@ -57,10 +57,19 @@ export {
   IDEMPOTENCY_ERROR_CODES,
   NUMBER_ERROR_CODES,
   SEND_ERROR_CODES,
+  TEMPLATE_ERROR_CODES,
   isNumberQuotaError,
   isSendRuleError,
 } from './core/error-codes.js';
-export type { AccessErrorCode, GroupActionErrorCode, IdempotencyErrorCode, KnownErrorCode, NumberErrorCode, SendErrorCode } from './core/error-codes.js';
+export type {
+  AccessErrorCode,
+  GroupActionErrorCode,
+  IdempotencyErrorCode,
+  KnownErrorCode,
+  NumberErrorCode,
+  SendErrorCode,
+  TemplateErrorCode,
+} from './core/error-codes.js';
 export type { SendMessageParams } from './resources/messages.js';
 
 export { VERSION } from './version.js';

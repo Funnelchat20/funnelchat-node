@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 0ffaad2b25733d28…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 38ae497ab7e6089b…) + spec/pending.json.
  */
 /* eslint-disable */
 export interface paths {
@@ -1636,6 +1636,41 @@ export interface paths {
         get: operations["messageTemplate.quickReplyButtons"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/devices/{device}/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sincronizar las plantillas de un número con Meta
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
+         *
+         *     Sincroniza con Meta las plantillas de un número de la API oficial de WhatsApp: trae las que se crearon o cambiaron directamente en Meta y quita las de una cuenta de WhatsApp Business que el número ya no usa. `{device}` es el `id` del número.
+         *
+         *     - **Asíncrona:** la primera página (hasta 100 plantillas) se lee en el momento y las siguientes en segundo plano. Responde 202 con `status`: `completed` si ya terminó, `in_progress` si sigue. Las plantillas sincronizadas se listan con `GET /templates`.
+         *     - **Una a la vez:** mientras hay una sincronización de ese número en curso, otra llamada responde 409 y no lanza una nueva.
+         *     - **Errores de Meta:** si Meta rechaza la lectura (por ejemplo, porque el token del número venció o la cuenta de WhatsApp Business no existe), responde 422 `meta_rejected` con el código de error de Meta en `meta_code` y no sincroniza nada.
+         *
+         *     | HTTP | `error` | Cuándo |
+         *     |---|---|---|
+         *     | 404 | — | El número no existe en tu cuenta o está fuera del workspace de tu clave. |
+         *     | 409 | `template_sync_in_progress` | Ya hay una sincronización de ese número en curso. |
+         *     | 422 | `number_not_connected_to_meta` | El número está conectado por QR o no tiene una cuenta de WhatsApp Business o credenciales en Meta. |
+         *     | 422 | `meta_rejected` | Meta rechazó la lectura de las plantillas (`meta_code` trae su código de error). |
+         *     | 429 | — | Demasiadas solicitudes por minuto (ver `Retry-After`). |
+         *     | 502 | `meta_unavailable` | Meta no respondió. |
+         */
+        post: operations["messageTemplate.sync"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5829,7 +5864,7 @@ export interface webhooks {
          * broadcast.paused
          * @description Una campaña se pausó sola, por ejemplo porque bajó la calidad del número.
          *
-         *     `reason` es `quality_degraded` (la calidad del número bajó respecto de la del inicio, o llegó a RED), `quality_unreadable` (no se pudo leer la calidad en tres controles seguidos), `template_unavailable` (Meta dejó la plantilla en `PAUSED`, `DISABLED` o `REJECTED` antes de una tanda) o `rejection_rate` (en los envíos recientes del número, por defecto las últimas 24 horas, Meta rechazó una proporción igual o mayor al umbral configurable: el código 131049, por defecto 5 %; el código 131026, por defecto 5 %; o los códigos que indican una restricción de la cuenta o del número, por defecto 15 %, con la lista configurable y por defecto 131049, 131048, 131031 y 368). Con `rejection_rate` llega además `rejection`: `codes` (los que llegaron a su umbral: `131049`, `131026` o `failed`), `rates` (el porcentaje de cada uno), `attempts` (los envíos medidos) y `window_hours`. `quality` y `quality_baseline` son la calidad de Meta leída en el control y la del inicio del envío (`GREEN`, `YELLOW`, `RED`), o `null` si no se pudo leer. `template` es `{name, status}` con el nombre de la plantilla y su estado en Meta cuando `reason` es `template_unavailable`, y `null` en las demás pausas (por calidad o por rechazos). Con `rejection_rate` el número además queda frenado 7 días (configurable): mientras dure no se pueden crear, ejecutar ni reanudar campañas desde ese número, ni mandar plantillas a contactos que no le escribieron en las últimas 24 horas, y solo soporte lo levanta antes. Sólo las campañas con envío inteligente se pausan solas. Reanudar la campaña y que se pause otra vez emite otro evento.
+         *     `reason` es `quality_degraded` (la calidad del número bajó respecto de la del inicio, o llegó a RED), `quality_unreadable` (no se pudo leer la calidad en tres controles seguidos), `template_unavailable` (Meta dejó la plantilla en `PAUSED`, `DISABLED` o `REJECTED` antes de una tanda), `payment_issue` (el 2 % o más de los envíos de la misma campaña, con un mínimo de 20 envíos, fueron rechazados por Meta con el código 131042, un problema de pago o de facturación de la cuenta de WhatsApp Business; el 2 % y el mínimo de 20 envíos son los valores por defecto y se pueden configurar; aplica a cualquier campaña, tenga o no envío inteligente; no frena el número; al reanudar la campaña el conteo, incluidos los envíos que cuentan, vuelve a empezar de cero) o `rejection_rate` (entre los envíos recientes de la propia campaña, por defecto las últimas 24 horas, Meta rechazó una proporción igual o mayor al umbral configurable, por defecto 15 %, con los códigos que indican una restricción de la cuenta o del número; la lista es configurable y por defecto es 131048, 131031 y 368; los códigos 131049 y 131026 no pausan la campaña). Con `rejection_rate` llega además `rejection`: `codes` (los que llegaron a su umbral: hoy `failed`), `rates` (el porcentaje de cada uno; las tasas de `131049` y `131026` se informan como dato aunque no pausen), `attempts` (los envíos medidos) y `window_hours`. `quality` y `quality_baseline` son la calidad de Meta leída en el control y la del inicio del envío (`GREEN`, `YELLOW`, `RED`), o `null` si no se pudo leer, y siempre `null` en una difusión sin envío inteligente. `template` es `{name, status}` con el nombre de la plantilla y su estado en Meta cuando `reason` es `template_unavailable`, y `null` en las demás pausas (por calidad, pago o rechazos). Con `rejection_rate` el número además queda frenado 7 días (configurable): mientras dure no se pueden crear, ejecutar ni reanudar campañas desde ese número, ni mandar plantillas a contactos que no le escribieron en las últimas 24 horas, y solo soporte lo levanta antes. Las pausas por calidad, por plantilla y por rechazos son solo de las campañas con envío inteligente; la pausa por `payment_issue` puede ocurrir en cualquier campaña. Reanudar la campaña y que se pause otra vez emite otro evento.
          */
         post: {
             parameters: {
@@ -12642,6 +12677,7 @@ export interface operations {
                 kanbanSettingId?: number;
                 kanbanStageIds?: string;
                 unreadMessages?: boolean;
+                awaitingReply?: boolean;
                 onlyWithMac?: boolean;
                 cursor?: string;
                 updated_since?: string;
@@ -15094,6 +15130,84 @@ export interface operations {
             401: components["responses"]["ConversationsAuthenticationException"];
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
+        };
+    };
+    "messageTemplate.sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                device: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        status: "in_progress" | "completed";
+                    };
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        message: string;
+                    };
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "template_sync_in_progress";
+                        message: string;
+                    };
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "number_not_connected_to_meta" | "meta_rejected";
+                        message: string;
+                        meta_code?: number | null;
+                    };
+                };
+            };
+            /** @description Bad Gateway */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "meta_unavailable";
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "messageTemplate.send": {
