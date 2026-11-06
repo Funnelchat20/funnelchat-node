@@ -154,7 +154,7 @@ CommonJS: `const { Funnelchat } = require('@funnelchat-hq/sdk');`. Every request
 | `funnelchat.connectLinks` | `create`, `get`, `list`, `revoke`: a page where your customer connects a number. |
 | `funnelchat.contacts` | `list`, `create`, `upsert`, `retrieve`, `update`, `delete`, the tags and fields of a contact, `metaWindow` (the 24-hour window), notes. |
 | `funnelchat.messages` | `send`, `sendDirect`, `sendForm`, `sendContactCard`, `forward`, `get` (one message by id), `list` (the history of a contact), `react`, `removeReaction`. |
-| `funnelchat.templates` | `list`, `create`, `retrieve`, `update`, `quickReplyButtons`, `send`, `delete`. |
+| `funnelchat.templates` | `list`, `sync` (bring a number's templates from Meta), `create`, `retrieve`, `update`, `quickReplyButtons`, `send`, `delete`. |
 | `funnelchat.groups` | `listByDevice` (a number's live groups), `follow`, `list`, `retrieve`, participants and their joins and leaves, messages, `sendMessage` and `retrieveAction`. |
 | `funnelchat.webhooks` | Subscriptions (`list`, `create`, `retrieve`, `update`, `delete`, `test`, `listDeliveries`), the catalog (`events`), `verify` and `constructEvent`. |
 | `funnelchat.conversations` | `list`, `update`, counters, mark everything as read or unread. |
@@ -174,6 +174,7 @@ A key has the permissions ticked when it was created. The panel groups them by a
 | Create numbers, show their QR, create and revoke connect links, delete numbers | **WhatsApp numbers → Create, connect and delete** |
 | Create contacts | **Contacts and conversations → Edit** |
 | Send messages and templates | **Contacts and conversations → Send** |
+| Bring a number's templates from Meta | **Contacts and conversations → Edit** |
 | Read groups | **Groups and campaigns → View** |
 | Send to a group | **Groups and campaigns → Send** (and **Groups and campaigns → Manage groups** for one not in the account yet) |
 | Follow a group | **Groups and campaigns → Manage groups** |
@@ -229,6 +230,8 @@ const { message } = await funnelchat.templates.send(3, '45', {
   template_variables: { body: ['Lucía'] }, // the body variables, in order
 });
 ```
+
+A template you created directly in Meta does not appear in `templates.list()`? Bring the number's templates from Meta with `await funnelchat.templates.sync(3)` and list again (official numbers only; with `status: 'in_progress'`, the rest arrives in a few seconds).
 
 #### When a send is stopped
 

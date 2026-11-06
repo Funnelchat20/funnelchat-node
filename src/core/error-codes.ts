@@ -166,6 +166,18 @@ export const GROUP_ACTION_ERROR_CODES = {
   import_in_progress: 409,
 } as const;
 
+/** Rejections of bringing a number's templates from Meta (`templates.sync`): nothing was brought. */
+export const TEMPLATE_ERROR_CODES = {
+  /** 409: a sync of that number is already running. Do not start another: list again in a few seconds. */
+  template_sync_in_progress: 409,
+  /** 422: the number is connected by QR, or has no WhatsApp Business account or credentials in Meta. */
+  number_not_connected_to_meta: 422,
+  /** 422: Meta refused to read the templates; its code comes in `meta_code` of `APIError.body`. */
+  meta_rejected: 422,
+  /** 502: Meta did not answer. */
+  meta_unavailable: 502,
+} as const;
+
 /** Rejections of a create sent with `idempotencyKey`. */
 export const IDEMPOTENCY_ERROR_CODES = {
   /** 422: the key was already used with another body. Use a new key for a new resource. */
@@ -182,10 +194,12 @@ export type SendErrorCode = keyof typeof SEND_ERROR_CODES;
 /** An error code of creating a number or a connect link (`APIError.code`). */
 export type NumberErrorCode = keyof typeof NUMBER_ERROR_CODES;
 export type IdempotencyErrorCode = keyof typeof IDEMPOTENCY_ERROR_CODES;
+/** An error code of bringing a number's templates from Meta (`APIError.code`). */
+export type TemplateErrorCode = keyof typeof TEMPLATE_ERROR_CODES;
 /** An error code of a message to a group or of reading a group action (`APIError.code`). */
 export type GroupActionErrorCode = keyof typeof GROUP_ACTION_ERROR_CODES;
 /** Every `error` code the SDK knows. The API can send others: treat `code` as a `string`. */
-export type KnownErrorCode = AccessErrorCode | SendErrorCode | NumberErrorCode | IdempotencyErrorCode | GroupActionErrorCode;
+export type KnownErrorCode = AccessErrorCode | SendErrorCode | NumberErrorCode | IdempotencyErrorCode | GroupActionErrorCode | TemplateErrorCode;
 
 const has = (table: object, code: string | undefined): boolean => code !== undefined && Object.prototype.hasOwnProperty.call(table, code);
 

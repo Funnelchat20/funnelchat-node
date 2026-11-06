@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 0ffaad2b25733d28…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 38ae497ab7e6089b…) + spec/pending.json.
  */
 
 /** One operation of the public API. `pending` = taken from spec/pending.json, not from the snapshot. */
@@ -15,7 +15,7 @@ export interface RouteInfo {
   readonly pending: boolean;
 }
 
-/** Every operation of the spec (284), sorted by path. */
+/** Every operation of the spec (285), sorted by path. */
 export const routes: readonly RouteInfo[] = [
   {"method":"GET","path":"/api/v1/agents","operationId":"user.index","domain":"conversations","permission":"conversations:read","tag":"User","summary":"Listar agentes","pending":false},
   {"method":"GET","path":"/api/v1/agents/{user}","operationId":"user.show","domain":"conversations","permission":"conversations:read","tag":"User","summary":"Ver un agente","pending":false},
@@ -150,6 +150,7 @@ export const routes: readonly RouteInfo[] = [
   {"method":"GET","path":"/api/v1/devices/{device}/qr","operationId":"deviceProvisioning.qr","domain":"accounts","permission":"accounts:operate","tag":"DeviceProvisioning","summary":"Pedir el QR de un número","pending":true},
   {"method":"PUT","path":"/api/v1/devices/{device}/reset","operationId":"device.reset","domain":"accounts","permission":"accounts:operate","tag":"Device","summary":"Reiniciar la sesión de un número","pending":false},
   {"method":"GET","path":"/api/v1/devices/{device}/status","operationId":"device.status","domain":"accounts","permission":"accounts:read","tag":"Device","summary":"Ver el estado de conexión","pending":false},
+  {"method":"POST","path":"/api/v1/devices/{device}/templates","operationId":"messageTemplate.sync","domain":"conversations","permission":"conversations:write","tag":"MessageTemplate","summary":"Sincronizar las plantillas de un número con Meta","pending":false},
   {"method":"DELETE","path":"/api/v1/devices/{device}/templates/{template}","operationId":"messageTemplate.delete","domain":"conversations","permission":"conversations:write","tag":"MessageTemplate","summary":"Eliminar una plantilla de un número","pending":false},
   {"method":"POST","path":"/api/v1/devices/{device}/templates/{template}/send-template","operationId":"messageTemplate.send","domain":"conversations","permission":"conversations:send","tag":"MessageTemplate","summary":"Enviar una plantilla","pending":true},
   {"method":"PUT","path":"/api/v1/devices/{device}/update-webhook-received","operationId":"device.updateWebhookReceived","domain":"accounts","permission":"accounts:write","tag":"Device","summary":"Configurar el webhook de mensajes recibidos","pending":false},

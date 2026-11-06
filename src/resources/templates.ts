@@ -6,12 +6,30 @@ type SendPath = '/api/v1/devices/{device}/templates/{template}/send-template';
 type DeviceId = PathParams<SendPath, 'POST'>['device'];
 type SendTemplateId = PathParams<SendPath, 'POST'>['template'];
 type DeleteTemplateId = PathParams<'/api/v1/devices/{device}/templates/{template}', 'DELETE'>['template'];
+type SyncDeviceId = PathParams<'/api/v1/devices/{device}/templates', 'POST'>['device'];
 
-/** WhatsApp message templates (conversations area): list, create, edit, send. */
+/** WhatsApp message templates (conversations area): list, bring from Meta, create, edit, send. */
 export class Templates extends Resource {
   /** `GET /api/v1/templates`, paginated. */
   list(query?: Query<'/api/v1/templates'>, options?: RequestOptions) {
     return this.client.paginate('/api/v1/templates', { ...options, query });
+  }
+
+  /**
+   * `POST /api/v1/devices/{device}/templates`: brings the templates an official number has in Meta,
+   * such as one you just created there, so you can list and send them. No body. Resolves to
+   * `{ status }`: `completed` when it is done, or `in_progress` when the first page (up to 100) is
+   * in and the rest keeps coming in the background: list again in a few seconds. It also drops the
+   * templates of a WhatsApp Business account the number no longer uses.
+   *
+   * Needs **Contacts and conversations → Edit**. Errors (`TEMPLATE_ERROR_CODES`): `404` (the number
+   * is not in the key's workspace), `409 template_sync_in_progress` (one is already running for that
+   * number: do not start another), `422 number_not_connected_to_meta` (a QR number, or one without
+   * its WhatsApp Business account or credentials), `422 meta_rejected` (Meta refused; `meta_code`
+   * in `APIError.body`, nothing was brought) and `502 meta_unavailable` (Meta did not answer).
+   */
+  sync(device: SyncDeviceId, options?: RequestOptions) {
+    return this.client.request('POST', '/api/v1/devices/{device}/templates', { ...options, path: { device } });
   }
 
   /** `POST /api/v1/templates`: creates a template and submits it to Meta. */

@@ -76,6 +76,19 @@ describe('sends return what the API answers', () => {
     expect(message.contact_id).toBe(2002);
   });
 
+  it('templates.sync brings the templates of a number from Meta: no body, its status, and typed errors', async () => {
+    const { fetch, calls } = mockFetch(
+      { status: 202, body: { status: 'in_progress' } },
+      { status: 422, body: { error: 'number_not_connected_to_meta', message: '…' } },
+    );
+    const funnelchat = client(fetch);
+    expect(await funnelchat.templates.sync(3)).toEqual({ status: 'in_progress' });
+    expect(calls[0]).toMatchObject({ method: 'POST', url: 'https://api.funnelchat.com/api/v1/devices/3/templates', body: undefined });
+    const error = (await funnelchat.templates.sync(4).catch((e: unknown) => e)) as APIError;
+    expect(error).toBeInstanceOf(UnprocessableEntityError);
+    expect(error.code).toBe('number_not_connected_to_meta');
+  });
+
   it('messages.sendForm sends a form by its family id and resolves to { message }', async () => {
     const { fetch, calls } = mockFetch({ status: 200, body: { message: { ...queued, type: 'whatsapp_form' } } });
     const result = await client(fetch).messages.sendForm(2001, { form_id: 12, device_id: 3, client_reference: 'encuesta-1' });
