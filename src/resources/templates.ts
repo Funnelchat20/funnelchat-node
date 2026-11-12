@@ -47,11 +47,6 @@ export class Templates extends Resource {
     return this.client.request('PUT', '/api/v1/templates/{template}', { ...options, path: { template }, body });
   }
 
-  /** `GET /api/v1/templates/{template}/quick-reply-buttons`. */
-  quickReplyButtons(template: TemplateId, options?: RequestOptions) {
-    return this.client.request('GET', '/api/v1/templates/{template}/quick-reply-buttons', { ...options, path: { template } });
-  }
-
   /**
    * `POST /api/v1/devices/{device}/templates/{template}/send-template`: sends an approved template
    * (the way to write to a contact outside the 24-hour window). `phone` and `contact_id` are

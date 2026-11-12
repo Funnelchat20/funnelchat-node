@@ -2,16 +2,13 @@
  * The stable `error` codes of the API (`APIError.code`), with their HTTP status. Decide by `status`
  * and `code`, never by `message`: its text and language change by area.
  *
- * Sources (production on 04-11-2026): platform-gate v0.9.1 as pinned by accounts v1.5.97 (a key
- * whose workspace cannot be read is `503 gate_unavailable`, no new code); api-edge 975d815, deployed
- * to production on 25-10 (src/index.ts; its latest tag, v0.3.0, is older); conversations v1.19.7
- * (Message/Services/ApiSendGuard.php and Message/Support/ApiKeySendResponse.php, byte-identical to
- * v1.18.10, and WhatsappForm/Support/FormSendPreflight.php); accounts v1.5.97 (creating and
- * connecting numbers, contract 1022-alta-de-numeros); communities v2.35.5 and v2.35.7 (the callers of
- * GroupManagement/Exceptions/ApiGroupActionRejected.php). The full unified spec of developers-portal
- * c90565e4 enumerates only the send rules of conversations (and the read receipt and typing routes,
- * which have no method here); the rest is not documented there yet. When it is, this list can be
- * generated.
+ * Sources, all in production on 04-11-2026: the key gate as accounts v1.5.97 runs it (a key whose
+ * workspace cannot be read is `503 gate_unavailable`, no new code); the API entry as deployed to
+ * production on 25-10-2026; conversations v1.19.7 (the send rules, the same as in v1.18.10, and the
+ * checks before sending a form); accounts v1.5.97 (creating and connecting numbers); communities
+ * v2.35.5 and v2.35.7 (the rejections of a group action). The spec the portal publishes (portal
+ * v0.6.13) documents some of these codes in the operations that answer them, but not those of the
+ * API entry and the key gate. When it documents all of them, this list can be generated.
  */
 
 /** Errors of the API entry and of the key gate, on any route. */

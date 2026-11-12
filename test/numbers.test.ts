@@ -1,5 +1,5 @@
 /**
- * Creating and connecting numbers (contract 1022-alta-de-numeros, in production except Meta links): each
+ * Creating and connecting numbers (accounts v1.5.97, in production except the Meta links): each
  * method calls its route, the creates send `Idempotency-Key`, the route table carries the
  * permissions, and the new error codes are not retried.
  */

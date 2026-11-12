@@ -52,14 +52,6 @@ export class Webhooks extends Resource {
     return this.client.request('DELETE', '/api/v1/webhooks/{id}', { ...options, path: { id } });
   }
 
-  /**
-   * `POST /api/v1/webhooks/{id}/rotate-secret`: the new secret comes once; the old one stops
-   * working. **Not open to API keys** (`403 route_not_available`): rotate it from the panel.
-   */
-  rotateSecret(id: SubscriptionId, options?: RequestOptions) {
-    return this.client.request('POST', '/api/v1/webhooks/{id}/rotate-secret', { ...options, path: { id } });
-  }
-
   /** `POST /api/v1/webhooks/{id}/test`: delivers one signed `webhook.test` now. Check `succeeded`. */
   test(id: SubscriptionId, options?: RequestOptions) {
     return this.client.request('POST', '/api/v1/webhooks/{id}/test', { ...options, path: { id } });

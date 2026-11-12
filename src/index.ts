@@ -47,8 +47,8 @@ export type { RawBody, VerifyOptions } from './webhooks/signature.js';
 
 export { webhookEvents } from './generated/events.js';
 export type { WebhookEventInfo } from './generated/events.js';
-export { routes } from './generated/routes.js';
-export type { RouteInfo } from './generated/routes.js';
+export { routeGroups, routes } from './generated/routes.js';
+export type { RouteGroupInfo, RouteInfo } from './generated/routes.js';
 export type { components, operations, paths, webhooks as WebhookSchemas } from './generated/openapi.js';
 
 export {

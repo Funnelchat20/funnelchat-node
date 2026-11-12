@@ -1,9 +1,8 @@
 /**
  * The signature vectors of the developer portal, replicated case by case.
  *
- * Source: developers-portal `tests/test_firmas.py` (branch feat/armar-funnelchat-portal @ dd7cd42;
- * identical in feat/openapi-unificada @ 0ef4abb), which tests `snippets/verificar-firma.js`,
- * `verificar-firma.php` and `verificar_firma.py`. Same secret, same body bytes, same cases.
+ * They are the cases the developer portal checks its own signature examples with (JavaScript, PHP
+ * and Python). Same secret, same body bytes, same cases.
  * The secret is a test value published in the portal, not a real one.
  */
 import { createHmac } from 'node:crypto';

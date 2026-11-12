@@ -18,7 +18,7 @@ describe('forms', () => {
     await forms.templates();
     await forms.create({ device_id: 3, template_key: 'encuesta' });
     await forms.retrieve(34);
-    await forms.update(34, { definition: {}, expected_updated_at: '2026-10-22T12:00:00Z' });
+    await forms.update(34, { definition: { screens: [] }, expected_updated_at: '2026-10-22T12:00:00Z' });
     await forms.delete(34);
     await forms.createVersion(34);
     await forms.sync(34);

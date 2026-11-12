@@ -190,6 +190,9 @@ function typeChecks(client: Funnelchat) {
       }
     };
     void handle;
+    // Production sends the message of a group as `uid` (communities v2.35.28), although the portal's example says `id`.
+    expectTypeOf<WebhookEventOf<'group.message_received'>['data']['message']['uid']>().toEqualTypeOf<string>();
+    expectTypeOf<WebhookEventOf<'group.reaction_added'>['data']['message']['uid']>().toEqualTypeOf<string>();
     expectTypeOf<WebhookEventOf<'device.connected'>['data']['device']['id']>().toEqualTypeOf<number>();
     // In production since accounts v1.4.38, so no longer optional: connect_link_id is in all of them.
     expectTypeOf<WebhookEventOf<'device.connected'>['data']['connect_link_id']>().toEqualTypeOf<number | null>();
