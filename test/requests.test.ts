@@ -184,7 +184,7 @@ describe('resources build the right requests', () => {
     });
   });
 
-  it('webhooks subscriptions (pending of the spec)', async () => {
+  it('webhooks subscriptions', async () => {
     const id = '00000000-0000-4000-8000-000000000001';
     expect(
       await capture((c) => c.webhooks.create({ url: 'https://example.com/hooks', events: ['message.received', 'message.status_changed'] }), {
@@ -196,7 +196,6 @@ describe('resources build the right requests', () => {
       method: 'PUT',
       path: `/api/v1/webhooks/${id}`,
     });
-    expect(await capture((c) => c.webhooks.rotateSecret(id))).toMatchObject({ method: 'POST', path: `/api/v1/webhooks/${id}/rotate-secret` });
     expect(await capture((c) => c.webhooks.test(id))).toMatchObject({ method: 'POST', path: `/api/v1/webhooks/${id}/test` });
     expect(await capture((c) => c.webhooks.listDeliveries(id, { per_page: 50 }).then((p) => p.data))).toMatchObject({
       method: 'GET',

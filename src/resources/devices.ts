@@ -91,16 +91,6 @@ export class Devices extends Resource {
     return this.client.request('GET', '/api/v1/devices/{device}/health', { ...options, path: { device } });
   }
 
-  /** `GET /api/v1/devices/{device}/me`: the WhatsApp profile of the number. */
-  me(device: DeviceId, options?: RequestOptions) {
-    return this.client.request('GET', '/api/v1/devices/{device}/me', { ...options, path: { device } });
-  }
-
-  /** `GET /api/v1/devices/{device}/check-phone`: whether a phone has WhatsApp. */
-  checkPhone(device: DeviceId, query: Query<'/api/v1/devices/{device}/check-phone'>, options?: RequestOptions) {
-    return this.client.request('GET', '/api/v1/devices/{device}/check-phone', { ...options, path: { device }, query });
-  }
-
   /** `GET /api/v1/devices/{device}/connection-history`, paginated. */
   listConnectionHistory(device: DeviceId, query?: Query<'/api/v1/devices/{device}/connection-history'>, options?: RequestOptions) {
     return this.client.paginate('/api/v1/devices/{device}/connection-history', { ...options, path: { device }, query });

@@ -2,8 +2,9 @@
 
 Official Node.js and TypeScript SDK for the [Funnelchat API](https://developers-portal.funnelchat.app/docs/): connect your WhatsApp number, send messages, know when they are read, receive them and handle your groups from your code.
 
+- Every function the developer portal publishes for an API key, typed: see [Every function of the portal](#every-function-of-the-portal).
 - TypeScript, ESM and CommonJS. Node 18 or later, with Node's own `fetch`. No runtime dependencies.
-- Types generated from the OpenAPI spec, safe retries, pagination with `for await`, typed errors with the `X-Request-Id` of each response, and webhook signature verification.
+- Types generated from the spec the portal publishes, safe retries, pagination with `for await`, typed errors with the `X-Request-Id` of each response, and webhook signature verification.
 
 ```bash
 npm install @funnelchat-hq/sdk
@@ -128,6 +129,30 @@ console.log(event.type, event.data.workspace_id); // 'message.received', 37
 
 An account with a single workspace, or without workspaces, works as always: its events carry the id of its default workspace. The caps of 20 keys and 50 subscriptions count per workspace.
 
+## Every function of the portal
+
+The SDK covers every function the developer portal publishes for an API key, the ones in [More functions](https://developers-portal.funnelchat.app/docs/mas-funciones/) included:
+
+<!-- generated:functions — written by scripts/generate.mjs; do not edit by hand -->
+**253 operations and 56 webhook events**, in the 30 groups of the portal (named as the portal names them):
+
+- **[Primer uso](https://developers-portal.funnelchat.app/):** Mensajes.
+- **[Funciones de WhatsApp](https://developers-portal.funnelchat.app/docs/mas-funciones/whatsapp/):** Números, Grupos, Atender una conversación, Cola de mensajes de un número, Acciones de grupo, Plantillas, Formularios, Conversions API, Costos y cuentas de Meta.
+- **[Funciones de Funnelchat](https://developers-portal.funnelchat.app/docs/mas-funciones/funnelchat/):** Contactos, Conversaciones, Etiquetas, Campos personalizados, Automatizaciones, Campañas, Envíos programados, Estadísticas, Difusiones, Tableros, Tickets, Notas, Respuestas rápidas, Carpetas de flujos, Puntaje, Ventas, Dominios propios, Tu cuenta y tu equipo, Alertas, Webhooks.
+<!-- /generated:functions -->
+
+The resources ([The pieces](#the-pieces)) wrap the most used ones. Any of them is a typed call with [`request`](#any-route), or `paginate` for a list, by the method and path the portal shows:
+
+```ts
+for await (const broadcast of funnelchat.paginate('/api/v1/broadcasts', { query: { perPage: 50 } })) {
+  console.log(broadcast.id, broadcast.name);
+}
+
+const { data: tickets } = await funnelchat.request('GET', '/api/v1/tickets');
+```
+
+`routes` lists every operation with its group as the portal names it (`tag`), the category of the group as the portal shows it (`category`), its permission and its summary; `routeGroups` has the groups in the portal's order. An operation with `destructive: true` cannot be undone, such as deleting a number: a script or an AI agent acting on its own should ask a person to confirm before calling it. `destructive: null` means the spec does not say.
+
 ---
 
 ## Reference
@@ -150,19 +175,19 @@ CommonJS: `const { Funnelchat } = require('@funnelchat-hq/sdk');`. Every request
 
 | Resource | What it has |
 |---|---|
-| `funnelchat.devices` | Your WhatsApp numbers: `list` (filter by `external_reference`), `create` (a QR number), `qr`, `retrieve` (with `capabilities`), `update`, `delete`, `status`, `health`, `me`, `checkPhone`, connection history. The `id` of a number is the `device_id` you send with. |
+| `funnelchat.devices` | Your WhatsApp numbers: `list` (filter by `external_reference`), `create` (a QR number), `qr`, `retrieve` (with `capabilities`), `update`, `delete`, `status`, `health`, connection history. The `id` of a number is the `device_id` you send with. |
 | `funnelchat.connectLinks` | `create`, `get`, `list`, `revoke`: a page where your customer connects a number. |
 | `funnelchat.contacts` | `list`, `create`, `upsert`, `retrieve`, `update`, `delete`, the tags and fields of a contact, `metaWindow` (the 24-hour window), notes. |
 | `funnelchat.messages` | `send`, `sendDirect`, `sendForm`, `sendContactCard`, `forward`, `get` (one message by id), `list` (the history of a contact), `react`, `removeReaction`. |
-| `funnelchat.templates` | `list`, `sync` (bring a number's templates from Meta), `create`, `retrieve`, `update`, `quickReplyButtons`, `send`, `delete`. |
-| `funnelchat.groups` | `listByDevice` (a number's live groups), `follow`, `list`, `retrieve`, participants and their joins and leaves, messages, `sendMessage` and `retrieveAction`. |
+| `funnelchat.templates` | `list`, `sync` (bring a number's templates from Meta), `create`, `retrieve`, `update`, `send`, `delete`. |
+| `funnelchat.groups` | `listByDevice` (a number's live groups), `follow`, `list`, `retrieve`, participants and their joins and leaves, scheduled messages, actions, `sendMessage` and `retrieveAction`. |
 | `funnelchat.webhooks` | Subscriptions (`list`, `create`, `retrieve`, `update`, `delete`, `test`, `listDeliveries`), the catalog (`events`), `verify` and `constructEvent`. |
-| `funnelchat.conversations` | `list`, `update`, counters, mark everything as read or unread. |
+| `funnelchat.conversations` | `list`, counters, mark everything as read or unread. |
 | `funnelchat.forms` | WhatsApp forms: `list`, `templates`, `create`, `retrieve`, `update`, `delete`, `createVersion`, `sync`, `publish`, numbers, `versions`, answers and `metrics`. |
 | `funnelchat.tags` | `list`, `create`, `retrieve`, `update`, `delete`, `listContacts`. |
 | `funnelchat.customFields` | `list`, `create`, `retrieve`, `update`, `delete`. |
 
-Parameters, bodies and responses are typed from the spec. For any other route, see [Any route](#any-route).
+Parameters, bodies and responses are typed from the spec. Every other function of the portal is a typed call too: see [Any route](#any-route).
 
 ### Permissions
 
@@ -419,7 +444,7 @@ const subscription = await funnelchat.webhooks.create({
 - Name every event you want: `message.status_changed` too. `events` is typed with the names the API accepts.
 - Permissions: **Notifications (webhooks) → View** to read and **Notifications (webhooks) → Manage** for the rest. Also, a key can only subscribe to events of the areas it can read: **Contacts and conversations → View**, **Groups and campaigns → View** and **WhatsApp numbers → View**. Asking for others is a `422` on `events`.
 - A subscription belongs to the workspace of the key that created it and receives only that workspace's events; `list()` brings every subscription of the workspace, also the ones of other integrations. To change the URL use `update(id, …)` (the secret stays). `test(id)` sends a signed `webhook.test` right now and `listDeliveries(id)` is the history.
-- `rotateSecret(id)` is **not open to API keys** (`403 route_not_available`): rotate the secret from the panel.
+- To rotate the secret, use the panel: that route is not open to API keys.
 
 ### Pagination
 
@@ -507,7 +532,7 @@ await funnelchat.tags.list({}, { maxRetries: 0, timeoutMs: 5000, signal: AbortSi
 
 ### Any route
 
-`request` calls any route. With a route of the spec, the path parameters, the query, the body and the response are typed:
+`request` calls any route. With a route of the spec (every function the portal publishes), the path parameters, the query, the body and the response are typed:
 
 ```ts
 const contact = await funnelchat.request('GET', '/api/v1/contacts/{contact}', { path: { contact: 2001 } });
@@ -525,7 +550,7 @@ const result = await funnelchat.request<{ ok: boolean }>('POST', '/api/v1/someth
 
 The query is built the way Laravel reads it: arrays as `key[]=a&key[]=b`, objects with brackets and booleans as `1` and `0`.
 
-The types of the spec are exported too: `paths`, `components`, `operations`, and the shorthands `Body<'/api/v1/tags', 'POST'>`, `Query<'/api/v1/contacts'>`, `ResponseBody<…>`. The `routes` table has every operation with its area and its permission.
+The types of the spec are exported too: `paths`, `components`, `operations`, and the shorthands `Body<'/api/v1/tags', 'POST'>`, `Query<'/api/v1/contacts'>`, `ResponseBody<…>`. The `routes` table has every operation with its area, its permission, its group and whether it can be undone (`destructive`); `routeGroups` has the groups of the portal.
 
 ### Test against the sandbox
 
@@ -537,19 +562,30 @@ const funnelchat = new Funnelchat({ apiKey: '1|fc_live_sandbox', baseUrl: 'http:
 
 ### Pending of the spec
 
-The types come from the full unified spec of the developer portal (`spec/funnelchat.json`; where it came from, in `spec/procedencia.json`: developers-portal 99928866 of 05-11-2026, with the areas at accounts v1.5.97, conversations v1.19.21 and communities v2.35.7). What production has and that spec does not describe, or describes otherwise than production answers, lives in a separate layer, `spec/pending.json`, which generation applies **only while the spec does not bring it**, or still says exactly what the entry corrects; each entry cites the production code it was read in:
+The types come from the spec the developer portal publishes (`spec/funnelchat.json`; where it came from, its URL and its `sha256`, in `spec/procedencia.json`). Where production answers otherwise than that spec says, or the spec shows an event only by an example or without one, a separate layer corrects it, `spec/pending.json`, which generation applies **only while the spec still says exactly what the entry corrects**; each entry cites the production code it was read in:
 
-- the events of the account (`device.*`, billing, subscriptions, monthly active contacts) and some of groups (`group.message_received`, `group.reaction_added`, `group.full`, `group_action.completed` and `.failed`, the join requests): the API publishes them in its catalog (`webhooks.events()`), not in the spec;
-- WhatsApp forms (except sending one) and `webhooks.rotateSecret`;
-- where the spec contradicts production: what a send answers (`{ message }`, never `null`), the body of `devices.qr`, the items of `templates.list`, the answer of `webhooks.update` and of `groups.retrieveAction`, and the events the spec only shows by one example (`message.received`, `message.status_changed`, `whatsapp_form.completed`, `group_participant.joined` and `.left`).
+- what a send answers (`{ message }`, never `null`), the body of `devices.qr`, the items of `templates.list`, and the answer of `webhooks.update` and of `groups.retrieveAction`;
+- the `data` of the events the spec shows only by an example, or without one, such as the `device.*` events, `message.received` and `message.status_changed`.
 
-`src/pending/` has what is not OpenAPI (the `workspace_id` of every event) and `src/core/error-codes.ts` the error codes.
+The layer never adds an operation or an event the portal does not publish. `src/pending/` has what is not OpenAPI (the `workspace_id` of every event) and `src/core/error-codes.ts` the error codes.
+
+### Upgrading from 0.3
+
+0.4.0 types only what the portal publishes for an API key. Routes it does not publish are closed to keys in production, so these methods are gone:
+
+- `devices.me` and `devices.checkPhone`;
+- `templates.quickReplyButtons`;
+- `groups.listMessages` (sending to a group, `groups.sendMessage`, stays);
+- `conversations.update`;
+- `webhooks.rotateSecret` (rotate the secret from the panel).
+
+`request` no longer types the other routes the portal does not publish, among them the panel's webhook endpoints (`/api/v1/webhooks/endpoints…`; the subscriptions of a key are `/api/v1/webhooks`), `POST /api/v1/lead-score/events`, the logs of numbers (`/api/v1/devices/logs` and `/api/v1/devices/{device}/logs…`), `POST /api/v1/devices/{device}/extension-token`, the disconnect survey, the chats and open conversations of a number, the `update-webhook-received…` routes of a number, `GET /api/v1/stats/countries`, the participants and webhooks of a campaign, `GET /api/v1/flows/{flow}/active-contacts-list`, and creating, editing, verifying, testing and deleting an alert destination (`/api/v1/alerts/destinations…`; the rest of `/api/v1/alerts` is published). `webhookEvents` and `WebhookEventType` no longer have the events the portal does not publish: `ai_quota.low_balance`, `ai_quota.topup_succeeded`, `ai_quota.topup_failed`, `billing.plan_blocked` and `subscription.expiring`.
 
 ### Development
 
 ```bash
 npm install
-npm run generate:check   # the generated files and spec/pending.json are up to date
+npm run generate:check   # the generated files, the README block and spec/pending.json are up to date
 npm run typecheck        # tsc, including the type checks of test/types.test.ts
 npm run lint
 npm test                 # vitest, no network and no keys: a mocked fetch
@@ -564,13 +600,14 @@ To release, push a `vX.Y.Z` tag on `main` matching the `version` in `package.jso
 Everything generated comes from one script:
 
 ```bash
-npm run generate -- --spec <path>/funnelchat-completa.json   # with a new full unified spec of the portal
-npm run generate                                             # with the one in spec/, for example after editing spec/pending.json
+curl -fsSo /tmp/funnelchat.json https://developers-portal.funnelchat.app/specs/funnelchat.json
+npm run generate -- --spec /tmp/funnelchat.json --source url=https://developers-portal.funnelchat.app/specs/funnelchat.json --source portal_version=v0.6.13
+npm run generate   # with the spec in spec/, for example after editing spec/pending.json
 ```
 
-1. With `--spec`, it copies the spec to `spec/funnelchat.json` and writes `spec/procedencia.json`: repository, branch, commit, date and `sha256` of the file. The portal builds its full spec in `generated/specs/funnelchat-completa.json`, which git ignores, so a copy of it says where it came from on the command line: `--expect-sha256 <hex>`, `--source repository=… --source branch=… --source commit=… --source path=…` and `--domain <area>=<sha>@<branch>@<snapshot_at>` for each area; `spec/procedencia.json` marks those fields as declared. Never generate from the published `/specs/`: it only carries what the portal shows.
-2. It adds `spec/pending.json`, but only what the spec does not bring, and lists what it already brings so you can delete it from there. An `operationPatches` entry without `while` adds body properties or `parameters` (such as a query filter) one by one, only while the operation lacks them. A `responsePatches` entry, and an event with `x-fc-replace-while`, replace the spec's only while it still matches: a key starting with `/` is a JSON Pointer into the operation or the event (`/responses/200/content/application~1json/schema`), so the entry stops applying, and is listed, as soon as the spec changes that place.
-3. It writes `src/generated/openapi.ts` (with [openapi-typescript](https://openapi-ts.dev)), `src/generated/routes.ts` (every operation, with area and permission) and `src/generated/events.ts` (the event catalog and the shape of the `data` of each one).
+1. With `--spec`, it copies the spec to `spec/funnelchat.json` and writes `spec/procedencia.json`: where it came from and the `sha256` of the file. Generate only from the spec the portal publishes (`/specs/funnelchat.json`): it carries every function an API key can use, and nothing closed to keys. For a downloaded file, say on the command line where it came from (`--source url=…`) and the version of the portal that published it (`--source portal_version=…`); `--expect-sha256 <hex>` refuses a file whose `sha256` is not the one announced; from a checkout of the portal, the repository, branch and commit are read from git (`--source key=value` and `--domain <area>=<sha>@<branch>@<snapshot_at>` declare what git cannot say; `spec/procedencia.json` marks those fields as declared).
+2. It applies `spec/pending.json`, but only while the spec still says what an entry corrects, and lists the entries a new spec made unnecessary so you can delete them from there. An `operationPatches` entry without `while` adds body properties or `parameters` (such as a query filter) one by one, only while the operation lacks them. A `responsePatches` entry, and an event with `x-fc-replace-while`, replace the spec's only while it still matches: a key starting with `/` is a JSON Pointer into the operation or the event (`/responses/200/content/application~1json/schema`), so the entry stops applying, and is listed, as soon as the spec changes that place. It never adds an operation or an event the spec does not publish.
+3. It writes `src/generated/openapi.ts` (with [openapi-typescript](https://openapi-ts.dev)), `src/generated/routes.ts` (every operation, with area, permission, group, category and whether it can be undone, and the groups of the portal), `src/generated/events.ts` (the event catalog and the shape of the `data` of each one) and the block of [Every function of the portal](#every-function-of-the-portal) in this README. The category of each group comes from the spec: `x-fc-categoria` on its `x-tagGroups` entry (or an entry that groups several tags), named and linked as `x-fc-categorias` lists it.
 
 ```
 spec/            the spec, its provenance and the pending layer

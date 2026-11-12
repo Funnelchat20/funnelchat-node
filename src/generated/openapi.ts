@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 38ae497ab7e6089b…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 a7b480743848dabc…) + spec/pending.json.
  */
 /* eslint-disable */
 export interface paths {
@@ -12,7 +12,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar difusiones
+         * Ver tus difusiones
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["broadcast.index"];
@@ -54,7 +54,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Contar contactos para una difusión
+         * Contar los contactos para una difusión
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["broadcast.contactsCount"];
@@ -119,7 +119,7 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Eliminar una difusión
+         * Borrar una difusión
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         delete: operations["broadcast.destroy"];
@@ -176,7 +176,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los contactos de una difusión
+         * Ver los contactos de una difusión
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["broadcast.broadcastContacts"];
@@ -216,7 +216,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los mensajes de una difusión
+         * Ver los mensajes de una difusión
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["broadcast.broadcastMessages"];
@@ -236,7 +236,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar carpetas de difusiones
+         * Ver las carpetas de difusiones
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["broadcastFolder.index"];
@@ -261,13 +261,13 @@ export interface paths {
         };
         get?: never;
         /**
-         * Actualizar una carpeta de difusiones
+         * Editar una carpeta de difusiones
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["broadcastFolder.update"];
         post?: never;
         /**
-         * Eliminar una carpeta de difusiones
+         * Borrar una carpeta de difusiones
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         delete: operations["broadcastFolder.destroy"];
@@ -284,7 +284,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar contactos
+         * Ver tus contactos
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["contact.index"];
@@ -292,6 +292,25 @@ export interface paths {
         /**
          * Crear un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
+         *
+         *     Crea un contacto con su teléfono (`phone`) o su `whatsapp_id`. Responde **201** cuando lo crea. Si en tu cuenta ya hay un contacto con ese teléfono o `whatsapp_id`, responde **200** con ese contacto, sin actualizar sus datos ni aplicarle `custom_fields`: para crear o actualizar en una sola llamada, usa `POST /contacts/update-or-create`.
+         *
+         *     **Campos personalizados (`custom_fields`, opcional).** Una lista de hasta 100 ítems `{id, value}`: `id` es el de un campo de tu cuenta (`GET /custom-fields`) y `value`, su valor para este contacto. Se guardan igual que con `POST /contacts/attach-custom-field`:
+         *
+         *     - Si el contacto ya tenía un valor en ese campo, se reemplaza. Los campos que no mandes no se tocan; para quitar un valor, `POST /contacts/detach-custom-field`.
+         *     - `value` es siempre texto (`"1500"`, no `1500`) y se valida contra el tipo del campo: un campo numérico, de fecha o de URL solo acepta su formato (por ejemplo, una fecha es `AAAA-MM-DD`). Cómo escribirlo según el tipo: ver `type` en `GET /custom-fields`.
+         *     - **Todo o nada:** si un `id` no existe, es de otra cuenta, está fuera del workspace de tu clave o se repite en la lista, o si un `value` no cumple el formato de su tipo, la llamada responde **422** y no crea ni cambia nada, ni el contacto ni ningún valor.
+         *     - Para ver los valores guardados: `GET /contacts/{contact}/custom-fields`.
+         *
+         *     ```json
+         *     {"phone": "5491122334455", "name": "Ana Pérez", "custom_fields": [{"id": 12, "value": "Mayorista"}, {"id": 15, "value": "2026-11-30"}]}
+         *     ```
+         *
+         *     | HTTP | Cuándo |
+         *     |---|---|
+         *     | 422 | Un dato del contacto no es válido, o `custom_fields` no es una lista de hasta 100 ítems con `id` entero y `value` de texto, o un `id` se repite o no es un campo de tu cuenta y de tu workspace (el error viene en `errors["custom_fields.N.id"]`), o un `value` no cumple el formato del tipo de su campo (en `errors["custom_fields.N.value"]`, con el formato que espera). No se crea ni se cambia nada. |
+         *     | 404 | Ya hay un contacto con ese teléfono (o `whatsapp_id`) en tu cuenta, pero fuera del workspace de tu clave. No se cambia nada. |
+         *     | 429 | Demasiadas solicitudes por minuto (ver `Retry-After`). |
          */
         post: operations["contact.store"];
         delete?: never;
@@ -312,8 +331,92 @@ export interface paths {
         /**
          * Crear o actualizar un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
+         *
+         *     Crea el contacto con ese teléfono (`phone`) o, si ya existe en tu cuenta, le actualiza `name` y `email` (los que mandes). Responde **201** cuando lo crea y **200** cuando lo actualiza. `custom_fields` se aplica en los dos casos.
+         *
+         *     **Campos personalizados (`custom_fields`, opcional).** Una lista de hasta 100 ítems `{id, value}`: `id` es el de un campo de tu cuenta (`GET /custom-fields`) y `value`, su valor para este contacto. Se guardan igual que con `POST /contacts/attach-custom-field`:
+         *
+         *     - Si el contacto ya tenía un valor en ese campo, se reemplaza. Los campos que no mandes no se tocan; para quitar un valor, `POST /contacts/detach-custom-field`.
+         *     - `value` es siempre texto (`"1500"`, no `1500`) y se valida contra el tipo del campo: un campo numérico, de fecha o de URL solo acepta su formato (por ejemplo, una fecha es `AAAA-MM-DD`). Cómo escribirlo según el tipo: ver `type` en `GET /custom-fields`.
+         *     - **Todo o nada:** si un `id` no existe, es de otra cuenta, está fuera del workspace de tu clave o se repite en la lista, o si un `value` no cumple el formato de su tipo, la llamada responde **422** y no crea ni cambia nada, ni el contacto ni ningún valor.
+         *     - Para ver los valores guardados: `GET /contacts/{contact}/custom-fields`.
+         *
+         *     ```json
+         *     {"phone": "5491122334455", "email": "ana@ejemplo.com", "custom_fields": [{"id": 12, "value": "Mayorista"}, {"id": 18, "value": "1500"}]}
+         *     ```
+         *
+         *     | HTTP | Cuándo |
+         *     |---|---|
+         *     | 422 | Un dato del contacto no es válido, o `custom_fields` no es una lista de hasta 100 ítems con `id` entero y `value` de texto, o un `id` se repite o no es un campo de tu cuenta y de tu workspace (el error viene en `errors["custom_fields.N.id"]`), o un `value` no cumple el formato del tipo de su campo (en `errors["custom_fields.N.value"]`, con el formato que espera). No se crea ni se cambia nada. |
+         *     | 404 | Ya hay un contacto con ese teléfono (o `whatsapp_id`) en tu cuenta, pero fuera del workspace de tu clave. No se cambia nada. |
+         *     | 429 | Demasiadas solicitudes por minuto (ver `Retry-After`). |
          */
         post: operations["contact.updateOrCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contacts/add-tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Agregar etiquetas a contactos
+         * @description **Permiso requerido:** **Contactos y conversaciones → Enviar**
+         *
+         *     Agrega etiquetas a contactos. El cuerpo es un arreglo JSON de hasta 200 ítems; cada ítem agrega una etiqueta (`tag.id`) a un contacto (`contactId`). Para poner varias etiquetas a un mismo contacto, un ítem por etiqueta. `tag.name` es opcional y no se usa: vale el nombre guardado de la etiqueta.
+         *
+         *     - **Dispara flujos, igual que en el panel:** si la llamada lleva **un solo ítem**, sin `bulk=true` en la query, y el contacto todavía no tenía la etiqueta, se arranca el flujo activo con el disparador «Tag agregado» de esa etiqueta (si hay más de uno, el creado primero), con las mismas reglas que el flujo tenga configuradas. Ese flujo puede enviar mensajes de WhatsApp al contacto: por eso esta llamada pide el permiso «Enviar», aunque por sí misma no envía nada.
+         *     - **Sin flujos:** con dos o más ítems, o con `?bulk=true`, las etiquetas se agregan igual y no se arranca ningún flujo.
+         *     - **Webhooks:** cada etiqueta que el contacto no tenía emite `contact.tag_added`, con uno o con varios ítems. Si el contacto ya tenía la etiqueta, ese ítem no hace nada.
+         *     - **Tu cuenta y tu workspace:** un ítem cuyo contacto o etiqueta no existe, es de otra cuenta o está fuera del workspace de tu clave se ignora sin error. Para confirmar el resultado, `GET /contacts/{contact}/tags`.
+         *     - **Respuesta:** 200 sin cuerpo.
+         *
+         *     | HTTP | Cuándo |
+         *     |---|---|
+         *     | 422 | El cuerpo no es un arreglo de ítems con `contactId` y `tag.id` enteros, o tiene más de 200 ítems. |
+         *     | 429 | Demasiadas solicitudes por minuto (ver `Retry-After`). |
+         */
+        post: operations["contact.addTags"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contacts/remove-tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Quitar etiquetas a contactos
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
+         *
+         *     Quita etiquetas de contactos. El cuerpo es un arreglo JSON de hasta 200 ítems; cada ítem quita una etiqueta (`tag.id`) de un contacto (`contactId`). `tag.name` es opcional y no se usa.
+         *
+         *     - **Webhooks:** cada etiqueta que el contacto tenía emite `contact.tag_removed`. Si el contacto no la tenía, ese ítem no hace nada.
+         *     - **Flujos:** quitar una etiqueta no arranca ningún flujo.
+         *     - **Tu cuenta y tu workspace:** un ítem cuyo contacto o etiqueta no existe, es de otra cuenta o está fuera del workspace de tu clave se ignora sin error. Para confirmar el resultado, `GET /contacts/{contact}/tags`.
+         *     - **Respuesta:** 200 sin cuerpo.
+         *
+         *     | HTTP | Cuándo |
+         *     |---|---|
+         *     | 422 | El cuerpo no es un arreglo de ítems con `contactId` y `tag.id` enteros, o tiene más de 200 ítems. |
+         *     | 429 | Demasiadas solicitudes por minuto (ver `Retry-After`). |
+         */
+        post: operations["contact.removeTags"];
         delete?: never;
         options?: never;
         head?: never;
@@ -330,8 +433,24 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Asignar un campo personalizado a contactos
+         * Poner un valor en un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
+         *
+         *     Pone valores de campos personalizados en contactos. El cuerpo es una lista de ítems `{customFieldId, contactId, value}`; si el contacto ya tenía un valor en ese campo, se reemplaza.
+         *
+         *     ```json
+         *     [{"customFieldId": 15, "contactId": 4321, "value": "2026-11-30"}]
+         *     ```
+         *
+         *     Cada ítem se resuelve por separado y uno rechazado no detiene a los demás. La respuesta es **200** con un resultado `{message, status}` por ítem, en el mismo orden:
+         *
+         *     | `status` | Cuándo |
+         *     |---|---|
+         *     | 201 | El valor quedó guardado. |
+         *     | 403 | El campo o el contacto no es de tu cuenta o está fuera del workspace de tu clave. No se guarda. |
+         *     | 422 | `value` no cumple el formato del tipo del campo (numérico, fecha `AAAA-MM-DD` o URL); `message` dice qué formato espera. No se guarda. |
+         *
+         *     Cómo escribir `value` según el tipo: ver `type` en `GET /custom-fields`. Si el cuerpo no es una lista de ítems con `customFieldId` y `contactId` enteros y `value` de texto, la llamada entera responde **422** y no guarda nada.
          */
         post: operations["contact.attachCustomField"];
         delete?: never;
@@ -350,7 +469,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Quitar un campo personalizado de contactos
+         * Quitar un valor de un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["contact.detachCustomField"];
@@ -373,7 +492,7 @@ export interface paths {
          */
         get: operations["contact.show"];
         /**
-         * Actualizar un contacto
+         * Editar un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["contact.update"];
@@ -392,7 +511,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar las etiquetas de un contacto
+         * Ver las etiquetas de un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["contact.tags"];
@@ -412,7 +531,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los campos personalizados de un contacto
+         * Ver los campos de un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["contact.customFields"];
@@ -452,7 +571,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los contactos de un número
+         * Ver los contactos de un número
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["contact.contactsByDevice"];
@@ -474,7 +593,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Eliminar contactos
+         * Borrar contactos
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["contact.destroy"];
@@ -494,7 +613,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Pausar un contacto
+         * Pausar las automatizaciones de un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["contactAutomation.pause"];
@@ -512,7 +631,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los flujos de un contacto
+         * Ver los flujos de un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["contactAutomation.flows"];
@@ -534,7 +653,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Enviar una tarjeta de contacto
+         * Mandar una tarjeta de contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Enviar**
          */
         post: operations["contactCard.store"];
@@ -552,7 +671,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver el lead score de un contacto
+         * Ver el puntaje de un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["contactLeadScore.show"];
@@ -572,7 +691,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar las notas de un contacto
+         * Ver las notas de un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["contactNote.index"];
@@ -599,7 +718,7 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Eliminar una nota
+         * Borrar una nota
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         delete: operations["contactNote.destroy"];
@@ -616,7 +735,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar conversaciones
+         * Ver tus conversaciones
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["conversation.index"];
@@ -636,7 +755,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Contar conversaciones sin leer
+         * Contar las conversaciones sin leer
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["conversation.countUnread"];
@@ -656,7 +775,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Contar conversaciones abiertas
+         * Contar las conversaciones abiertas
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["conversation.countOpen"];
@@ -676,7 +795,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Contar conversaciones cerradas
+         * Contar las conversaciones cerradas
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["conversation.countClosed"];
@@ -696,7 +815,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Contar todas las conversaciones
+         * Contar tus conversaciones
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["conversation.countAll"];
@@ -748,26 +867,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/contacts/{contact}/update": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Actualizar la conversación de un contacto
-         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
-         */
-        put: operations["conversation.update"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/contacts/{contact}/message": {
         parameters: {
             query?: never;
@@ -778,7 +877,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Enviar un mensaje a un contacto
+         * Mandar un mensaje a un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Enviar**
          */
         post: operations["conversation.sendMessage"];
@@ -796,7 +895,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los mensajes de un contacto
+         * Ver los mensajes con un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["conversation.getLatestMessages"];
@@ -816,13 +915,13 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar campos personalizados
+         * Ver tus campos
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["customField.index"];
         put?: never;
         /**
-         * Crear un campo personalizado
+         * Crear un campo
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["customField.store"];
@@ -842,7 +941,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Eliminar campos personalizados
+         * Borrar campos personalizados
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["customField.destroy"];
@@ -860,12 +959,12 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver un campo personalizado
+         * Ver un campo
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["customField.show"];
         /**
-         * Actualizar un campo personalizado
+         * Editar un campo
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["customField.update"];
@@ -884,7 +983,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los flujos en curso de un contacto
+         * Ver las ejecuciones de un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["flow.contactFlowHistory"];
@@ -905,7 +1004,7 @@ export interface paths {
         };
         get?: never;
         /**
-         * Cancelar un flujo en curso
+         * Cancelar una ejecución
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["flow.cancelContactFlow"];
@@ -924,7 +1023,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar flujos
+         * Ver tus flujos
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["flow.index"];
@@ -964,7 +1063,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los nodos de un flujo
+         * Ver los pasos de un flujo
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["flow.nodes"];
@@ -984,7 +1083,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Contar los contactos activos de un flujo
+         * Contar los contactos en curso de un flujo
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["flow.activeContacts"];
@@ -996,7 +1095,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/flows/{flow}/active-contacts-list": {
+    "/api/v1/flows/{flow}/paused-contacts": {
         parameters: {
             query?: never;
             header?: never;
@@ -1004,10 +1103,30 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los contactos activos de un flujo
+         * Contar los contactos pausados de un flujo
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
-        get: operations["flow.activeContactsList"];
+        get: operations["flow.pausedContacts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/flows/{flow}/paused-contacts-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver los contactos pausados de un flujo
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
+         */
+        get: operations["flow.pausedContactsList"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1024,7 +1143,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los contactos de un flujo
+         * Ver los contactos de un flujo
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["flow.flowContactsList"];
@@ -1044,7 +1163,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar carpetas
+         * Ver tus carpetas
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["folder.index"];
@@ -1073,13 +1192,13 @@ export interface paths {
          */
         get: operations["folder.show"];
         /**
-         * Actualizar una carpeta
+         * Editar una carpeta
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["folder.update"];
         post?: never;
         /**
-         * Eliminar una carpeta
+         * Borrar una carpeta
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         delete: operations["folder.destroy"];
@@ -1116,7 +1235,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar tableros
+         * Ver tus tableros
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["kanbanSetting.index"];
@@ -1145,13 +1264,13 @@ export interface paths {
          */
         get: operations["kanbanSetting.show"];
         /**
-         * Actualizar un tablero
+         * Editar un tablero
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["kanbanSetting.update"];
         post?: never;
         /**
-         * Eliminar un tablero
+         * Borrar un tablero
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         delete: operations["kanbanSetting.destroy"];
@@ -1168,7 +1287,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver los miembros de un tablero
+         * Ver si unos contactos están en un tablero
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["kanbanSetting.members"];
@@ -1188,7 +1307,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver las etapas de un contacto en los tableros
+         * Ver las etapas de un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["kanbanStage.contactStages"];
@@ -1230,7 +1349,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Mover contactos de etapa en bloque
+         * Mover varios contactos de etapa
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["kanbanStage.bulkMove"];
@@ -1250,7 +1369,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Sacar un contacto del tablero
+         * Sacar un contacto de un tablero
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["kanbanStage.removeContact"];
@@ -1270,7 +1389,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Sacar contactos del tablero en bloque
+         * Sacar varios contactos de un tablero
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["kanbanStage.bulkRemove"];
@@ -1310,7 +1429,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Reordenar las etapas
+         * Ordenar las etapas
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["kanbanStage.reorder"];
@@ -1329,13 +1448,13 @@ export interface paths {
         };
         get?: never;
         /**
-         * Actualizar una etapa
+         * Editar una etapa
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["kanbanStage.update"];
         post?: never;
         /**
-         * Eliminar una etapa
+         * Borrar una etapa
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         delete: operations["kanbanStage.destroy"];
@@ -1352,7 +1471,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los contactos de una etapa
+         * Ver los contactos de una etapa
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["kanbanStage.contacts"];
@@ -1372,32 +1491,12 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver la distribución del lead score
+         * Ver cómo se reparte el puntaje
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["leadScoreDistribution.show"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/lead-score/events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Registrar un evento de lead score
-         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
-         */
-        post: operations["leadScoreEventIngest.ingest"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1412,12 +1511,12 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver la configuración del lead score
+         * Ver cómo se calcula el puntaje
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["leadScoreSettings.show"];
         /**
-         * Actualizar la configuración del lead score
+         * Configurar el puntaje
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["leadScoreSettings.update"];
@@ -1438,7 +1537,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Ajustar el lead score de un contacto
+         * Ajustar el puntaje de un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["leadScoreSettings.adjust"];
@@ -1456,7 +1555,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver el consumo de MACs
+         * Ver tu consumo de contactos activos
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["mac.status"];
@@ -1476,7 +1575,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los contactos que cuentan como MAC
+         * Ver tus contactos activos
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["mac.contacts"];
@@ -1496,7 +1595,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver el historial de MACs
+         * Ver el historial de tus contactos activos
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["mac.contactsHistory"];
@@ -1518,7 +1617,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * POST /contacts/{contact}/messages/{message}/read
+         * Marcar un mensaje como leído
          * @description **Permiso requerido:** **Contactos y conversaciones → Enviar**
          */
         post: operations["message.markMessageRead"];
@@ -1538,10 +1637,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Enviar un mensaje
+         * Mandar un mensaje
          * @description **Permiso requerido:** **Contactos y conversaciones → Enviar**
          *
-         *     Indica a quién envías con `phone`: el teléfono con código de país, por ejemplo `5491122334455`. No hace falta crear el contacto antes: si ese teléfono todavía no es un contacto de tu cuenta, se crea en el workspace de tu clave, igual que con `POST /contacts/update-or-create` y con el mismo permiso, que **Enviar** ya incluye. La respuesta trae su id en `message.contact_id`, el mismo que llevan los avisos `message.status_changed`. Si el teléfono no es válido, o ya es un contacto de otro workspace de tu cuenta, la respuesta es la misma que daría `POST /contacts/update-or-create`: 422, o 404 sin datos de ese contacto. Con un número oficial de WhatsApp (API Cloud) también puedes indicar `whatsapp_id`, el BSUID que envía Meta (por ejemplo `US.13491208655302741918`), en lugar de `phone`; usado así con un número conectado por QR, responde 422. En un número oficial, el primer mensaje a un contacto nuevo tiene que ser una plantilla: un mensaje libre solo sale dentro de las 24 horas desde que el contacto te escribió. Si ya tienes el `contact_id`, puedes seguir enviándolo: si junto con él mandas `phone` o `whatsapp_id`, tienen que ser de ese mismo contacto (si no, 422 `recipient_mismatch`). En `send-template`, `phone` o `whatsapp_id` va siempre, con o sin `contact_id`.
+         *     Indica a quién envías con `phone`: el teléfono con código de país, por ejemplo `5491122334455`. No hace falta crear el contacto antes: si ese teléfono todavía no es un contacto de tu cuenta, se crea en el workspace de tu clave, igual que con `POST /contacts/update-or-create` y con el mismo permiso, que **Enviar** ya incluye. La respuesta trae su id en `message.contact_id`, el mismo que llevan los eventos `message.status_changed`. Si el teléfono no es válido, o ya es un contacto de otro workspace de tu cuenta, la respuesta es la misma que daría `POST /contacts/update-or-create`: 422, o 404 sin datos de ese contacto. Con un número oficial de WhatsApp (API Cloud) también puedes indicar `whatsapp_id`, el BSUID que envía Meta (por ejemplo `US.13491208655302741918`), en lugar de `phone`; usado así con un número conectado por QR, responde 422. En un número oficial, el primer mensaje a un contacto nuevo tiene que ser una plantilla: un mensaje libre solo sale dentro de las 24 horas desde que el contacto te escribió. Si ya tienes el `contact_id`, puedes seguir enviándolo: si junto con él mandas `phone` o `whatsapp_id`, tienen que ser de ese mismo contacto (si no, 422 `recipient_mismatch`). En `send-template`, `phone` o `whatsapp_id` va siempre, con o sin `contact_id`.
          */
         post: operations["message.sendMessage"];
         delete?: never;
@@ -1561,12 +1660,36 @@ export interface paths {
         /**
          * Reaccionar a un mensaje
          * @description **Permiso requerido:** **Contactos y conversaciones → Enviar**
+         *
+         *     Pone o reemplaza la reacción de tu cuenta a un mensaje del contacto: un emoji en `emoji`. Para quitarla, `DELETE` en la misma ruta.
+         *
+         *     - **Se procesa después:** `202` sin cuerpo quiere decir que la reacción se aceptó, no que ya se aplicó. Se envía a WhatsApp desde una cola y queda aplicada solo cuando WhatsApp la confirma.
+         *     - **Cómo saber el resultado:** la reacción vigente de cada mensaje está en `reactions` de `GET /contacts/{contact_id}/messages`; la de tu cuenta viene con `actor` `business`. Ese dato cambia solo cuando WhatsApp confirma la reacción.
+         *     - **Si falla después del `202`** (por ejemplo, WhatsApp la rechaza, no hay saldo de WhatsApp o el pago del número está vencido), `reactions` queda como estaba y se emite el evento de webhook `message.reaction_failed`, una vez por pedido, con el motivo en `reason` y el momento en que se aceptó el pedido en `requested_at`. Para recibirlo, suscríbete a `message.reaction_failed` (sección «Webhooks»).
+         *
+         *     | HTTP | Cuándo |
+         *     |---|---|
+         *     | 404 | El contacto o el mensaje no existe o es de otra cuenta, el mensaje es de otro contacto, el mensaje pasó por un número de otro workspace de tu cuenta, o la clave es de un agente y el contacto no está asignado a ese agente. Es la misma respuesta en todos los casos. |
+         *     | 422 | No se puede reaccionar a ese mensaje y no se envía nada. `error` dice por qué: `no_provider_uid` (el mensaje no tiene un id de WhatsApp, por ejemplo una nota o un envío que no salió), `message_not_reactable` (ese tipo de mensaje no admite reacciones), `message_deleted` (el mensaje se eliminó), `device_disconnected` (el número por el que pasó el mensaje ya no está o está desconectado), `provider_unsupported` (ese número no admite reacciones) o `window_expired` (en un número de la API oficial de WhatsApp, pasaron más de 24 horas desde el último mensaje que el contacto le escribió a ese número). `recipient_unsupported` si el contacto es un grupo, una lista de difusión o un canal. En un `PUT`, también si `emoji` no es un emoji. |
+         *     | 429 | `rate_limited`: se superó el ritmo de la sección «Envío de mensajes con clave» (ver `Retry-After`). |
          */
         put: operations["messageReaction.update"];
         post?: never;
         /**
          * Quitar una reacción
          * @description **Permiso requerido:** **Contactos y conversaciones → Enviar**
+         *
+         *     Quita la reacción de tu cuenta a un mensaje del contacto. Si el mensaje no tenía una reacción tuya, la respuesta es la misma.
+         *
+         *     - **Se procesa después:** `202` sin cuerpo quiere decir que la reacción se aceptó, no que ya se aplicó. Se envía a WhatsApp desde una cola y queda aplicada solo cuando WhatsApp la confirma.
+         *     - **Cómo saber el resultado:** la reacción vigente de cada mensaje está en `reactions` de `GET /contacts/{contact_id}/messages`; la de tu cuenta viene con `actor` `business`. Ese dato cambia solo cuando WhatsApp confirma la reacción.
+         *     - **Si falla después del `202`** (por ejemplo, WhatsApp la rechaza, no hay saldo de WhatsApp o el pago del número está vencido), `reactions` queda como estaba y se emite el evento de webhook `message.reaction_failed`, una vez por pedido, con el motivo en `reason` y el momento en que se aceptó el pedido en `requested_at`. Para recibirlo, suscríbete a `message.reaction_failed` (sección «Webhooks»).
+         *
+         *     | HTTP | Cuándo |
+         *     |---|---|
+         *     | 404 | El contacto o el mensaje no existe o es de otra cuenta, el mensaje es de otro contacto, el mensaje pasó por un número de otro workspace de tu cuenta, o la clave es de un agente y el contacto no está asignado a ese agente. Es la misma respuesta en todos los casos. |
+         *     | 422 | No se puede reaccionar a ese mensaje y no se envía nada. `error` dice por qué: `no_provider_uid` (el mensaje no tiene un id de WhatsApp, por ejemplo una nota o un envío que no salió), `message_not_reactable` (ese tipo de mensaje no admite reacciones), `message_deleted` (el mensaje se eliminó), `device_disconnected` (el número por el que pasó el mensaje ya no está o está desconectado), `provider_unsupported` (ese número no admite reacciones) o `window_expired` (en un número de la API oficial de WhatsApp, pasaron más de 24 horas desde el último mensaje que el contacto le escribió a ese número). `recipient_unsupported` si el contacto es un grupo, una lista de difusión o un canal. En un `PUT`, también si `emoji` no es un emoji. |
+         *     | 429 | `rate_limited`: se superó el ritmo de la sección «Envío de mensajes con clave» (ver `Retry-After`). |
          */
         delete: operations["messageReaction.destroy"];
         options?: never;
@@ -1582,7 +1705,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar plantillas
+         * Ver tus plantillas
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["messageTemplate.templates"];
@@ -1611,30 +1734,10 @@ export interface paths {
          */
         get: operations["messageTemplate.template"];
         /**
-         * Actualizar una plantilla
+         * Editar una plantilla
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["messageTemplate.update"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/templates/{template}/quick-reply-buttons": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Ver los botones de respuesta rápida de una plantilla
-         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
-         */
-        get: operations["messageTemplate.quickReplyButtons"];
-        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -1652,7 +1755,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Sincronizar las plantillas de un número con Meta
+         * Traer tus plantillas de Meta
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          *
          *     Sincroniza con Meta las plantillas de un número de la API oficial de WhatsApp: trae las que se crearon o cambiaron directamente en Meta y quita las de una cuenta de WhatsApp Business que el número ya no usa. `{device}` es el `id` del número.
@@ -1687,10 +1790,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Enviar una plantilla
+         * Mandar una plantilla
          * @description **Permiso requerido:** **Contactos y conversaciones → Enviar**
          *
-         *     Indica a quién envías con `phone`: el teléfono con código de país, por ejemplo `5491122334455`. No hace falta crear el contacto antes: si ese teléfono todavía no es un contacto de tu cuenta, se crea en el workspace de tu clave, igual que con `POST /contacts/update-or-create` y con el mismo permiso, que **Enviar** ya incluye. La respuesta trae su id en `message.contact_id`, el mismo que llevan los avisos `message.status_changed`. Si el teléfono no es válido, o ya es un contacto de otro workspace de tu cuenta, la respuesta es la misma que daría `POST /contacts/update-or-create`: 422, o 404 sin datos de ese contacto. Con un número oficial de WhatsApp (API Cloud) también puedes indicar `whatsapp_id`, el BSUID que envía Meta (por ejemplo `US.13491208655302741918`), en lugar de `phone`; usado así con un número conectado por QR, responde 422. En un número oficial, el primer mensaje a un contacto nuevo tiene que ser una plantilla: un mensaje libre solo sale dentro de las 24 horas desde que el contacto te escribió. Si ya tienes el `contact_id`, puedes seguir enviándolo: si junto con él mandas `phone` o `whatsapp_id`, tienen que ser de ese mismo contacto (si no, 422 `recipient_mismatch`). En `send-template`, `phone` o `whatsapp_id` va siempre, con o sin `contact_id`.
+         *     Indica a quién envías con `phone`: el teléfono con código de país, por ejemplo `5491122334455`. No hace falta crear el contacto antes: si ese teléfono todavía no es un contacto de tu cuenta, se crea en el workspace de tu clave, igual que con `POST /contacts/update-or-create` y con el mismo permiso, que **Enviar** ya incluye. La respuesta trae su id en `message.contact_id`, el mismo que llevan los eventos `message.status_changed`. Si el teléfono no es válido, o ya es un contacto de otro workspace de tu cuenta, la respuesta es la misma que daría `POST /contacts/update-or-create`: 422, o 404 sin datos de ese contacto. Con un número oficial de WhatsApp (API Cloud) también puedes indicar `whatsapp_id`, el BSUID que envía Meta (por ejemplo `US.13491208655302741918`), en lugar de `phone`; usado así con un número conectado por QR, responde 422. En un número oficial, el primer mensaje a un contacto nuevo tiene que ser una plantilla: un mensaje libre solo sale dentro de las 24 horas desde que el contacto te escribió. Si ya tienes el `contact_id`, puedes seguir enviándolo: si junto con él mandas `phone` o `whatsapp_id`, tienen que ser de ese mismo contacto (si no, 422 `recipient_mismatch`). En `send-template`, `phone` o `whatsapp_id` va siempre, con o sin `contact_id`.
          */
         post: operations["messageTemplate.send"];
         delete?: never;
@@ -1710,7 +1813,7 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Eliminar una plantilla de un número
+         * Borrar una plantilla de un número
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         delete: operations["messageTemplate.delete"];
@@ -1727,7 +1830,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los productos de una plataforma de pagos
+         * Ver los productos de una plataforma de pagos
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["paymentProduct.index"];
@@ -1747,7 +1850,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar respuestas rápidas
+         * Ver tus respuestas rápidas
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["quickReply.index"];
@@ -1776,13 +1879,13 @@ export interface paths {
          */
         get: operations["quickReply.show"];
         /**
-         * Actualizar una respuesta rápida
+         * Editar una respuesta rápida
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["quickReply.update"];
         post?: never;
         /**
-         * Eliminar una respuesta rápida
+         * Borrar una respuesta rápida
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         delete: operations["quickReply.destroy"];
@@ -1859,7 +1962,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar ventas
+         * Ver tus ventas
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["salesDashboard.index"];
@@ -1882,7 +1985,7 @@ export interface paths {
          * Ver un mensaje
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          *
-         *     Devuelve un mensaje de tu cuenta por el id que te dio el envío o un webhook. Aceptado no es entregado: el estado final llega por `message.status_changed` o por este GET. `status` es `queued`, `sent`, `delivered`, `read` o `failed` en los mensajes que enviaste. `sent`, `delivered`, `read` y `failed` tienen el mismo significado que en `message.status_changed`; `queued` es un mensaje en cola que todavía no se envió (en cola no es enviado) y no se reintenta. `status` es `null` en los mensajes recibidos, las notas y las acciones. `status` también es `null` en un mensaje enviado cuyo resultado no se conoce (el proveedor no confirmó ni rechazó el envío o el envío se interrumpió): puede haber llegado y no cambia de estado; también cuando lleva más de una hora en cola sin resultado: un mensaje cuyo envío no empezó dentro de la hora ya no sale; pasada la hora sin resultado, `status` es `null`, o `failed` con `error.reason` `not_sent` y su aviso si su envío llega tarde. Reintentar es un envío nuevo, que sólo puede duplicar si el envío había empezado y se cortó. `error` trae `code`, `title` y `reason` solo cuando `status` es `failed`. `error.reason` es `null` cuando el rechazo lo informó el proveedor; si Funnelchat decidió que un mensaje enviado con clave no salía, trae `device_unavailable`, `insufficient_balance`, `window_closed`, `recipient_unreachable`, `template_not_found`, `template_unresolved_placeholder`, `not_queued` o `not_sent`, `code` es `null` y `title` es un texto llano en el idioma de la cuenta. `client_reference` es la referencia que mandaste al enviar, o `null`. Responde 404 si el mensaje no existe o no es de ese contacto.
+         *     Devuelve un mensaje de tu cuenta por el id que te dio el envío o un webhook. Aceptado no es entregado: el estado final llega por `message.status_changed` o por este GET. `status` es `queued`, `sent`, `delivered`, `read` o `failed` en los mensajes que enviaste. `sent`, `delivered`, `read` y `failed` tienen el mismo significado que en `message.status_changed`; `queued` es un mensaje en cola que todavía no se envió (en cola no es enviado) y no se reintenta. `status` es `null` en los mensajes recibidos, las notas y las acciones. `status` también es `null` en un mensaje enviado cuyo resultado no se conoce (el proveedor no confirmó ni rechazó el envío o el envío se interrumpió): puede haber llegado y no cambia de estado; también cuando lleva más de una hora en cola sin resultado: un mensaje cuyo envío no empezó dentro de la hora ya no sale; pasada la hora sin resultado, `status` es `null`, o `failed` con `error.reason` `not_sent` y su evento si su envío llega tarde. Reintentar es un envío nuevo, que sólo puede duplicar si el envío había empezado y se cortó. `error` trae `code`, `title` y `reason` solo cuando `status` es `failed`. `error.reason` es `null` cuando el rechazo lo informó el proveedor; si Funnelchat decidió que un mensaje enviado con clave no salía, trae `device_unavailable`, `insufficient_balance`, `window_closed`, `recipient_unreachable`, `template_not_found`, `template_unresolved_placeholder`, `not_queued` o `not_sent`, `code` es `null` y `title` es un texto llano en el idioma de la cuenta. `client_reference` es la referencia que mandaste al enviar, o `null`. Responde 404 si el mensaje no existe o no es de ese contacto.
          */
         get: operations["message.showMessage"];
         put?: never;
@@ -1901,7 +2004,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar etiquetas
+         * Ver tus etiquetas
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["tag.index"];
@@ -1930,7 +2033,7 @@ export interface paths {
          */
         get: operations["tag.show"];
         /**
-         * Actualizar una etiqueta
+         * Editar una etiqueta
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["tag.update"];
@@ -1949,7 +2052,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los contactos con una etiqueta
+         * Ver los contactos de una etiqueta
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["tag.contacts"];
@@ -1971,7 +2074,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Eliminar etiquetas
+         * Borrar etiquetas
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         post: operations["tag.destroy"];
@@ -1989,7 +2092,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * GET /templates/{template}/metrics
+         * Ver las métricas de una plantilla
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          *
          *     Devuelve lo que Meta informa de una plantilla de un número de la API oficial de WhatsApp, día por día (UTC) y en total: mensajes enviados, entregados y leídos, clics por botón y, cuando Meta lo informa, el costo.
@@ -2034,7 +2137,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar tickets
+         * Ver tus tickets
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["ticket.index"];
@@ -2063,7 +2166,7 @@ export interface paths {
          */
         get: operations["ticket.show"];
         /**
-         * Actualizar un ticket
+         * Editar un ticket
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          */
         put: operations["ticket.update"];
@@ -2144,7 +2247,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * POST /contacts/{contact}/typing
+         * Mostrar «escribiendo…»
          * @description **Permiso requerido:** **Contactos y conversaciones → Enviar**
          */
         post: operations["message.typingIndicator"];
@@ -2162,7 +2265,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver un agente
+         * Ver a una persona de tu equipo
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["user.show"];
@@ -2182,12 +2285,344 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar agentes
+         * Ver tu equipo
          * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
          */
         get: operations["user.index"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver los modelos de formulario
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
+         *
+         *     Devuelve las plantillas con las que puedes empezar un formulario nuevo: `key`, `title`, `description` y `category`. El catálogo es fijo y el mismo para todas las cuentas.
+         */
+        get: operations["whatsappForm.templates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver tus formularios
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
+         *
+         *     Lista los formularios de tu cuenta, uno por formulario aunque tenga varias versiones; de cada uno ves la versión que usas hoy (la publicada o, si no hay, la más nueva). El `id` de cada fila es el de esa versión y `family_id` es el del formulario. Filtra con `q` (parte del nombre), `status` (`draft`, `published` o `deprecated`) y `device_id` (un número de tu cuenta; si no es WhatsApp Cloud responde 422 `NUMBER_NOT_ELIGIBLE`). Pagina con `perPage` (1 a 100, 25 por defecto).
+         */
+        get: operations["whatsappForm.index"];
+        put?: never;
+        /**
+         * Crear un formulario
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
+         *
+         *     Crea un formulario nuevo como borrador de tu cuenta. Envía `template_key` (una de las `key` de `GET /forms/templates`; `blank` empieza vacío), `device_id` (un número de WhatsApp Cloud de tu cuenta) y, si quieres, `device_ids` con otros números donde también vivirá. Responde 201 con la versión (`id`), su `family_id`, `lint` y `numbers`. Si un número no es de tu cuenta o no es WhatsApp Cloud responde 422 `NUMBER_NOT_ELIGIBLE`.
+         */
+        post: operations["whatsappForm.store"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/families/{familyId}/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver las métricas de un formulario
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
+         *
+         *     Devuelve los números de un formulario de tu cuenta: cuántos se enviaron, cuántos se abrieron y cuántos se completaron, y sus porcentajes. `{familyId}` es el `family_id` del formulario. Acepta los mismos filtros de fecha, versión y origen que la lista de respuestas; un filtro inválido responde 422. Responde 404 si el formulario no existe o no es de tu cuenta.
+         */
+        get: operations["whatsappForm.metrics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/families/{familyId}/responses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver las respuestas de un formulario
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
+         *
+         *     Lista las respuestas de un formulario de tu cuenta, de la más reciente a la más antigua, sumando todas sus versiones. Junto a `data` viene `columns`, las preguntas que usan esas respuestas. `{familyId}` es el `family_id` del formulario. Filtra con `from` y `to` (fechas), `version_id` (el `id` de una versión de ese formulario), `origin`, `status` y `search` (nombre o teléfono del contacto). Un filtro con un valor inválido responde 422. Pagina con `perPage` (1 a 100, 25 por defecto). Responde 404 si el formulario no existe o no es de tu cuenta.
+         */
+        get: operations["whatsappForm.responses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/families/{familyId}/responses/{runId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver una respuesta de un formulario
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
+         *
+         *     Devuelve una respuesta completa de un formulario de tu cuenta: las respuestas del contacto y lo que se hizo con ellas. `{familyId}` es el `family_id` del formulario y `{runId}` el `id` de la respuesta que viene en `GET /forms/families/{familyId}/responses`. Responde 404 si no existe o no es de tu cuenta.
+         */
+        get: operations["whatsappForm.response"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/families/{familyId}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver las versiones de un formulario
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
+         *
+         *     Lista las versiones de un formulario de tu cuenta, de la más nueva a la más vieja, con su estado, si es la vigente y cuántas respuestas recibió cada una. `{familyId}` es el `family_id` del formulario. Pagina con `perPage` (1 a 100, 25 por defecto). Responde 404 si el formulario no existe o no es de tu cuenta.
+         */
+        get: operations["whatsappForm.versions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/families/{familyId}/definition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver la definición de un formulario
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
+         *
+         *     Devuelve la definición de un formulario: la de la versión publicada o, si todavía no hay ninguna, la de la versión más nueva. `{familyId}` es el `family_id` del formulario, no el `id` de una versión. Responde 404 si el formulario no existe o no es de tu cuenta.
+         */
+        get: operations["whatsappForm.definition"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver un formulario
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
+         *
+         *     Devuelve una versión de un formulario de tu cuenta con su definición y su detalle. `{id}` es el `id` de la versión (el de las filas de `GET /forms`), no el `family_id`. Trae además `lint` (lo que falta corregir antes de publicar), `versions` (las versiones del formulario) y `numbers` (los números donde vive). Responde 404 si la versión no existe o no es de tu cuenta.
+         */
+        get: operations["whatsappForm.show"];
+        /**
+         * Editar un formulario
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
+         *
+         *     Guarda la definición de un borrador. `{id}` es el `id` de la versión. Envía `definition` con `screens` (cada pantalla con `id` de texto y `items`; cada bloque con `type`, y las preguntas con `name`) y, si quieres, `name` y `expected_updated_at`. Una definición con la forma rota responde 422 con el error en su ruta. Lo incompleto (sin título, sin bloques, etiquetas vacías) se guarda y la respuesta trae en `lint` lo que falta corregir. Responde 409 `PUBLISHED` si la versión ya está publicada (crea otra con `POST /forms/{id}/versions`) y 409 `STALE` si `expected_updated_at` no es el último guardado. Responde 404 si no existe o no es de tu cuenta.
+         */
+        put: operations["whatsappForm.update"];
+        post?: never;
+        /**
+         * Borrar un formulario
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
+         *
+         *     Elimina un borrador. `{id}` es el `id` de la versión. Un formulario publicado no se elimina: responde 409 `PUBLISHED`. Responde 404 si la versión no existe o no es de tu cuenta.
+         */
+        delete: operations["whatsappForm.destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/{id}/numbers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver los números de un formulario
+         * @description **Permiso requerido:** **Contactos y conversaciones → Ver**
+         *
+         *     Lista los números de WhatsApp Cloud donde vive una versión de formulario de tu cuenta y el estado de cada uno (`draft`, `publishing`, `published` o `failed`). El primero es el número con el que se creó. `{id}` es el `id` de la versión. Responde 404 si la versión no existe o no es de tu cuenta.
+         */
+        get: operations["whatsappForm.numbersIndex"];
+        put?: never;
+        /**
+         * Sumar números a un formulario
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
+         *
+         *     Suma un número de WhatsApp Cloud a una versión de formulario. `{id}` es el `id` de la versión y `device_id` el número de tu cuenta. Si la versión ya está publicada, se publica en ese número de inmediato. Responde `numbers` con el estado de cada número; si el número no es de tu cuenta o no es WhatsApp Cloud responde 422 `NUMBER_NOT_ELIGIBLE`. Puedes llamarla hasta 30 veces por minuto.
+         */
+        post: operations["whatsappForm.addNumber"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/{id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Crear una versión de un formulario
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
+         *
+         *     Crea la versión siguiente de un formulario publicado, como borrador, para poder cambiarlo. `{id}` es el `id` de la versión desde la que partes. Responde 201 con la versión nueva, o 200 con `created: false` si el formulario ya tenía un borrador (ese borrador es la respuesta). Responde 404 si la versión no existe o no es de tu cuenta.
+         */
+        post: operations["whatsappForm.storeVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/{id}/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sincronizar un formulario
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
+         *
+         *     Valida una versión en Meta sin publicarla. `{id}` es el `id` de la versión. Responde la versión con `lint` y lo que Meta observó. Si Meta rechaza la llamada responde 502 `META`, o 422 `META` si la rechaza porque tu cuenta de WhatsApp Business no cumple sus requisitos de integridad. Responde 404 si no existe o no es de tu cuenta. Puedes llamarla hasta 30 veces por minuto.
+         */
+        post: operations["whatsappForm.sync"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publicar un formulario
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
+         *
+         *     Publica una versión en Meta; la publicación es inmediata. `{id}` es el `id` de la versión. Si la definición tiene errores responde 422 `LINT` con la lista; si Meta rechaza la llamada, 502 `META`, o 422 `META` si la rechaza porque tu cuenta de WhatsApp Business no cumple sus requisitos de integridad. Los otros números del formulario se publican en segundo plano: consulta su estado en `GET /forms/{id}/numbers`. Responde 404 si no existe o no es de tu cuenta. Puedes llamarla hasta 30 veces por minuto.
+         */
+        post: operations["whatsappForm.publish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/{id}/numbers/{deviceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Sacar un número de un formulario
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
+         *
+         *     Quita un número de una versión de formulario: deja de enviarse por él. `{id}` es el `id` de la versión y `{deviceId}` el número de tu cuenta. El número con el que se creó el formulario no se quita: responde 422 `PRIMARY_NUMBER`. Responde 404 si la versión o el número no existen o no son de tu cuenta.
+         */
+        delete: operations["whatsappForm.removeNumber"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/{id}/numbers/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reintentar los números de un formulario
+         * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
+         *
+         *     Reintenta publicar los números que fallaron o que aún no se publicaron en una versión ya publicada. `{id}` es el `id` de la versión. Responde `numbers` con el estado de cada número. Responde 404 si no existe o no es de tu cuenta.
+         */
+        post: operations["whatsappForm.retryNumbers"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2204,7 +2639,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Enviar un formulario
+         * Mandar un formulario
          * @description **Permiso requerido:** **Contactos y conversaciones → Enviar**
          *
          *     Envía a un contacto un formulario de WhatsApp publicado. `form_id` es el identificador estable del formulario (el mismo en todas sus versiones) y `device_id` el número de WhatsApp Cloud de tu cuenta por el que sale. `text` (hasta 1024 caracteres) acompaña al formulario y por defecto es su nombre; `button_text` (hasta 30 caracteres, sin emojis) es el botón y por defecto es «Abrir» u «Open» según el idioma del usuario de la clave (en inglés «Open»; en español y portugués «Abrir»). Sólo funciona dentro de las 24 horas siguientes al último mensaje del contacto a ese número. Responde `200` con el mensaje en cola (`status` `queued`, `type` `whatsapp_form`); aceptado no es entregado: el estado final llega por `message.status_changed` o por `GET /contacts/{contact}/messages/{message}`, y la respuesta del contacto por `whatsapp_form.completed`. Responde `404` si el contacto no existe o no es de tu cuenta, o `404` con `form_not_found` si el formulario no existe en tu cuenta. Responde `422` con `device_unavailable` si el número no es de tu cuenta o no está conectado, `number_not_eligible` si no es un número de WhatsApp Cloud que pueda enviar formularios, `form_not_published` si el formulario no tiene versión publicada, `form_not_on_number` si no está publicado en ese número, `recipient_unreachable` si el contacto no tiene teléfono ni identificador de WhatsApp, `contact_blocked` si bloqueaste al contacto en ese número y `window_closed` si pasaron más de 24 horas. También responde `422` por las guardas de envío y `429` con `rate_limited` si superas el ritmo del número o del contacto.
@@ -2226,7 +2661,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar campañas
+         * Ver tus campañas
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `created_at`, `id`, `name`, `updated_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
@@ -2268,7 +2703,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver las condicionales de una campaña
+         * Ver las condiciones de una campaña
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["campaignConditional.index"];
@@ -2288,7 +2723,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los grupos que se pueden sumar a una campaña
+         * Ver los grupos que puedes sumar a una campaña
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `pageSize` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
@@ -2310,7 +2745,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los grupos de una campaña
+         * Ver los grupos de una campaña
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `id`, `name`, `created_at`, `updated_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
@@ -2332,7 +2767,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los pipelines de una campaña
+         * Ver los pipelines de una campaña
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `per_page` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `id`, `name`, `group_index`, `created_at`, `updated_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
@@ -2374,7 +2809,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver la configuración de los planes de operación
+         * Ver qué se puede configurar en un plan de operación
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["operationPlan.config"];
@@ -2394,7 +2829,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los planes de operación de una campaña
+         * Ver los planes de operación de una campaña
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `per_page` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
@@ -2436,7 +2871,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar las acciones de sesión de una campaña
+         * Ver las acciones de una campaña
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** página fija de 15 elementos; se recorre con `page`.
@@ -2458,7 +2893,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los grupos alcanzados por una acción
+         * Ver los grupos de una acción
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `name`, `status`, `created_at`, `updated_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
@@ -2480,7 +2915,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar grupos
+         * Ver los grupos de tu cuenta
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `created_at`, `id`, `name`, `updated_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
@@ -2488,7 +2923,7 @@ export interface paths {
         get: operations["group.index"];
         put?: never;
         /**
-         * Crea un grupo
+         * Crear un grupo
          * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
          *
          *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Hasta 20 participantes iniciales, sin contar al propio número. Con un número QR la descripción se pone justo después de crear el grupo, y las creaciones respetan la espera entre creaciones del número. El resultado trae el grupo y su link de invitación. Con un número oficial, `join_approval_required: true` crea el grupo pidiendo aprobación para entrar (no se puede cambiar después); con un número QR responde `422 provider_unsupported`.
@@ -2508,7 +2943,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los grupos que administra un número
+         * Ver tus grupos
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Nota:** La lista se lee de WhatsApp y, para una API key, se reutiliza durante un minuto por número: un grupo recién creado en WhatsApp puede tardar hasta un minuto en aparecer. Si un grupo ya está en la cuenta, trae `device_id`. Para importar uno: `POST /groups/{group}/import`.
@@ -2532,7 +2967,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los grupos de anuncios de un número
+         * Ver los grupos de anuncios de un número
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `pageSize` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
@@ -2554,7 +2989,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los canales de un número
+         * Ver los canales de un número
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `pageSize` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
@@ -2576,7 +3011,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver los datos actuales de un grupo en WhatsApp
+         * Ver los datos de un grupo en WhatsApp
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["groupMetadata.show"];
@@ -2598,10 +3033,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Importar un grupo de un número
+         * Seguir un grupo
          * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
          *
-         *     **Nota:** Importa a la cuenta un grupo del número indicado en `device_id`, igual que importarlo desde el panel: queda visible en el panel, se sincronizan sus participantes y desde entonces genera los avisos `group_participant.joined` y `group_participant.left`. Los datos del grupo y si el número es administrador se leen de WhatsApp en la misma llamada. Responde `201` si lo importó y `200` si ya estaba en la cuenta, con `is_admin`. Solo números QR: con un número oficial responde `422 provider_unsupported`. Si el grupo no es del número responde `404 group_not_found`. Cada número importa hasta 5 grupos por minuto (`429 import_rate_limited`, con `retry_after` en segundos). Dos pedidos a la vez por el mismo grupo lo importan una sola vez. Un grupo que ya está en otro workspace de la cuenta no se puede importar en este.
+         *     **Nota:** Importa a la cuenta un grupo del número indicado en `device_id`, igual que importarlo desde el panel: queda visible en el panel, se sincronizan sus participantes y desde entonces genera los eventos `group_participant.joined` y `group_participant.left`. Los datos del grupo y si el número es administrador se leen de WhatsApp en la misma llamada. Responde `201` si lo importó y `200` si ya estaba en la cuenta, con `is_admin`. Solo números QR: con un número oficial responde `422 provider_unsupported`. Si el grupo no es del número responde `404 group_not_found`. Cada número importa hasta 5 grupos por minuto (`429 import_rate_limited`, con `retry_after` en segundos). Dos pedidos a la vez por el mismo grupo lo importan una sola vez. Un grupo que ya está en otro workspace de la cuenta no se puede importar en este.
          */
         post: operations["v2.apiGroupImport"];
         delete?: never;
@@ -2638,7 +3073,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar las acciones de sesión sobre un grupo
+         * Ver las acciones sobre un grupo
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `status`, `created_at`, `updated_at`, `completed_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
@@ -2646,34 +3081,6 @@ export interface paths {
         get: operations["group.actions"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/groups/{group}/messages": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Listar los mensajes enviados a un grupo
-         * @description **Permiso requerido:** **Grupos y campañas → Ver**
-         *
-         *     **Con API key:** página fija de 3 elementos; se recorre con `page`.
-         */
-        get: operations["group.messages"];
-        put?: never;
-        /**
-         * Mandar un mensaje a un grupo
-         * @description **Permiso requerido:** **Grupos y campañas → Enviar**
-         *
-         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}` (`result.message.uid` es el id del mensaje en WhatsApp). `type`: `text`, `image`, `video`, `audio` o `document`. Con un número QR sale al ritmo de los mensajes programados de velocidad Low, que el integrador no puede cambiar. Con un número oficial se verifican, antes de aceptar, la ventana de servicio de 24 horas y la calidad del número. No tiene tope de volumen del plan. Si el grupo todavía no está en la cuenta y el número es QR, primero se importa como en `POST /groups/{group}/import` (pide además **Grupos y campañas → Administrar grupos**, `403 import_permission_required` sin él) y el envío sigue con las mismas reglas: si el número no es administrador del grupo no se importa nada y responde `422 device_not_group_admin`. Esa importación cuenta en el tope de 5 por minuto del número.
-         */
-        post: operations["apiGroupAction.sendMessage"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2688,7 +3095,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los envíos programados que incluyen un grupo
+         * Ver los envíos programados de un grupo
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `send_at`, `name`, `status`, `id`, `created_at`, `updated_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
@@ -2732,7 +3139,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Suma participantes al grupo
+         * Sumar participantes a un grupo
          * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
          *
          *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Hasta 20 teléfonos por pedido. Con un número QR cada teléfono se agrega por separado, uno tras otro, al ritmo de las campañas. El resultado informa cada persona como `added` o `failed`.
@@ -2754,7 +3161,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Saca participantes del grupo
+         * Sacar participantes de un grupo
          * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
          *
          *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Hasta 20 teléfonos por pedido, sacados en una sola operación de WhatsApp. No admite el teléfono del propio número que ejecuta.
@@ -2776,7 +3183,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Promueve teléfonos a administrador
+         * Hacer administradores
          * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
          *
          *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Hasta 20 teléfonos por pedido, en una sola operación de WhatsApp. Un teléfono que no está en el grupo se agrega primero. Solo con números QR. Se ejecuta al ritmo de las campañas del número.
@@ -2798,7 +3205,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Quita el rol de administrador a teléfonos
+         * Quitar administradores
          * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
          *
          *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Hasta 20 teléfonos por pedido, en una sola operación de WhatsApp. No admite el teléfono del propio número que ejecuta. Solo con números QR. Se ejecuta al ritmo de las campañas del número.
@@ -2819,7 +3226,7 @@ export interface paths {
         };
         get?: never;
         /**
-         * Cambia el nombre del grupo
+         * Cambiar el nombre de un grupo
          * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
          *
          *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. El nombre se envía tal cual, sin numeración de campaña. Hasta 100 caracteres. Se ejecuta al ritmo de las campañas del número.
@@ -2841,7 +3248,7 @@ export interface paths {
         };
         get?: never;
         /**
-         * Cambia la descripción del grupo
+         * Cambiar la descripción de un grupo
          * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
          *
          *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Hasta 2048 caracteres; una descripción vacía la borra. Se ejecuta al ritmo de las campañas del número.
@@ -2863,7 +3270,7 @@ export interface paths {
         };
         get?: never;
         /**
-         * Cambia la foto del grupo
+         * Cambiar la foto de un grupo
          * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
          *
          *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. `photo_url` debe ser una URL `https` de una imagen jpg, jpeg o png. Solo con números QR. Se ejecuta al ritmo de las campañas del número.
@@ -2885,13 +3292,35 @@ export interface paths {
         };
         get?: never;
         /**
-         * Cambia si los miembros pueden escribir
+         * Elegir quién escribe en un grupo
          * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
          *
          *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. `members_can_send_messages`; bloquear la escritura también deja a solo los administradores editando la información del grupo. Solo con números QR. Se ejecuta al ritmo de las campañas del número.
          */
         put: operations["apiGroupAction.updateSettings"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mandar un mensaje a un grupo
+         * @description **Permiso requerido:** **Grupos y campañas → Enviar**
+         *
+         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}` (`result.message.uid` es el id del mensaje en WhatsApp). `type`: `text`, `image`, `video`, `audio` o `document`. Con un número QR sale al ritmo de los mensajes programados de velocidad Low, que el integrador no puede cambiar. Con un número oficial se verifican, antes de aceptar, la ventana de servicio de 24 horas y la calidad del número. No tiene tope de volumen del plan. Si el grupo todavía no está en la cuenta y el número es QR, primero se importa como en `POST /groups/{group}/import` (pide además **Grupos y campañas → Administrar grupos**, `403 import_permission_required` sin él) y el envío sigue con las mismas reglas: si el número no es administrador del grupo no se importa nada y responde `422 device_not_group_admin`. Esa importación cuenta en el tope de 5 por minuto del número.
+         */
+        post: operations["apiGroupAction.sendMessage"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2908,7 +3337,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Renueva el link de invitación del grupo
+         * Renovar el link de invitación de un grupo
          * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
          *
          *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Con un número QR relee el link vigente y NO lo revoca (los proveedores QR de WhatsApp no exponen revocación acá); con un número oficial revoca el link y WhatsApp genera uno nuevo. El resultado trae `invite_link`.
@@ -2928,7 +3357,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Link de invitación vigente del grupo
+         * Ver el link de invitación de un grupo
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Nota:** Se lee en vivo del proveedor con el número indicado en `device_id`. Límite: 30 pedidos por minuto.
@@ -2950,10 +3379,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Solicitudes pendientes para unirse al grupo
+         * Ver las solicitudes para unirse
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
-         *     **Nota:** Solo números oficiales con la beta de grupos de la API oficial; un número QR recibe `422 provider_unsupported`. Se lee en vivo del proveedor con el número indicado en `device_id`; devuelve hasta 100 solicitudes, en el orden del proveedor, y omite las que no traen teléfono (no hay BSUID). Límite: 30 pedidos por minuto.
+         *     **Nota:** Solo números oficiales con la versión preliminar de grupos de la API oficial; un número QR recibe `422 provider_unsupported`. Se lee en vivo del proveedor con el número indicado en `device_id`; devuelve hasta 100 solicitudes, en el orden del proveedor, y omite las que no traen teléfono (no hay BSUID). Límite: 30 pedidos por minuto.
          */
         get: operations["apiGroupAction.joinRequests"];
         put?: never;
@@ -2974,10 +3403,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Aprueba solicitudes para unirse al grupo
+         * Aprobar solicitudes para unirse
          * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
          *
-         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Solo números oficiales con la beta de grupos de la API oficial y con la habilitación de decisiones; si no, `422 provider_unsupported`. Verifica que los teléfonos entren en los lugares libres del grupo (`capacity_full`). El resultado es por persona.
+         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Solo números oficiales con la versión preliminar de grupos de la API oficial y con la habilitación de decisiones; si no, `422 provider_unsupported`. Verifica que los teléfonos entren en los lugares libres del grupo (`capacity_full`). El resultado es por persona.
          */
         post: operations["apiGroupAction.approveJoinRequests"];
         delete?: never;
@@ -2996,56 +3425,12 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Rechaza solicitudes para unirse al grupo
+         * Rechazar solicitudes para unirse
          * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
          *
-         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Solo números oficiales con la beta de grupos de la API oficial y con la habilitación de decisiones; si no, `422 provider_unsupported`. El resultado es por persona.
+         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Solo números oficiales con la versión preliminar de grupos de la API oficial y con la habilitación de decisiones; si no, `422 provider_unsupported`. El resultado es por persona.
          */
         post: operations["apiGroupAction.rejectJoinRequests"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign}/participants": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Listar los participantes de una campaña
-         * @description **Permiso requerido:** **Grupos y campañas → Ver**
-         *
-         *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `updated_at`, `id`, `created_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
-         */
-        get: operations["campaign.participants"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign}/campaign-participants": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Listar los participantes con su grupo actual
-         * @description **Permiso requerido:** **Grupos y campañas → Ver**
-         *
-         *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `joined_at`, `left_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
-         */
-        get: operations["campaign.campaignParticipants"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3060,7 +3445,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar entradas y salidas de una campaña
+         * Ver quién entró y salió de una campaña
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
@@ -3082,7 +3467,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los participantes de un grupo
+         * Ver los participantes de un grupo
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `created_at`, `id`, `updated_at`; dirección `orderDirection`: `asc` o `desc`. Otro valor responde `422`.
@@ -3104,7 +3489,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar entradas y salidas de un grupo
+         * Ver quién entró y salió de un grupo
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
@@ -3126,7 +3511,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar envíos programados
+         * Ver tus envíos programados
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `created_at`, `id`, `name`, `updated_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
@@ -3168,7 +3553,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los grupos destino de un envío
+         * Ver los grupos de un envío
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** página fija de 3 elementos; se recorre con `page`. Orden: `orderBy` acepta `created_at`, `id`, `name`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
@@ -3190,7 +3575,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver el resultado por grupo de un envío
+         * Ver cómo salió un envío en cada grupo
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`). Orden: `orderBy` acepta `group_message_template.id`, `group_message_template.status`, `groups.name`, `group_message_template.created_at`; dirección `orderByMethod`: `asc` o `desc`. Otro valor responde `422`.
@@ -3212,7 +3597,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver las tasas de lectura y reproducción de un envío
+         * Ver cuántos leyeron o escucharon un envío
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["scheduledMessage.readedAndPlayedRates"];
@@ -3232,7 +3617,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar las ocurrencias de un envío recurrente
+         * Ver cada vez que salió un envío recurrente
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
@@ -3254,7 +3639,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar las carpetas de envíos
+         * Ver las carpetas de envíos
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["scheduledMessageFolder.index"];
@@ -3274,7 +3659,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar las respuestas a un envío
+         * Ver las respuestas a un envío
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `perPage` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
@@ -3296,7 +3681,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar las etiquetas que se aplican a quien responde
+         * Ver las etiquetas que pone un envío a quien responde
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["scheduledMessage.responseTags"];
@@ -3316,7 +3701,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver participantes por período
+         * Ver los participantes por período
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** `start_date` y `end_date` son obligatorios, con formato `AAAA-MM-DD`, y el rango entre los dos, ambos incluidos, admite como máximo 366 días (un año completo, bisiesto incluido). Si falta una de las dos fechas, si una es inválida, si `end_date` es anterior a `start_date` o si el rango es mayor, responde `422`.
@@ -3338,7 +3723,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver participantes activos
+         * Ver los participantes activos
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** `start_date` y `end_date` son obligatorios, con formato `AAAA-MM-DD`, y el rango entre los dos, ambos incluidos, admite como máximo 366 días (un año completo, bisiesto incluido). Si falta una de las dos fechas, si una es inválida, si `end_date` es anterior a `start_date` o si el rango es mayor, responde `422`.
@@ -3360,7 +3745,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver grupos por estado
+         * Ver tus grupos por estado
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** `start_date` y `end_date` son obligatorios, con formato `AAAA-MM-DD`, y el rango entre los dos, ambos incluidos, admite como máximo 366 días (un año completo, bisiesto incluido). Si falta una de las dos fechas, si una es inválida, si `end_date` es anterior a `start_date` o si el rango es mayor, responde `422`.
@@ -3382,7 +3767,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver clics en links
+         * Ver los clics en tus links
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** `start_date` y `end_date` son obligatorios, con formato `AAAA-MM-DD`, y el rango entre los dos, ambos incluidos, admite como máximo 366 días (un año completo, bisiesto incluido). Si falta una de las dos fechas, si una es inválida, si `end_date` es anterior a `start_date` o si el rango es mayor, responde `422`.
@@ -3404,7 +3789,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar registros de clics
+         * Ver el registro de clics
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `per_page` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
@@ -3426,74 +3811,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver métricas por país
+         * Ver las métricas por país
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          */
         get: operations["stats.countryMetrics"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/stats/countries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Listar países presentes
-         * @description **Permiso requerido:** **Grupos y campañas → Ver**
-         */
-        get: operations["stats.countryList"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign}/webhooks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Listar los webhooks de una campaña
-         * @description **Permiso requerido:** **Grupos y campañas → Ver**
-         *
-         *     **Nota:** Webhooks legados de campaña, con otro formato; no reciben los eventos de plataforma (ver `/webhooks`).
-         */
-        get: operations["campaignWebhook.index"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns/{campaign}/webhooks/logs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Listar las entregas de los webhooks de una campaña
-         * @description **Permiso requerido:** **Grupos y campañas → Ver**
-         *
-         *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `per_page` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
-         */
-        get: operations["campaignWebhook.logs"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3510,10 +3831,12 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver mi cuenta
+         * Ver tu cuenta
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
-         *     La cuenta dueña de la clave: sus datos, su plan y sus límites.
+         *     La cuenta dueña de la clave: su nombre, su plan y sus límites. Los conteos (números,
+         *     agentes) son los del workspace de la clave. No trae el email, el teléfono ni las fechas de
+         *     login del dueño, ni datos de cobro.
          */
         get: {
             parameters: {
@@ -3530,7 +3853,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["AccountsUserResource"] & Record<string, unknown>;
+                        "application/json": unknown;
                     };
                 };
                 401: components["responses"]["AccountsAuthenticationException"];
@@ -3553,7 +3876,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar las campañas para alertas
+         * Ver las campañas para tus alertas
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25); también `per_page` · orden fijo: id ascendente · no acepta parámetros de orden.
@@ -3578,7 +3901,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver el catálogo de alertas
+         * Ver las alertas que hay
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
          *     Las alertas que la cuenta puede activar en un destino, con su `module` y su `action`. Las
@@ -3633,105 +3956,17 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los destinos de alertas
+         * Ver los destinos de tus alertas
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25) · orden fijo: id ascendente · no acepta parámetros de orden.
          *
-         *     Los teléfonos y webhooks que reciben las alertas de la cuenta. Si la cuenta no tiene
-         *     ninguno y tiene un teléfono cargado, crea con él un destino `phone` sin verificar.
+         *     Los teléfonos y webhooks que reciben las alertas, los del workspace de la clave. El
+         *     teléfono sale tapado: solo se ven sus últimos cuatro dígitos (`****1234`).
          */
         get: operations["alertDestination.index"];
         put?: never;
-        /**
-         * Crear un destino de alertas
-         * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
-         *
-         *     `type` es `phone` (un número de teléfono) o `webhook` (una URL `https` que resuelva a una
-         *     dirección pública de internet). La cuenta puede tener hasta 10 destinos de cada tipo. El
-         *     destino nace sin verificar: un teléfono se verifica con el código que envía
-         *     `POST alerts/destinations/{id}/otp`.
-         *
-         *     Para un `webhook`, la respuesta trae `secret`, el secreto con el que se firman sus
-         *     entregas: es la única vez que aparece.
-         */
-        post: operations["alertDestination.store"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/alerts/destinations/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
         post?: never;
-        /**
-         * Eliminar un destino de alertas
-         * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
-         *
-         *     Borra también las alertas que tenía activadas.
-         */
-        delete: operations["alertDestination.destroy"];
-        options?: never;
-        head?: never;
-        /**
-         * Actualizar un destino de alertas
-         * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
-         *
-         *     Cambia `name` (con `null` se borra) y, solo en un `webhook`, la URL (`destination`), con
-         *     las mismas reglas que al crearlo. El teléfono de un destino `phone` no se puede cambiar:
-         *     para otro teléfono, crea otro destino. Cambiar la URL de un webhook lo deja sin verificar.
-         */
-        patch: operations["alertDestination.update"];
-        trace?: never;
-    };
-    "/api/v1/alerts/destinations/{id}/otp": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Enviar un código de verificación
-         * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
-         *
-         *     Envía (o reenvía) un código de 6 dígitos al teléfono del destino. Se confirma
-         *     con `POST alerts/destinations/{id}/otp/verify`.
-         */
-        post: operations["alertOtp.send"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/alerts/destinations/{id}/otp/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Verificar el código
-         * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
-         *
-         *     `code` es el código de 6 dígitos que llegó al teléfono. Con el destino verificado ya se
-         *     pueden activar alertas en él.
-         */
-        post: operations["alertOtp.verify"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3777,7 +4012,7 @@ export interface paths {
         };
         get?: never;
         /**
-         * Activar o desactivar una alerta
+         * Prender o apagar una alerta en un destino
          * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
          *
          *     `module` y `action` son los de una alerta del catálogo (`GET alerts/catalog`); `enabled`
@@ -3785,30 +4020,6 @@ export interface paths {
          */
         put: operations["alertSetting.upsert"];
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/alerts/destinations/{id}/test": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Probar un destino webhook
-         * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
-         *
-         *     Envía una entrega de prueba a la URL del destino y devuelve el resultado: `status` (el
-         *     código HTTP que respondió, o `null` si no respondió), `ok` y `latency` (en
-         *     milisegundos).
-         */
-        post: operations["alertWebhookTest.test"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3825,7 +4036,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Configurar el dataset de Conversions API
+         * Configurar el dataset de un número
          * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
          *
          *     Crea en Meta el dataset de la Conversions API (CAPI) de la cuenta de WhatsApp Business
@@ -3873,7 +4084,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los datasets de Conversions API
+         * Ver tus datasets de Conversions API
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25) · orden fijo: id ascendente · no acepta parámetros de orden.
@@ -3899,7 +4110,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar los links de alta
+         * Ver tus links de alta
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25) · orden fijo: id descendente · no acepta parámetros de orden.
@@ -3911,7 +4122,7 @@ export interface paths {
         get: operations["connectLink.index"];
         put?: never;
         /**
-         * Crear un link de alta
+         * Conectar un número
          * @description **Escritura** · requiere **Números de WhatsApp → Crear, conectar y borrar**.
          *
          *     > 🔑 **Da el control de un WhatsApp.** Por eso pide **Números de WhatsApp → Crear, conectar y borrar**: crear un número ocupa un lugar del plan, y quien escanee su QR o use un link de alta conecta un teléfono a esta cuenta. Trata el QR y la URL del link como un secreto.
@@ -3994,7 +4205,7 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Revocar un link de alta
+         * Anular un link de alta
          * @description **Escritura** · requiere **Números de WhatsApp → Crear, conectar y borrar**.
          *
          *     > 🔑 **Da el control de un WhatsApp.** Por eso pide **Números de WhatsApp → Crear, conectar y borrar**: crear un número ocupa un lugar del plan, y quien escanee su QR o use un link de alta conecta un teléfono a esta cuenta. Trata el QR y la URL del link como un secreto.
@@ -4016,7 +4227,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar dominios propios
+         * Ver tus dominios propios
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25) · orden fijo: id ascendente · no acepta parámetros de orden.
@@ -4078,7 +4289,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Cambiar el método de validación SSL
+         * Cambiar cómo se valida el certificado
          * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
          *
          *     `method` es `HTTP` (por defecto: el certificado se emite cuando el registro DNS del
@@ -4104,7 +4315,7 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Eliminar un dominio propio
+         * Borrar un dominio propio
          * @description > ⚠️ **No se puede deshacer:** el dominio propio se borra y deja de usarse de inmediato.
          *
          *     **Escritura** · requiere **Números de WhatsApp → Crear, conectar y borrar**.
@@ -4126,7 +4337,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar números
+         * Ver tus números
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25) · orden fijo: id ascendente · no acepta parámetros de orden.
@@ -4136,7 +4347,7 @@ export interface paths {
         get: operations["device.index"];
         put?: never;
         /**
-         * Crear un número por QR
+         * Crear un número para conectar por QR
          * @description **Escritura** · requiere **Números de WhatsApp → Crear, conectar y borrar**.
          *
          *     > 🔑 **Da el control de un WhatsApp.** Por eso pide **Números de WhatsApp → Crear, conectar y borrar**: crear un número ocupa un lugar del plan, y quien escanee su QR o use un link de alta conecta un teléfono a esta cuenta. Trata el QR y la URL del link como un secreto.
@@ -4177,46 +4388,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/devices/{device}/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Ver el perfil de WhatsApp de un número
-         * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
-         */
-        get: operations["device.me"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/devices/{device}/check-phone": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Verificar si un teléfono tiene WhatsApp
-         * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
-         */
-        get: operations["device.checkPhone"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/devices/{device}": {
         parameters: {
             query?: never;
@@ -4230,7 +4401,7 @@ export interface paths {
          */
         get: operations["device.show"];
         /**
-         * Actualizar un número
+         * Editar un número
          * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
          *
          *     Cambia los datos del número, por ejemplo `alias`, `color`, `image`, tu
@@ -4239,7 +4410,7 @@ export interface paths {
         put: operations["device.update"];
         post?: never;
         /**
-         * Eliminar un número
+         * Borrar un número
          * @description > ⚠️ **No se puede deshacer:** el número se borra de la cuenta y libera su lugar en el plan. Para volver a usar ese teléfono hay que crear un número nuevo y conectarlo otra vez.
          *
          *     **Escritura** · requiere **Números de WhatsApp → Crear, conectar y borrar**.
@@ -4274,7 +4445,7 @@ export interface paths {
         get?: never;
         /**
          * Reiniciar la sesión de un número
-         * @description > ⚠️ **No se puede deshacer:** reinicia desde cero la sesión de WhatsApp del número: después hay que volver a escanear el código QR.
+         * @description > ⚠️ **No se puede deshacer:** borra la información del número conectado en ese lugar (por QR u oficial), igual que «Borrar datos» en el panel, para conectar ahí un número distinto. El lugar en el plan sigue ocupado y se conserva el alias; para conectar el número nuevo hay que pedir un QR o hacer el alta oficial.
          *
          *     **Escritura** · requiere **Números de WhatsApp → Crear, conectar y borrar**.
          *
@@ -4296,46 +4467,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/devices/{device}/update-webhook-received": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Configurar el webhook de mensajes recibidos
-         * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
-         */
-        put: operations["device.updateWebhookReceived"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/devices/{device}/update-webhook-received-and-delivery": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Configurar el webhook de recibidos y entregas
-         * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
-         */
-        put: operations["device.updateWebhookReceivedAndDelivery"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/devices/{device}/clean": {
         parameters: {
             query?: never;
@@ -4346,8 +4477,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Limpiar un número
-         * @description > ⚠️ **No se puede deshacer:** limpia la sesión de WhatsApp del número: después hay que volver a escanear el código QR.
+         * Desconectar un número
+         * @description > ⚠️ **No se puede deshacer:** cierra la conexión del número, que deja de mandar y recibir hasta que lo vuelvas a conectar: uno por QR, escaneando un código QR nuevo; uno oficial, con el alta oficial. Conserva su lugar en el plan y su historial.
          *
          *     **Escritura** · requiere **Números de WhatsApp → Crear, conectar y borrar**.
          *
@@ -4370,50 +4501,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/devices/{device}/chats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Listar los chats de un número
-         * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
-         *
-         *     **Listado** · `perPage` de 1 a 100 (por defecto 25); también `pageSize` · orden fijo: el que devuelve el proveedor · no acepta parámetros de orden.
-         */
-        get: operations["device.chats"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/devices/{device}/open-conversations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Ver qué teléfonos tienen conversación abierta
-         * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
-         *
-         *     **Con API key** · Con una clave de API, `phones` admite como máximo 100 teléfonos por llamada. Más responde `422`.
-         */
-        get: operations["device.openConversations"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/devices/{device}/message-queue": {
         parameters: {
             query?: never;
@@ -4422,7 +4509,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver la cola de mensajes
+         * Ver la cola de mensajes de un número
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25); también `pageSize` · orden fijo: el que devuelve el proveedor · no acepta parámetros de orden.
@@ -4431,7 +4518,7 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Eliminar mensajes de la cola
+         * Sacar mensajes de la cola
          * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
          */
         delete: operations["device.deleteMessageQueue"];
@@ -4490,37 +4577,17 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver el estado de conexión
+         * Ver el estado de un número
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
+         *
+         *     `accountStatus` es el estado de la sesión de WhatsApp del número. Con una clave de API esta
+         *     llamada nunca trae el QR: `qrCode` llega siempre vacío (`""`), también con el número
+         *     desconectado. Para conectar un número por QR, pide el código con `GET devices/{device}/qr`,
+         *     que pide **Números de WhatsApp → Crear, conectar y borrar**.
          */
         get: operations["device.status"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/devices/{device}/extension-token": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Pedir un token para la extensión de WhatsApp Web
-         * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
-         *
-         *     Un código de un solo uso, que vence pronto (`expiresAt`, `expiresInSeconds`), para que la
-         *     extensión de Chrome pase a este número una sesión abierta de WhatsApp Web sin recibir las
-         *     credenciales del número. Solo algunos números por QR lo admiten: los demás
-         *     responden `422`.
-         */
-        post: operations["device.extensionToken"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4535,69 +4602,12 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver el historial de conexión
+         * Ver el historial de conexión de un número
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25) · orden fijo: created_at descendente · no acepta parámetros de orden.
          */
         get: operations["deviceConnectionEvent.index"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/devices/{device}/disconnect-survey": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Ver la encuesta de desconexión
-         * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
-         *
-         *     `pending` es `true` cuando el número se desconectó y todavía no se contó por qué
-         *     (`POST devices/{device}/disconnect-survey`); `phone` es el número que se desconectó.
-         */
-        get: operations["deviceDisconnectSurvey.show"];
-        put?: never;
-        /**
-         * Responder la encuesta de desconexión
-         * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
-         *
-         *     Guarda el motivo (`reason`) de la última desconexión del número.
-         */
-        post: operations["deviceDisconnectSurvey.store"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/devices/logs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Listar los registros de todos los números
-         * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
-         *
-         *     **Listado** · `perPage` de 1 a 100 (por defecto 25); también `limit` · orden fijo: más reciente primero · no acepta parámetros de orden.
-         *
-         *     Las llamadas al proveedor de WhatsApp hechas para los números de la cuenta dentro de una
-         *     ventana de tiempo, de la más reciente a la más vieja, con el número de cada una y la lista
-         *     de números en `devices`. Para la página siguiente, envía el `next_cursor` de la respuesta
-         *     como `cursor` (`has_more` dice si hay más). La primera página (sin `cursor`) trae además un
-         *     resumen de la ventana en `summary`.
-         */
-        get: operations["deviceFleetLogs.index"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4614,7 +4624,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver la salud de un número
+         * Ver la salud de un número oficial
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
          *     El último estado guardado que informó Meta: si el número puede enviar (`health`), su
@@ -4640,7 +4650,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Actualizar la salud de un número
+         * Actualizar la salud de un número oficial
          * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
          *
          *     Le pide a Meta el estado actual del número y devuelve lo mismo que
@@ -4659,57 +4669,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/devices/{device}/logs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Listar los registros de un número
-         * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
-         *
-         *     **Listado** · `perPage` de 1 a 100 (por defecto 25); también `limit` · orden fijo: más reciente primero · no acepta parámetros de orden.
-         *
-         *     Las llamadas al proveedor de WhatsApp hechas para este número dentro de una ventana de
-         *     tiempo (`range`, o `from` y `to`), de la más reciente a la más vieja. Para la página
-         *     siguiente, envía el `next_cursor` de la respuesta como `cursor` (`has_more` dice si hay
-         *     más). La primera página (sin `cursor`) trae además un resumen de la ventana en `summary`.
-         */
-        get: operations["deviceLogs.index"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/devices/{device}/logs/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Ver la señal de salud de los registros
-         * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
-         *
-         *     Las últimas 5 llamadas al proveedor de WhatsApp de este número que no son envíos, con un
-         *     veredicto (`verdict`): `healthy`, `review` o `attention`, y cuántas fallaron
-         *     (`fail_count` de `sample_size`).
-         */
-        get: operations["deviceLogs.health"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/devices/{device}/qr": {
         parameters: {
             query?: never;
@@ -4718,7 +4677,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Pedir el QR de un número
+         * Ver el QR de un número
          * @description **Escritura** · requiere **Números de WhatsApp → Crear, conectar y borrar**.
          *
          *     > 🔑 **Da el control de un WhatsApp.** Por eso pide **Números de WhatsApp → Crear, conectar y borrar**: crear un número ocupa un lugar del plan, y quien escanee su QR o use un link de alta conecta un teléfono a esta cuenta. Trata el QR y la URL del link como un secreto.
@@ -4754,7 +4713,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver el nombre de usuario
+         * Ver el nombre de usuario de un número
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
          *     Lo consulta en Meta; si Meta no devuelve ninguno, responde el último que se reservó. Solo
@@ -4763,7 +4722,7 @@ export interface paths {
         get: operations["deviceUsername.show"];
         put?: never;
         /**
-         * Configurar el nombre de usuario
+         * Reservar un nombre de usuario
          * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
          *
          *     `username` va de 3 a 35 caracteres: letras minúsculas, números, puntos y guiones bajos. Se
@@ -4785,120 +4744,13 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Sugerir nombres de usuario
+         * Ver nombres de usuario sugeridos
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
          *     Las sugerencias que da Meta para ese número. Solo para números oficiales.
          */
         get: operations["deviceUsername.suggestions"];
         put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/webhooks/endpoints/{id}/deliveries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Listar entregas de un webhook
-         * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
-         *
-         *     **Listado** · `perPage` de 1 a 100 (por defecto 25); también `per_page` · orden fijo: attempted_at descendente, después id descendente · no acepta parámetros de orden.
-         *
-         *     Una fila por intento: los reintentos de un mismo evento comparten `event_id`.
-         */
-        get: operations["webhookDelivery.index"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/webhooks/endpoints": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Listar webhooks
-         * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
-         *
-         *     **Listado** · `perPage` de 1 a 100 (por defecto 25) · orden fijo: id ascendente · no acepta parámetros de orden.
-         */
-        get: operations["webhookEndpoint.index"];
-        put?: never;
-        /**
-         * Crear un webhook
-         * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
-         */
-        post: operations["webhookEndpoint.store"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/webhooks/endpoints/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Ver un webhook
-         * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
-         */
-        get: operations["webhookEndpoint.show"];
-        put?: never;
-        post?: never;
-        /**
-         * Eliminar un webhook
-         * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
-         *
-         *     Se borran con él sus suscripciones y su historial de entregas.
-         */
-        delete: operations["webhookEndpoint.destroy"];
-        options?: never;
-        head?: never;
-        /**
-         * Actualizar un webhook
-         * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
-         *
-         *     La URL nueva sigue las mismas reglas que al registrar el endpoint: `https` y que resuelva
-         *     a una dirección pública de internet. Volver a habilitar un endpoint (`status: enabled`)
-         *     reinicia su cuenta de entregas fallidas.
-         */
-        patch: operations["webhookEndpoint.update"];
-        trace?: never;
-    };
-    "/api/v1/webhooks/endpoints/{id}/events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Elegir los eventos de un webhook
-         * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
-         *
-         *     `events` es la lista completa: un tipo que no viene en la lista queda desuscripto, y
-         *     `{"events": []}` deja el endpoint registrado sin recibir nada.
-         */
-        put: operations["webhookEndpointEvent.update"];
         post?: never;
         delete?: never;
         options?: never;
@@ -4914,7 +4766,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar tipos de evento
+         * Ver los tipos de evento
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          */
         get: operations["webhookEventCatalog.index"];
@@ -4934,7 +4786,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar webhooks
+         * Ver tus webhooks
          * @description **Lectura** · requiere **Avisos (webhooks) → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25) · orden fijo: id ascendente · no acepta parámetros de orden.
@@ -4977,7 +4829,7 @@ export interface paths {
          */
         get: operations["webhookSubscription.show"];
         /**
-         * Actualizar un webhook
+         * Editar un webhook
          * @description Reemplaza `url`, `events`, `description` y `filters`; `status` opcional
          *
          *     **Escritura** · requiere **Avisos (webhooks) → Administrar**.
@@ -4997,7 +4849,7 @@ export interface paths {
         put: operations["webhookSubscription.update"];
         post?: never;
         /**
-         * Eliminar un webhook
+         * Borrar un webhook
          * @description **Escritura** · requiere **Avisos (webhooks) → Administrar**.
          *
          *     Con una clave de API, la clave necesita además el permiso de lectura del
@@ -5018,7 +4870,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Listar entregas de un webhook
+         * Ver las entregas de un webhook
          * @description **Lectura** · requiere **Avisos (webhooks) → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25); también `per_page` · orden fijo: attempted_at descendente, después id descendente · no acepta parámetros de orden.
@@ -5049,7 +4901,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Enviar un evento de prueba
+         * Probar un webhook
          * @description Envía una entrega de prueba firmada a la URL de la suscripción y devuelve el resultado
          *
          *     **Escritura** · requiere **Avisos (webhooks) → Administrar**.
@@ -5075,7 +4927,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Cuentas de WhatsApp Business (WABA) de la cuenta
+         * Ver tus cuentas de WhatsApp Business
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25) · orden fijo: id ascendente, como número · no acepta parámetros de orden.
@@ -5112,7 +4964,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Una cuenta de WhatsApp Business (WABA) de la cuenta
+         * Ver una cuenta de WhatsApp Business
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
          *     Lo mismo que el listado, para una sola WABA. Responde `404` si la cuenta no tiene números de WhatsApp Cloud en
@@ -5146,277 +4998,13 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Ver los costos de WhatsApp
+         * Ver tus costos de WhatsApp
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
          *     `month` es el mes en `YYYY-MM`; sin `month`, o con un valor que no es un mes válido,
-         *     devuelve el mes en curso.
+         *     devuelve el mes en curso. El resumen es el de los números del workspace de la clave.
          */
         get: operations["whatsappCost.index"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/webhooks/{id}/rotate-secret": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Generate a new secret
-         * @description A new secret, shown only once; the previous one stops working.
-         *
-         *     **Not open to API keys:** with a key it answers `403 route_not_available`. Rotate the secret from the panel.
-         */
-        post: operations["pendingWebhookSubscription.rotateSecret"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/forms": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List forms */
-        get: operations["pendingForms.list"];
-        put?: never;
-        /** Create a form from a template */
-        post: operations["pendingForms.create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/forms/templates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Templates to start a form */
-        get: operations["pendingForms.templates"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/forms/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** One version of a form */
-        get: operations["pendingForms.retrieve"];
-        /** Save the definition of a draft */
-        put: operations["pendingForms.update"];
-        post?: never;
-        /** Delete a draft */
-        delete: operations["pendingForms.delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/forms/{id}/versions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Open a new version (draft) of a published form */
-        post: operations["pendingForms.createVersion"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/forms/{id}/sync": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Upload the draft to Meta without publishing it */
-        post: operations["pendingForms.sync"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/forms/{id}/publish": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Publish on Meta */
-        post: operations["pendingForms.publish"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/forms/{id}/numbers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** The numbers of the form */
-        get: operations["pendingForms.numbers"];
-        put?: never;
-        /** Publish it on another number too */
-        post: operations["pendingForms.addNumber"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/forms/{id}/numbers/{deviceId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Take it off a number */
-        delete: operations["pendingForms.removeNumber"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/forms/{id}/numbers/retry": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Retry the numbers that failed */
-        post: operations["pendingForms.retryNumbers"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/forms/families/{familyId}/definition": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** The current definition of a form */
-        get: operations["pendingForms.definition"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/forms/families/{familyId}/versions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** The versions of a form */
-        get: operations["pendingForms.versions"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/forms/families/{familyId}/responses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** The answers of a form */
-        get: operations["pendingForms.responses"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/forms/families/{familyId}/responses/{runId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** One answer */
-        get: operations["pendingForms.response"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/forms/families/{familyId}/metrics": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** The funnel of a form: sent, opened, completed */
-        get: operations["pendingForms.metrics"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6194,6 +5782,155 @@ export interface webhooks {
         patch?: never;
         trace?: never;
     };
+    "message.reaction_failed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * message.reaction_failed
+         * @description Una reacción a un mensaje que se aceptó no se pudo aplicar.
+         *
+         *     Se emite cuando una reacción a un mensaje (ponerla, reemplazarla o quitarla) que se aceptó con `202` termina sin aplicarse, la haya pedido una clave o una persona del equipo desde el chat. Sale una sola vez por pedido: los reintentos internos del mismo pedido no generan otro evento. No se emite cuando la reacción se aplicó, cuando una reacción más nueva al mismo mensaje ya la reemplazó, ni cuando el mensaje ya no existe. `message_id` es el mensaje al que se reaccionaba (el mismo id de la ruta), `contact_id` el del contacto y `device_id` el número de tu cuenta por el que iba a salir (`null` si el mensaje ya no tiene número). `emoji` es el emoji pedido y `null` si el pedido era quitar la reacción. `reason` es uno de `no_provider_uid`, `message_not_reactable`, `message_deleted`, `device_disconnected`, `provider_unsupported`, `window_expired`, `provider_rejected`, `insufficient_balance`, `payment_expired`. `requested_at` es el momento en que se aceptó el pedido, en UTC y con microsegundos: sirve para relacionar el evento con la llamada que respondió `202`. `occurred_at` es el momento en que Funnelchat decidió el fallo, en UTC. Mientras tanto, `reactions` de `GET /contacts/{contact_id}/messages` queda como estaba.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description Firma de la entrega: `t=<timestamp>,v1=<firma>`. Se calcula sobre `t + "." + cuerpo crudo`. */
+                    "X-Funnelchat-Signature": string;
+                    /** @description Tipo de evento (igual que `type` en el cuerpo). */
+                    "X-Funnelchat-Event": string;
+                    /** @description Identificador de esta entrega; cambia en cada intento. */
+                    "X-Funnelchat-Delivery": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "id": "evt_000000000000000000000016",
+                     *       "type": "message.reaction_failed",
+                     *       "version": 1,
+                     *       "occurred_at": "2026-10-01T12:00:00Z",
+                     *       "data": {
+                     *         "message_id": 1001,
+                     *         "contact_id": 2001,
+                     *         "device_id": 4521,
+                     *         "emoji": "👍",
+                     *         "reason": "provider_rejected",
+                     *         "requested_at": "2026-10-01T11:59:58.123456Z",
+                     *         "occurred_at": "2026-10-01T12:00:00Z"
+                     *       }
+                     *     }
+                     */
+                    "application/json": Record<string, unknown>;
+                };
+            };
+            responses: {
+                /** @description Cualquier respuesta 2xx en 10 segundos o menos confirma la entrega. */
+                "2XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "contact.updated": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * contact.updated
+         * @description Cambió el nombre, el email, el teléfono o el valor de un campo personalizado de un contacto.
+         *
+         *     Se envía cuando cambia el nombre, el email o el teléfono de un contacto que ya existía, o cuando se pone, cambia o quita el valor de uno de sus campos personalizados, venga del panel, de la API, de un flujo o de una importación. Varios cambios del mismo contacto en una misma operación llegan en un solo evento. `changed` dice qué cambió (`name`, `email`, `phone`, `custom_fields`); `contact` trae el estado después del cambio y `custom_fields`, sólo los campos que cambiaron, con su valor nuevo (`null` si se quitó). No se envía al crear un contacto (eso es `contact.created`), por etiquetas, por el estado de la conversación ni si el valor nuevo es igual al anterior; tampoco al borrar un campo personalizado de la cuenta. En importaciones grandes el límite de volumen de la cuenta puede descartar parte de los eventos.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description Firma de la entrega: `t=<timestamp>,v1=<firma>`. Se calcula sobre `t + "." + cuerpo crudo`. */
+                    "X-Funnelchat-Signature": string;
+                    /** @description Tipo de evento (igual que `type` en el cuerpo). */
+                    "X-Funnelchat-Event": string;
+                    /** @description Identificador de esta entrega; cambia en cada intento. */
+                    "X-Funnelchat-Delivery": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "id": "evt_000000000000000000000017",
+                     *       "type": "contact.updated",
+                     *       "version": 1,
+                     *       "occurred_at": "2026-10-01T12:00:00Z",
+                     *       "data": {
+                     *         "contact": {
+                     *           "id": 2001,
+                     *           "name": "Ana Pérez",
+                     *           "phone": "+5491100000000",
+                     *           "email": "ana@example.com"
+                     *         },
+                     *         "changed": [
+                     *           "email",
+                     *           "custom_fields"
+                     *         ],
+                     *         "custom_fields": [
+                     *           {
+                     *             "id": 12,
+                     *             "name": "Plan",
+                     *             "value": "Pro"
+                     *           },
+                     *           {
+                     *             "id": 15,
+                     *             "name": "Ciudad",
+                     *             "value": null
+                     *           }
+                     *         ]
+                     *       }
+                     *     }
+                     */
+                    "application/json": Record<string, unknown>;
+                };
+            };
+            responses: {
+                /** @description Cualquier respuesta 2xx en 10 segundos o menos confirma la entrega. */
+                "2XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "webhook.test (conversations)": {
         parameters: {
             query?: never;
@@ -6445,7 +6182,7 @@ export interface webhooks {
         put?: never;
         /**
          * group.invite_link_renewed
-         * @description El enlace de invitación de un grupo cambió por una renovación, automática al detectarse inválido o pedida por el usuario; en v0 no se publican los cambios que detecta la sincronización ni el enlace inicial al crear el grupo.
+         * @description El enlace de invitación de un grupo cambió por una renovación, automática al detectarse inválido o pedida por el usuario; no se publican los cambios que detecta la sincronización ni el enlace inicial al crear el grupo.
          */
         post: operations["webhook.group_invite_link_renewed"];
         delete?: never;
@@ -6488,6 +6225,637 @@ export interface webhooks {
          * @description Evento de prueba que se envía al pedir la prueba de una suscripción; no se puede suscribir a él.
          */
         post: operations["webhook.webhook_test"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "campaign.no_groups_available": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * campaign.no_groups_available
+         * @description Una campaña no tiene grupos a los que dirigir a las personas que entran por su link.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description Firma de la entrega: `t=<timestamp>,v1=<firma>`. Se calcula sobre `t + "." + cuerpo crudo`. */
+                    "X-Funnelchat-Signature": string;
+                    /** @description Tipo de evento (igual que `type` en el cuerpo). */
+                    "X-Funnelchat-Event": string;
+                    /** @description Identificador de esta entrega; cambia en cada intento. */
+                    "X-Funnelchat-Delivery": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "id": "evt_0f8e4b526c1d4c7a9a3e2b5d",
+                     *       "type": "campaign.no_groups_available",
+                     *       "version": 1,
+                     *       "occurred_at": "2026-10-01T12:00:00Z",
+                     *       "data": {
+                     *         "campaign": {
+                     *           "uuid": "xK9mQz",
+                     *           "name": "Campaña de ejemplo"
+                     *         },
+                     *         "reason": "none_selectable",
+                     *         "workspace_id": 37
+                     *       }
+                     *     }
+                     */
+                    "application/json": Record<string, unknown>;
+                };
+            };
+            responses: {
+                /** @description Cualquier respuesta 2xx en 10 segundos o menos confirma la entrega. */
+                "2XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "daily_report.generated": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * daily_report.generated
+         * @description Se generó el reporte diario de la cuenta (clics, ingresos y salidas).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description Firma de la entrega: `t=<timestamp>,v1=<firma>`. Se calcula sobre `t + "." + cuerpo crudo`. */
+                    "X-Funnelchat-Signature": string;
+                    /** @description Tipo de evento (igual que `type` en el cuerpo). */
+                    "X-Funnelchat-Event": string;
+                    /** @description Identificador de esta entrega; cambia en cada intento. */
+                    "X-Funnelchat-Delivery": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "id": "evt_0f8e4b526c1d4c7a9a3e2b5d",
+                     *       "type": "daily_report.generated",
+                     *       "version": 1,
+                     *       "occurred_at": "2026-10-01T12:00:00Z",
+                     *       "data": {
+                     *         "period": {
+                     *           "date": "2026-10-01",
+                     *           "timezone": "America/Argentina/Buenos_Aires"
+                     *         },
+                     *         "clicks": 120,
+                     *         "joins": 80,
+                     *         "leaves": 10,
+                     *         "conversion_rate": 0.67,
+                     *         "workspace_id": 37
+                     *       }
+                     *     }
+                     */
+                    "application/json": Record<string, unknown>;
+                };
+            };
+            responses: {
+                /** @description Cualquier respuesta 2xx en 10 segundos o menos confirma la entrega. */
+                "2XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "group.full": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * group.full
+         * @description Un grupo pasó de no estar lleno a estarlo.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description Firma de la entrega: `t=<timestamp>,v1=<firma>`. Se calcula sobre `t + "." + cuerpo crudo`. */
+                    "X-Funnelchat-Signature": string;
+                    /** @description Tipo de evento (igual que `type` en el cuerpo). */
+                    "X-Funnelchat-Event": string;
+                    /** @description Identificador de esta entrega; cambia en cada intento. */
+                    "X-Funnelchat-Delivery": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "id": "evt_0f8e4b526c1d4c7a9a3e2b5d",
+                     *       "type": "group.full",
+                     *       "version": 1,
+                     *       "occurred_at": "2026-10-01T12:00:00Z",
+                     *       "data": {
+                     *         "group": {
+                     *           "uid": "120363000000000000@g.us",
+                     *           "name": "Grupo de ejemplo",
+                     *           "type": "tipo_de_ejemplo"
+                     *         },
+                     *         "campaign": {
+                     *           "uuid": "xK9mQz",
+                     *           "name": "Campaña de ejemplo"
+                     *         },
+                     *         "trigger": "participants_limit",
+                     *         "participants": 1024,
+                     *         "workspace_id": 37
+                     *       }
+                     *     }
+                     */
+                    "application/json": Record<string, unknown>;
+                };
+            };
+            responses: {
+                /** @description Cualquier respuesta 2xx en 10 segundos o menos confirma la entrega. */
+                "2XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "account.blocked": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * account.blocked
+         * @description La cuenta quedó bloqueada por consumo: terminó la gracia de 24 horas tras agotar los contactos activos mensuales sin que se regularizara.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description Firma de la entrega: `t=<timestamp>,v1=<firma>`. Se calcula sobre `t + "." + cuerpo crudo`. */
+                    "X-Funnelchat-Signature": string;
+                    /** @description Tipo de evento (igual que `type` en el cuerpo). */
+                    "X-Funnelchat-Event": string;
+                    /** @description Identificador de esta entrega; cambia en cada intento. */
+                    "X-Funnelchat-Delivery": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "id": "evt_0f8e4b526c1d4c7a9a3e2b5d",
+                     *       "type": "account.blocked",
+                     *       "version": 1,
+                     *       "occurred_at": "2026-10-01T12:00:00Z",
+                     *       "data": {
+                     *         "reason": "mac_grace_expired",
+                     *         "grace_started_at": "2026-10-01T12:00:00Z",
+                     *         "grace_expired_at": "2026-10-02T12:00:00Z",
+                     *         "workspace_id": 37
+                     *       }
+                     *     }
+                     */
+                    "application/json": Record<string, unknown>;
+                };
+            };
+            responses: {
+                /** @description Cualquier respuesta 2xx en 10 segundos o menos confirma la entrega. */
+                "2XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "mac.expiring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * mac.expiring
+         * @description Hay contactos activos mensuales que vencen en los próximos 7 días.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description Firma de la entrega: `t=<timestamp>,v1=<firma>`. Se calcula sobre `t + "." + cuerpo crudo`. */
+                    "X-Funnelchat-Signature": string;
+                    /** @description Tipo de evento (igual que `type` en el cuerpo). */
+                    "X-Funnelchat-Event": string;
+                    /** @description Identificador de esta entrega; cambia en cada intento. */
+                    "X-Funnelchat-Delivery": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "id": "evt_0f8e4b526c1d4c7a9a3e2b5d",
+                     *       "type": "mac.expiring",
+                     *       "version": 1,
+                     *       "occurred_at": "2026-10-01T12:00:00Z",
+                     *       "data": {
+                     *         "contacts_expiring": 1200,
+                     *         "expires_at": "2026-10-08T03:00:00Z",
+                     *         "workspace_id": 37
+                     *       }
+                     *     }
+                     */
+                    "application/json": Record<string, unknown>;
+                };
+            };
+            responses: {
+                /** @description Cualquier respuesta 2xx en 10 segundos o menos confirma la entrega. */
+                "2XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "mac.usage_100": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * mac.usage_100
+         * @description La cuenta agotó sus contactos activos mensuales del ciclo; se abre una gracia de 24 horas cuyo vencimiento viaja en `grace_expires_at`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description Firma de la entrega: `t=<timestamp>,v1=<firma>`. Se calcula sobre `t + "." + cuerpo crudo`. */
+                    "X-Funnelchat-Signature": string;
+                    /** @description Tipo de evento (igual que `type` en el cuerpo). */
+                    "X-Funnelchat-Event": string;
+                    /** @description Identificador de esta entrega; cambia en cada intento. */
+                    "X-Funnelchat-Delivery": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "id": "evt_0f8e4b526c1d4c7a9a3e2b5d",
+                     *       "type": "mac.usage_100",
+                     *       "version": 1,
+                     *       "occurred_at": "2026-10-01T12:00:00Z",
+                     *       "data": {
+                     *         "used": 10000,
+                     *         "limit": 10000,
+                     *         "percentage": 100,
+                     *         "cycle_started_at": "2026-10-01T00:00:00Z",
+                     *         "grace_expires_at": "2026-10-02T12:00:00Z",
+                     *         "workspace_id": 37
+                     *       }
+                     *     }
+                     */
+                    "application/json": Record<string, unknown>;
+                };
+            };
+            responses: {
+                /** @description Cualquier respuesta 2xx en 10 segundos o menos confirma la entrega. */
+                "2XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "mac.usage_80": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * mac.usage_80
+         * @description La cuenta alcanzó el 80% de sus contactos activos mensuales del ciclo.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description Firma de la entrega: `t=<timestamp>,v1=<firma>`. Se calcula sobre `t + "." + cuerpo crudo`. */
+                    "X-Funnelchat-Signature": string;
+                    /** @description Tipo de evento (igual que `type` en el cuerpo). */
+                    "X-Funnelchat-Event": string;
+                    /** @description Identificador de esta entrega; cambia en cada intento. */
+                    "X-Funnelchat-Delivery": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "id": "evt_0f8e4b526c1d4c7a9a3e2b5d",
+                     *       "type": "mac.usage_80",
+                     *       "version": 1,
+                     *       "occurred_at": "2026-10-01T12:00:00Z",
+                     *       "data": {
+                     *         "used": 8000,
+                     *         "limit": 10000,
+                     *         "percentage": 80,
+                     *         "cycle_started_at": "2026-10-01T00:00:00Z",
+                     *         "workspace_id": 37
+                     *       }
+                     *     }
+                     */
+                    "application/json": Record<string, unknown>;
+                };
+            };
+            responses: {
+                /** @description Cualquier respuesta 2xx en 10 segundos o menos confirma la entrega. */
+                "2XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "subscription.cancellation_confirmed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * subscription.cancellation_confirmed
+         * @description Quedó confirmada la cancelación de la suscripción (solo suscripciones de Stripe): se conserva el acceso hasta la fecha indicada.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description Firma de la entrega: `t=<timestamp>,v1=<firma>`. Se calcula sobre `t + "." + cuerpo crudo`. */
+                    "X-Funnelchat-Signature": string;
+                    /** @description Tipo de evento (igual que `type` en el cuerpo). */
+                    "X-Funnelchat-Event": string;
+                    /** @description Identificador de esta entrega; cambia en cada intento. */
+                    "X-Funnelchat-Delivery": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "id": "evt_0f8e4b526c1d4c7a9a3e2b5d",
+                     *       "type": "subscription.cancellation_confirmed",
+                     *       "version": 1,
+                     *       "occurred_at": "2026-10-01T12:00:00Z",
+                     *       "data": {
+                     *         "access_until": "2026-11-05T00:00:00Z",
+                     *         "workspace_id": 37
+                     *       }
+                     *     }
+                     */
+                    "application/json": Record<string, unknown>;
+                };
+            };
+            responses: {
+                /** @description Cualquier respuesta 2xx en 10 segundos o menos confirma la entrega. */
+                "2XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "subscription.reactivated": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * subscription.reactivated
+         * @description Se revirtió la cancelación programada de la suscripción (solo suscripciones de Stripe): sigue vigente y se renueva en la fecha indicada.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description Firma de la entrega: `t=<timestamp>,v1=<firma>`. Se calcula sobre `t + "." + cuerpo crudo`. */
+                    "X-Funnelchat-Signature": string;
+                    /** @description Tipo de evento (igual que `type` en el cuerpo). */
+                    "X-Funnelchat-Event": string;
+                    /** @description Identificador de esta entrega; cambia en cada intento. */
+                    "X-Funnelchat-Delivery": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "id": "evt_0f8e4b526c1d4c7a9a3e2b5d",
+                     *       "type": "subscription.reactivated",
+                     *       "version": 1,
+                     *       "occurred_at": "2026-10-01T12:00:00Z",
+                     *       "data": {
+                     *         "renews_at": "2026-11-05T00:00:00Z",
+                     *         "workspace_id": 37
+                     *       }
+                     *     }
+                     */
+                    "application/json": Record<string, unknown>;
+                };
+            };
+            responses: {
+                /** @description Cualquier respuesta 2xx en 10 segundos o menos confirma la entrega. */
+                "2XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "subscription.trial_ending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * subscription.trial_ending
+         * @description El período de prueba está por terminar; el evento llega entre 1 y 3 días antes del final, según cómo se contrató (en las suscripciones de Stripe, el evento de Stripe).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description Firma de la entrega: `t=<timestamp>,v1=<firma>`. Se calcula sobre `t + "." + cuerpo crudo`. */
+                    "X-Funnelchat-Signature": string;
+                    /** @description Tipo de evento (igual que `type` en el cuerpo). */
+                    "X-Funnelchat-Event": string;
+                    /** @description Identificador de esta entrega; cambia en cada intento. */
+                    "X-Funnelchat-Delivery": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    /**
+                     * @example {
+                     *       "id": "evt_0f8e4b526c1d4c7a9a3e2b5d",
+                     *       "type": "subscription.trial_ending",
+                     *       "version": 1,
+                     *       "occurred_at": "2026-10-01T12:00:00Z",
+                     *       "data": {
+                     *         "trial_ends_at": "2026-10-04T00:00:00Z",
+                     *         "workspace_id": 37
+                     *       }
+                     *     }
+                     */
+                    "application/json": Record<string, unknown>;
+                };
+            };
+            responses: {
+                /** @description Cualquier respuesta 2xx en 10 segundos o menos confirma la entrega. */
+                "2XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -6619,39 +6987,6 @@ export interface webhooks {
         patch?: never;
         trace?: never;
     };
-    "billing.plan_blocked": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * billing.plan_blocked
-         * @description The plan was blocked by an unprocessed charge. Planned: not emitted yet.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            responses: never;
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "billing.upcoming_charge": {
         parameters: {
             query?: never;
@@ -6694,159 +7029,6 @@ export interface webhooks {
         patch?: never;
         trace?: never;
     };
-    "subscription.expiring": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * subscription.expiring
-         * @description The subscription is about to expire. Planned: not emitted yet.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            responses: never;
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "subscription.trial_ending": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * subscription.trial_ending
-         * @description The trial period is about to end.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    /**
-                     * @example {
-                     *       "data": {
-                     *         "trial_ends_at": "2026-10-04T00:00:00Z"
-                     *       }
-                     *     }
-                     */
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            responses: never;
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "subscription.reactivated": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * subscription.reactivated
-         * @description The scheduled cancellation of the subscription was reverted (Stripe subscriptions only).
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    /**
-                     * @example {
-                     *       "data": {
-                     *         "renews_at": "2026-11-05T00:00:00Z"
-                     *       }
-                     *     }
-                     */
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            responses: never;
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "subscription.cancellation_confirmed": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * subscription.cancellation_confirmed
-         * @description The cancellation of the subscription was confirmed (Stripe subscriptions only).
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    /**
-                     * @example {
-                     *       "data": {
-                     *         "access_until": "2026-11-05T00:00:00Z"
-                     *       }
-                     *     }
-                     */
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            responses: never;
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "subscription.dormant_ending": {
         parameters: {
             query?: never;
@@ -6875,275 +7057,6 @@ export interface webhooks {
                      *         "charge_date": "2026-10-08T00:00:00Z",
                      *         "amount_cents": 1990,
                      *         "currency": "USD"
-                     *       }
-                     *     }
-                     */
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            responses: never;
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "ai_quota.low_balance": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * ai_quota.low_balance
-         * @description The AI message quota is about to run out. Planned: not emitted yet.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            responses: never;
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "ai_quota.topup_succeeded": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * ai_quota.topup_succeeded
-         * @description An AI quota top-up was credited. Planned: not emitted yet.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            responses: never;
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "ai_quota.topup_failed": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * ai_quota.topup_failed
-         * @description An AI quota top-up could not be processed. Planned: not emitted yet.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            responses: never;
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "mac.usage_80": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * mac.usage_80
-         * @description The account reached 80% of its monthly active contacts of the cycle.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    /**
-                     * @example {
-                     *       "data": {
-                     *         "used": 8000,
-                     *         "limit": 10000,
-                     *         "percentage": 80,
-                     *         "cycle_started_at": "2026-10-01T00:00:00Z"
-                     *       }
-                     *     }
-                     */
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            responses: never;
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "mac.usage_100": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * mac.usage_100
-         * @description The account used up its monthly active contacts of the cycle; a 24-hour grace period starts.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    /**
-                     * @example {
-                     *       "data": {
-                     *         "used": 10000,
-                     *         "limit": 10000,
-                     *         "percentage": 100,
-                     *         "cycle_started_at": "2026-10-01T00:00:00Z",
-                     *         "grace_expires_at": "2026-10-02T12:00:00Z"
-                     *       }
-                     *     }
-                     */
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            responses: never;
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "mac.expiring": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * mac.expiring
-         * @description Some monthly active contacts expire in the next 7 days.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    /**
-                     * @example {
-                     *       "data": {
-                     *         "contacts_expiring": 1200,
-                     *         "expires_at": "2026-10-08T03:00:00Z"
-                     *       }
-                     *     }
-                     */
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            responses: never;
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "account.blocked": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * account.blocked
-         * @description The account was blocked by usage: the 24-hour grace period after using up the monthly active contacts ended.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    /**
-                     * @example {
-                     *       "data": {
-                     *         "reason": "mac_grace_expired",
-                     *         "grace_started_at": "2026-10-01T12:00:00Z",
-                     *         "grace_expired_at": "2026-10-02T12:00:00Z"
                      *       }
                      *     }
                      */
@@ -7219,147 +7132,6 @@ export interface webhooks {
                             reason: string;
                         };
                     };
-                };
-            };
-            responses: never;
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "daily_report.generated": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * daily_report.generated
-         * @description The daily report of the account was generated (clicks, joins and leaves).
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    /**
-                     * @example {
-                     *       "data": {
-                     *         "period": {
-                     *           "date": "2026-10-01",
-                     *           "timezone": "America/Argentina/Buenos_Aires"
-                     *         },
-                     *         "clicks": 120,
-                     *         "joins": 80,
-                     *         "leaves": 10,
-                     *         "conversion_rate": 0.67
-                     *       }
-                     *     }
-                     */
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            responses: never;
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "campaign.no_groups_available": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * campaign.no_groups_available
-         * @description A campaign has no groups to send the people who come through its link to.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    /**
-                     * @example {
-                     *       "data": {
-                     *         "campaign": {
-                     *           "uuid": "xK9mQz",
-                     *           "name": "Example campaign"
-                     *         },
-                     *         "reason": "none_selectable"
-                     *       }
-                     *     }
-                     */
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            responses: never;
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "group.full": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * group.full
-         * @description A group went from not full to full.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    /**
-                     * @example {
-                     *       "data": {
-                     *         "group": {
-                     *           "uid": "120363000000000000@g.us",
-                     *           "name": "Example group",
-                     *           "type": "example_type"
-                     *         },
-                     *         "campaign": {
-                     *           "uuid": "xK9mQz",
-                     *           "name": "Example campaign"
-                     *         },
-                     *         "trigger": "participants_limit",
-                     *         "participants": 1024
-                     *       }
-                     *     }
-                     */
-                    "application/json": Record<string, unknown>;
                 };
             };
             responses: never;
@@ -8289,107 +8061,6 @@ export interface webhooks {
 }
 export interface components {
     schemas: {
-        /** UserResource */
-        AccountsUserResource: {
-            id: string;
-            name: string;
-            email: string;
-            admin: string | 0;
-            role: string;
-            token: string | "";
-            first_login_at: string;
-            last_login_at: string;
-            first_login_form: boolean | null;
-            without_business_type: boolean;
-            image: string;
-            phone: string;
-            timezone: string;
-            locale: string | "es";
-            theme: string | "light";
-            owner_id: string;
-            /**
-             * @description La cuenta principal (`id`, `name`, `email`) cuando la cuenta es un agente. En
-             *     `GET me` es siempre `null`.
-             */
-            owner: {
-                id: string;
-                name: string;
-                email: string;
-            } | null;
-            plan: unknown[] | "";
-            effective_business_numbers_limit?: number | null;
-            effective_agents_limit?: number | null;
-            advisor_scope: string;
-            show_advisor_name: string;
-            contacts: string | number;
-            groups: string | number;
-            devices: string;
-            additional_devices: string;
-            agents: string;
-            payment_till: string;
-            next_billing_at?: string;
-            workspaces_billing?: string;
-            last_payment_at: string | "";
-            feature_versions?: string;
-            /**
-             * @description Por cada función en prueba, `true` si la cuenta usa la versión beta y `false` si
-             *     usa la estable; un agente ve la de su cuenta principal.
-             */
-            effective_feature_versions?: unknown[];
-            /** @description Si la cuenta tiene habilitados los espacios de trabajo. */
-            workspaces_enabled?: string;
-            /**
-             * @description Si la beta `device_auto_sync` está activa para el dueño efectivo del espacio activo.
-             *     Mismo gating por ruta que `workspaces_enabled`.
-             */
-            device_auto_sync_enabled?: boolean;
-            /**
-             * @description Cuánto usa la cuenta las funciones del panel. Solo aparece cuando ya está
-             *     calculado.
-             */
-            panel_usage?: {
-                percentage: string;
-                ceiling: string;
-                used_count: string;
-                reachable_count: string;
-                total_count: string;
-                tier: string;
-                is_agent: string;
-                blocks: string;
-                computed_at: string | null;
-            } | null;
-            created_at: string | "";
-            updated_at: string | "";
-            /** @description Si la cuenta está en pausa; `dormant_expires_at` dice hasta cuándo. */
-            is_dormant: boolean;
-            dormant_expires_at: string | null;
-            /**
-             * @description Solo cuando se trabaja en el espacio de trabajo de otra cuenta: de qué cuenta son
-             *     los datos, y en `overridden_fields` qué campos de esta respuesta vienen de ella.
-             */
-            workspace_context?: string;
-            /**
-             * @description Con qué plataforma de cobro se gestiona la pausa de la cuenta: `hotmart`,
-             *     `stripe` o `manual`.
-             * @enum {string}
-             */
-            dormant_provider: "hotmart" | "manual" | "stripe";
-            can_enter_dormant?: boolean | null;
-            /** @description `true` si el paso del cobro de Hotmart a Stripe quedó sin una suscripción asociada. */
-            stripe_migration_incomplete: boolean;
-            stripe_migration_incomplete_reason?: string;
-            /**
-             * @description MAC enforcement fields.
-             *     mac_enforcement_enabled: cast to bool so null (pre-migration) renders as false.
-             *     available_mac_buckets_sum: single extra query; acceptable on /me (single user).
-             *     per-workspace-billing: the account /me shows the ACCOUNT pool (own-billing
-             *     workspaces are excluded via the accountPool scope), never forUser's union.
-             */
-            mac_enforcement_enabled: boolean;
-            available_mac_buckets_sum: number;
-            password_set?: boolean;
-            password_set_at?: string | null;
-        };
         /** ActionGroupResource */
         ActionGroupResource: {
             id: string;
@@ -8465,11 +8136,15 @@ export interface components {
          * @enum {integer}
          */
         ActionStatusEnum: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+        /** AddFormNumberRequest */
+        AddFormNumberRequest: {
+            device_id: number;
+        };
         /**
          * AlertAction
          * @enum {string}
          */
-        AlertAction: "disconnected" | "usage_80" | "expiring" | "usage_100" | "upcoming_charge" | "payment_failed" | "plan_blocked" | "reactivated" | "trial_ending" | "cancellation_confirmed" | "dormant_ending" | "blocked" | "no_groups_available" | "daily_report" | "action_failed" | "message_failed" | "full" | "invalid_link" | "started" | "paused" | "resumed" | "cancelled" | "low_balance" | "topup_succeeded" | "topup_failed";
+        AlertAction: "disconnected" | "usage_80" | "expiring" | "usage_100" | "upcoming_charge" | "payment_failed" | "plan_blocked" | "reactivated" | "trial_ending" | "cancellation_confirmed" | "dormant_ending" | "blocked" | "no_groups_available" | "daily_report" | "action_failed" | "message_failed" | "full" | "invalid_link" | "started" | "paused" | "resumed" | "cancelled" | "finished" | "summary" | "low_balance" | "topup_succeeded" | "topup_failed";
         /** AlertCampaignResource */
         AlertCampaignResource: {
             id: string;
@@ -8495,8 +8170,6 @@ export interface components {
             all_campaigns: boolean;
             campaign_ids: string | string[];
         };
-        /** AlertDestinationCreatedResource */
-        AlertDestinationCreatedResource: unknown[];
         /** AlertDestinationResource */
         AlertDestinationResource: {
             id: number;
@@ -8508,11 +8181,6 @@ export interface components {
             created_at: string | null;
             settings?: components["schemas"]["AlertSettingResource"][];
         };
-        /**
-         * AlertDestinationType
-         * @enum {string}
-         */
-        AlertDestinationType: "phone" | "webhook";
         /**
          * AlertModule
          * @enum {string}
@@ -8628,6 +8296,12 @@ export interface components {
         /** App.Modules.ScheduledMessages.Resources.ScheduledMessageResource */
         "App.Modules.ScheduledMessages.Resources.ScheduledMessageResource": {
             id: string;
+            /**
+             * @description Identificador estable del envío: es el `scheduled_message.uuid` de los eventos `scheduled_message.*`.
+             *     `null` solo en un envío creado antes del 30-09-2026 que todavía no generó ningún evento: se completa
+             *     con el primero.
+             */
+            uuid: string;
             name: string | "";
             send_at: string | null;
             status: string;
@@ -8789,6 +8463,8 @@ export interface components {
             lead_score_categories: unknown[] | null;
             lead_score_min: number | null;
             lead_score_max: number | null;
+            custom_field_filters: unknown[] | null;
+            custom_field_filter_fields: string | string[];
             exclude_never_replied: boolean;
             date_from: string;
             date_to: string;
@@ -8901,6 +8577,7 @@ export interface components {
             resume_from_contact: number | null;
             stop_reason: string | null;
             publish_as_status: string;
+            custom_field_filters: string | string[];
         };
         /** BulkMoveStageRequest */
         BulkMoveStageRequest: {
@@ -8925,19 +8602,6 @@ export interface components {
             order: string;
             created_at: string;
             updated_at: string;
-        };
-        /** CampaignParticipantResource */
-        CampaignParticipantResource: {
-            id: string;
-            phone: string;
-            name: string;
-            lid: string;
-            group_id: string;
-            group_name?: string | null;
-            joined_at: string | null;
-            left_at: string | null;
-            status: string;
-            source: string;
         };
         /** CampaignResource */
         CampaignResource: {
@@ -8994,13 +8658,6 @@ export interface components {
             total_in_counter: number;
             /** @description Salidas de los grupos de la campaña, según el contador de salidas de cada grupo. */
             total_out_counter: number;
-            /**
-             * @description Average read rate (0..100) of this campaign's groups over the last
-             *     30 days, counting only groups that have recent sends. NULL when no
-             *     group has data or the read rate is not available for the account.
-             *     For an API key, only the campaign's groups of its workspace.
-             */
-            average_read_rate: number | null;
             auto_create_groups: boolean;
             group_creation_suspended: string | boolean;
             suspended_creator_phones: string | string[];
@@ -9012,30 +8669,6 @@ export interface components {
             api_policy?: {
                 [key: string]: unknown;
             };
-        };
-        /** CampaignWebhookLogResource */
-        CampaignWebhookLogResource: {
-            id: string;
-            campaign_id: string;
-            webhook_id: string;
-            webhook_type: string;
-            url: string;
-            payload: string;
-            response_status: string;
-            response_body: string;
-            execution_time_ms: string;
-            success: string;
-            error_message: string;
-            created_at: string;
-        };
-        /** CampaignWebhookResource */
-        CampaignWebhookResource: {
-            id: string;
-            type: string;
-            url: string;
-            is_active: string;
-            created_at: string;
-            updated_at: string;
         };
         /** CampaignsResource */
         CampaignsResource: {
@@ -9108,14 +8741,6 @@ export interface components {
             role: string | null;
             group_id: string | null;
         };
-        /** MessageResource */
-        CommunitiesMessageResource: {
-            id: string;
-            uid: string;
-            type: string;
-            value: unknown;
-            scheduledMessage: components["schemas"]["ScheduledMessageResource"];
-        };
         /** ConnectLinkResource */
         ConnectLinkResource: {
             id: number;
@@ -9138,7 +8763,24 @@ export interface components {
             id: number;
             name: string;
             description: string;
-            type: string;
+            /**
+             * @description Tipo del campo. Se elige al crearlo y no se puede cambiar después. Indica cómo escribir su valor:
+             *
+             *     | `type` | Tipo | Cómo escribir `value` | Ejemplo |
+             *     |---|---|---|---|
+             *     | 0 | Texto | Cualquier texto. | `"Cliente mayorista"` |
+             *     | 1 | Numérico | Un número, con punto decimal y sin separador de miles; puede llevar `-` adelante. | `"1500"`, `"99.90"` |
+             *     | 2 | Fecha | `AAAA-MM-DD`, una fecha que exista. | `"2026-11-30"` |
+             *     | 3 | URL | La dirección completa, con `https://` o `http://`. | `"https://ejemplo.com/pedido/123"` |
+             *     | 4 | Alfanumérico | Pensado para códigos con letras y números; acepta cualquier texto. | `"AB1234"` |
+             *
+             *     **La API valida el valor contra el tipo.** Al poner un valor con tu clave (`POST /contacts/attach-custom-field`, o `custom_fields` en `POST /contacts` y `POST /contacts/update-or-create`), un campo numérico, de fecha o de URL solo acepta el formato de la tabla; con otro formato la API responde **422** con un mensaje que dice qué formato espera ese campo, y no lo guarda. Texto y alfanumérico aceptan cualquier texto. `value` es siempre un texto, también para un número o una fecha (`"1500"`, no `1500`).
+             *
+             *     Es el formato que escribe el panel y el que entienden los filtros de `GET /contacts` (`custom_field_filters`), que comparan un campo numérico como número y uno de fecha como fecha. Un valor que no escribió tu clave (desde el panel, un flujo o una importación) puede tener otro formato.
+             * @enum {integer}
+             */
+            type: 0 | 1 | 2 | 3 | 4;
+            /** @description Valor del campo para el contacto. Siempre es un texto (`"1500"`, no `1500`). Al ponerlo con tu clave se valida contra el tipo del campo (numérico, fecha o URL) y, si no cumple su formato, la API responde 422: el formato de cada tipo está en la descripción de `type` de `GET /custom-fields`. */
             value: string;
             created_at: string;
             updated_at: string;
@@ -9218,11 +8860,10 @@ export interface components {
             device_id: number | null;
             adviser_id: number | null;
             paused_at: string | null;
+            paused_by?: unknown;
             mac_date: string | null;
             is_mac_inactive?: boolean;
             ai_assistant_name: string | null;
-            ai_assistant_email?: string;
-            account_main_email?: string;
             stage_since?: string;
             is_stagnant?: boolean;
             follow_up_date?: string | null;
@@ -9248,60 +8889,6 @@ export interface components {
             contact_count: string;
             assigned_at: string | null;
             last_updated: string | null;
-        };
-        /** MessageResource */
-        ConversationsMessageResource: {
-            chat_id: string;
-            contact_id: number | "";
-            content: unknown[] | {
-                [key: string]: unknown;
-            } | string;
-            device_id: number | "";
-            error_code: string;
-            file: string;
-            forwarded: number;
-            group_id: number | "";
-            id: number;
-            origin: components["schemas"]["MessageOriginEnum"] | "";
-            origin_id: number | "";
-            own: number;
-            reference_message: string | null;
-            reference_message_uid: string | null;
-            is_quotable: boolean;
-            status: components["schemas"]["MessageStatusEnum"] | null;
-            temporal_uuid: string | "";
-            text: string;
-            time: string | null;
-            type: components["schemas"]["MessageTypeEnum"] | null;
-            uid: string;
-            info: unknown[] | "";
-            user_id: number;
-            deleted_at: string | null;
-            deleted_scope: string | null;
-            deleted_by: number | null;
-            edited_at: string | null;
-            poll_results?: string;
-            event_rsvps?: string;
-            form_answers?: string;
-            reactions: unknown[];
-            file_original_name: string | null;
-            client_reference: string | null;
-            scheduled?: boolean;
-            ai_assistant?: {
-                name: string;
-                email: string;
-                account_main_email: string;
-            };
-        };
-        /** UserResource */
-        ConversationsUserResource: {
-            id: string;
-            name: string;
-            email: string;
-            owner_id: string;
-            advisor_scope: string;
-            created_at: string;
-            updated_at: string | "";
         };
         /**
          * CreateApiGroupRequest
@@ -9359,17 +8946,28 @@ export interface components {
         CustomFieldResource: {
             id: number;
             name: string;
-            type: components["schemas"]["CustomFieldTypeEnum"];
+            /**
+             * @description Tipo del campo. Se elige al crearlo y no se puede cambiar después. Indica cómo escribir su valor:
+             *
+             *     | `type` | Tipo | Cómo escribir `value` | Ejemplo |
+             *     |---|---|---|---|
+             *     | 0 | Texto | Cualquier texto. | `"Cliente mayorista"` |
+             *     | 1 | Numérico | Un número, con punto decimal y sin separador de miles; puede llevar `-` adelante. | `"1500"`, `"99.90"` |
+             *     | 2 | Fecha | `AAAA-MM-DD`, una fecha que exista. | `"2026-11-30"` |
+             *     | 3 | URL | La dirección completa, con `https://` o `http://`. | `"https://ejemplo.com/pedido/123"` |
+             *     | 4 | Alfanumérico | Pensado para códigos con letras y números; acepta cualquier texto. | `"AB1234"` |
+             *
+             *     **La API valida el valor contra el tipo.** Al poner un valor con tu clave (`POST /contacts/attach-custom-field`, o `custom_fields` en `POST /contacts` y `POST /contacts/update-or-create`), un campo numérico, de fecha o de URL solo acepta el formato de la tabla; con otro formato la API responde **422** con un mensaje que dice qué formato espera ese campo, y no lo guarda. Texto y alfanumérico aceptan cualquier texto. `value` es siempre un texto, también para un número o una fecha (`"1500"`, no `1500`).
+             *
+             *     Es el formato que escribe el panel y el que entienden los filtros de `GET /contacts` (`custom_field_filters`), que comparan un campo numérico como número y uno de fecha como fecha. Un valor que no escribió tu clave (desde el panel, un flujo o una importación) puede tener otro formato.
+             * @enum {integer}
+             */
+            type: 0 | 1 | 2 | 3 | 4;
             description: string | null;
             contact_count?: number;
             /** Format: date-time */
             created_at: string | null;
         };
-        /**
-         * CustomFieldTypeEnum
-         * @enum {integer}
-         */
-        CustomFieldTypeEnum: 0 | 1 | 2 | 3 | 4;
         /**
          * DeviceConnectionEventEnum
          * @enum {integer}
@@ -9381,20 +8979,6 @@ export interface components {
             phone: string | null;
             event: components["schemas"]["DeviceConnectionEventEnum"];
             created_at: string;
-        };
-        /** DeviceFleetLogResource */
-        DeviceFleetLogResource: {
-            id: number;
-            method: string;
-            url: string | null;
-            status_code: number | null;
-            is_error: boolean;
-            duration_ms: number | null;
-            created_at: string | null;
-            request_payload: unknown[] | null;
-            response_body: unknown[] | null;
-            device_id: string | null;
-            device_label: string | null;
         };
         /** DeviceHealthDetailResource */
         DeviceHealthDetailResource: {
@@ -9418,18 +9002,6 @@ export interface components {
                 waba_id: string | null;
                 business_id: string | null;
             } | null;
-        };
-        /** DeviceLogResource */
-        DeviceLogResource: {
-            id: number;
-            method: string;
-            url: string | null;
-            status_code: number | null;
-            is_error: boolean;
-            duration_ms: number | null;
-            created_at: string | null;
-            request_payload: unknown[] | null;
-            response_body: unknown[] | null;
         };
         /** DeviceResource */
         DeviceResource: {
@@ -9554,17 +9126,6 @@ export interface components {
             /** @description `true` si el dueño activó "Sincronizar todos mis grupos y mensajes" para este número. */
             sync_all_groups: boolean;
         };
-        /** DisconnectSurveyResource */
-        DisconnectSurveyResource: {
-            pending: boolean;
-            phone: string | null;
-        };
-        /** ExtensionTokenResource */
-        ExtensionTokenResource: {
-            token: string;
-            expiresAt: number;
-            expiresInSeconds: number;
-        };
         /** FlowResource */
         FlowResource: {
             id: string;
@@ -9670,13 +9231,6 @@ export interface components {
             order: string;
             participants_numbers: string;
             participants_count: string;
-            /**
-             * @description Read rate of the group over the last 30 days, an integer 0..100.
-             *     NULL when the group has no recent sends or the read rate is not
-             *     available for the account.
-             */
-            read_rate: number | null;
-            read_rate_messages_count: number;
             status: string;
             uid: string;
             updatedAt: string;
@@ -9705,23 +9259,6 @@ export interface components {
             lastSyncAt: string | null;
         } & {
             [key: string]: unknown;
-        };
-        /** IngestLeadScoreEventsRequest */
-        IngestLeadScoreEventsRequest: {
-            events: {
-                /** @enum {string} */
-                signal: "group_join" | "group_leave" | "group_reaction" | "group_poll_vote" | "link_click";
-                owner_user_id: number;
-                contact_id?: number | null;
-                phone?: string | null;
-                /** Format: date-time */
-                occurred_at: string;
-                external_id: string;
-                scope_key?: string | null;
-                meta?: {
-                    campaign_message_uid?: string | null;
-                } | null;
-            }[];
         };
         /** KanbanSettingResource */
         KanbanSettingResource: {
@@ -9819,6 +9356,48 @@ export interface components {
          * @enum {integer}
          */
         MessageOriginEnum: 0 | 1 | 2 | 3;
+        /** MessageResource */
+        MessageResource: {
+            chat_id: string;
+            contact_id: number | "";
+            content: unknown[] | {
+                [key: string]: unknown;
+            } | string;
+            device_id: number | "";
+            error_code: string;
+            file: string;
+            forwarded: number;
+            group_id: number | "";
+            id: number;
+            origin: components["schemas"]["MessageOriginEnum"] | "";
+            origin_id: number | "";
+            own: number;
+            reference_message: string | null;
+            reference_message_uid: string | null;
+            is_quotable: boolean;
+            status: components["schemas"]["MessageStatusEnum"] | null;
+            temporal_uuid: string | "";
+            text: string;
+            time: string | null;
+            type: components["schemas"]["MessageTypeEnum"] | null;
+            uid: string;
+            info: unknown[] | "";
+            user_id: number;
+            deleted_at: string | null;
+            deleted_scope: string | null;
+            deleted_by: number | null;
+            edited_at: string | null;
+            poll_results?: string;
+            event_rsvps?: string;
+            form_answers?: string;
+            reactions: unknown[];
+            file_original_name: string | null;
+            client_reference: string | null;
+            scheduled?: boolean;
+            ai_assistant?: {
+                name: string;
+            };
+        };
         /** MessageResponseResource */
         MessageResponseResource: {
             message_template_id: string;
@@ -9888,7 +9467,7 @@ export interface components {
             flow_id: string;
             type: number;
             action: string;
-            value: string;
+            value: unknown[] | null | string;
             next_uuid: string;
         };
         /** OperationPlanResource */
@@ -10044,6 +9623,39 @@ export interface components {
             distinct_buyers: string;
             repeat_purchase_rate: string;
         };
+        /** SaveWhatsappFormRequest */
+        SaveWhatsappFormRequest: {
+            name?: string;
+            definition: {
+                screens: {
+                    id: string;
+                    title?: string | null;
+                    cta?: string | null;
+                    next?: string | null;
+                    routes?: {
+                        field?: string | null;
+                        groups?: {
+                            to?: string | null;
+                            options?: string[] | null;
+                        }[] | null;
+                    } | null;
+                    items?: {
+                        type: string;
+                        name?: string;
+                        id?: string | null;
+                        label?: string | null;
+                        url?: string | null;
+                        src?: string | null;
+                        options?: {
+                            id?: string | null;
+                            title?: string | null;
+                        }[] | null;
+                        tagMap?: (string | null)[] | null;
+                    }[];
+                }[];
+            };
+            expected_updated_at?: string | null;
+        };
         /**
          * ScheduledMessageEditStatusEnum
          * @description Resultado de editar el texto de un envío programado que ya salió, por grupo. Cada grupo del último envío termina en exactamente uno de estos valores.
@@ -10065,6 +9677,12 @@ export interface components {
         /** ScheduledMessageIndexResource */
         ScheduledMessageIndexResource: {
             id: string;
+            /**
+             * @description Identificador estable del envío: es el `scheduled_message.uuid` de los eventos `scheduled_message.*`.
+             *     `null` solo en un envío creado antes del 30-09-2026 que todavía no generó ningún evento: se completa
+             *     con el primero.
+             */
+            uuid: string;
             name: string | "";
             send_at: string | null;
             status: string;
@@ -10094,6 +9712,12 @@ export interface components {
         /** ScheduledMessageResource */
         ScheduledMessageResource: {
             id: string;
+            /**
+             * @description Identificador estable del envío: es el `scheduled_message.uuid` de los eventos `scheduled_message.*`.
+             *     `null` solo en un envío creado antes del 30-09-2026 que todavía no generó ningún evento: se completa
+             *     con el primero.
+             */
+            uuid: string;
             name: string;
             send_at: string;
             status: string;
@@ -10204,12 +9828,6 @@ export interface components {
          * @enum {string}
          */
         SslValidationMethod: "TXT" | "HTTP";
-        /** StoreAlertDestinationRequest */
-        StoreAlertDestinationRequest: {
-            type: components["schemas"]["AlertDestinationType"];
-            destination: string;
-            name?: string | null;
-        };
         /** StoreBroadcastFolderRequest */
         StoreBroadcastFolderRequest: {
             name: string;
@@ -10270,6 +9888,25 @@ export interface components {
             email?: string | null;
             image?: string | null;
             deviceId?: number | null;
+            /**
+             * @description Opcional. Valores de campos personalizados para el contacto, hasta 100 ítems `{id, value}`: `id` es el de un campo de tu cuenta (`GET /custom-fields`) y `value`, su valor (siempre texto, en el formato del tipo del campo). Si un `id` no es de tu cuenta o de tu workspace, o un `value` no cumple el formato de su tipo, la llamada responde 422 y no crea ni cambia nada.
+             * @example [
+             *       {
+             *         "id": 12,
+             *         "value": "Mayorista"
+             *       },
+             *       {
+             *         "id": 15,
+             *         "value": "2026-11-30"
+             *       }
+             *     ]
+             */
+            custom_fields?: {
+                /** @description El `id` de un campo personalizado de tu cuenta (`GET /custom-fields`). */
+                id: number;
+                /** @description Valor del campo para el contacto. Siempre es un texto (`"1500"`, no `1500`). Al ponerlo con tu clave se valida contra el tipo del campo (numérico, fecha o URL) y, si no cumple su formato, la API responde 422: el formato de cada tipo está en la descripción de `type` de `GET /custom-fields`. */
+                value: string;
+            }[];
         };
         /**
          * StoreCustomDomainRequest
@@ -10307,16 +9944,6 @@ export interface components {
              *     case): send the country of the phone that will scan the QR. Without it, the default.
              */
             country?: string | null;
-        };
-        /**
-         * StoreDisconnectReasonRequest
-         * @description El cuerpo de `POST devices/{device}/disconnect-survey`: por qué se desconectó el número.
-         *     `reason` es `1` (lo desconecté a propósito), `2` (WhatsApp lo desconectó sin dar motivo), `4`
-         *     (WhatsApp lo bloqueó de forma permanente) o `5` (WhatsApp lo bloqueó de forma temporal).
-         */
-        StoreDisconnectReasonRequest: {
-            /** @enum {integer} */
-            reason: "1" | "2" | "4" | "5";
         };
         /** StoreFolderRequest */
         StoreFolderRequest: {
@@ -10381,20 +10008,6 @@ export interface components {
                 phone_number?: string;
             }[] | null;
         };
-        /** StoreWebhookEndpointRequest */
-        StoreWebhookEndpointRequest: {
-            /**
-             * Format: uri
-             * @description La URL de tu sistema: `https` y que resuelva a una dirección pública de internet.
-             */
-            url: string;
-            description?: string | null;
-            /**
-             * @description Los tipos de evento a los que se suscribe, opcional: sin `events`, el endpoint
-             *     queda registrado sin recibir nada y se suscribe después.
-             */
-            events?: ("device.disconnected" | "device.connected" | "device.deleted" | "device.health_changed" | "device.quality_changed" | "device.messaging_limit_changed" | "device.display_name_reviewed" | "billing.payment_failed" | "billing.plan_blocked" | "billing.upcoming_charge" | "subscription.expiring" | "subscription.trial_ending" | "subscription.reactivated" | "subscription.cancellation_confirmed" | "subscription.dormant_ending" | "ai_quota.low_balance" | "ai_quota.topup_succeeded" | "ai_quota.topup_failed" | "mac.usage_80" | "mac.usage_100" | "mac.expiring" | "account.blocked")[];
-        };
         /**
          * StoreWebhookSubscriptionRequest
          * @description El cuerpo de `POST api/webhooks`: la URL, los tipos de evento y, opcionales, la descripción y
@@ -10404,10 +10017,16 @@ export interface components {
             /** Format: uri */
             url: string;
             description?: string | null;
-            events: ("device.disconnected" | "device.connected" | "device.deleted" | "device.health_changed" | "device.quality_changed" | "device.messaging_limit_changed" | "device.display_name_reviewed" | "billing.payment_failed" | "billing.plan_blocked" | "billing.upcoming_charge" | "subscription.expiring" | "subscription.trial_ending" | "subscription.reactivated" | "subscription.cancellation_confirmed" | "subscription.dormant_ending" | "ai_quota.low_balance" | "ai_quota.topup_succeeded" | "ai_quota.topup_failed" | "mac.usage_80" | "mac.usage_100" | "mac.expiring" | "account.blocked" | "message.received" | "flow.completed" | "broadcast.finished" | "contact.stage_changed" | "message.status_changed" | "conversation.closed" | "conversation.assigned" | "contact.tag_added" | "broadcast.paused" | "contact.tag_removed" | "contact.created" | "template.status_changed" | "flow.failed" | "whatsapp_form.completed" | "group.created" | "group.invite_link_down" | "group.invite_link_renewed" | "group_participant.joined" | "group_participant.left" | "scheduled_message.group_delivery_failed" | "scheduled_message.response_received" | "poll.voted" | "pipeline.finished" | "group.blocked" | "group.recovered" | "campaign.status_changed" | "scheduled_message.finished" | "group_action.failed" | "daily_report.generated" | "campaign.no_groups_available" | "group.full" | "group_action.completed" | "group.message_received" | "group.reaction_added" | "group_join_request.created" | "group_join_request.revoked")[];
+            events: ("device.disconnected" | "device.connected" | "device.deleted" | "device.health_changed" | "device.quality_changed" | "device.messaging_limit_changed" | "device.display_name_reviewed" | "billing.payment_failed" | "billing.upcoming_charge" | "subscription.trial_ending" | "subscription.reactivated" | "subscription.cancellation_confirmed" | "subscription.dormant_ending" | "mac.usage_80" | "mac.usage_100" | "mac.expiring" | "account.blocked" | "message.received" | "flow.completed" | "broadcast.finished" | "contact.stage_changed" | "message.status_changed" | "conversation.closed" | "conversation.assigned" | "contact.tag_added" | "broadcast.paused" | "contact.tag_removed" | "contact.created" | "template.status_changed" | "flow.failed" | "whatsapp_form.completed" | "contact.updated" | "message.reaction_failed" | "group.created" | "group.invite_link_down" | "group.invite_link_renewed" | "group_participant.joined" | "group_participant.left" | "scheduled_message.group_delivery_failed" | "scheduled_message.response_received" | "poll.voted" | "pipeline.finished" | "group.blocked" | "group.recovered" | "campaign.status_changed" | "scheduled_message.finished" | "group_action.failed" | "daily_report.generated" | "campaign.no_groups_available" | "group.full" | "group_action.completed" | "group.message_received" | "group.reaction_added" | "group_join_request.created" | "group_join_request.revoked")[];
             filters?: {
                 campaign_ids?: string[] | null;
             };
+        };
+        /** StoreWhatsappFormRequest */
+        StoreWhatsappFormRequest: {
+            device_id: number;
+            device_ids?: number[];
+            template_key: string;
         };
         /**
          * SwitchValidationMethodRequest
@@ -10497,16 +10116,6 @@ export interface components {
             all_campaigns: boolean;
             campaign_ids?: number[] | null;
         };
-        /** UpdateAlertDestinationRequest */
-        UpdateAlertDestinationRequest: {
-            /** @description El nombre del destino. Con `null` se borra. */
-            name?: string | null;
-            /**
-             * @description Solo para un `webhook`: la URL nueva, `https` y que resuelva a una dirección
-             *     pública de internet.
-             */
-            destination?: string;
-        };
         /** UpdateAlertQuietHourRequest */
         UpdateAlertQuietHourRequest: {
             enabled: boolean;
@@ -10580,36 +10189,31 @@ export interface components {
                 phone_number?: string;
             }[] | null;
         };
-        /**
-         * UpdateWebhookEndpointEventsRequest
-         * @description El cuerpo de `PUT api/v1/webhooks/endpoints/{id}/events`. Acepta dos formas:
-         *
-         *       `{"events": ["device.disconnected"]}`
-         *           → suscribe a esos tipos, activados, y da de baja los que no estén.
-         *
-         *       `{"events": [{"event_type": "device.disconnected", "enabled": false}]}`
-         *           → lo mismo, pero eligiendo el interruptor de cada uno. Un tipo con
-         *             `enabled: false` queda suscripto y apagado: no se entrega, pero la
-         *             configuración sobrevive a volver a prenderlo.
-         */
-        UpdateWebhookEndpointEventsRequest: {
-            events: {
-                /** @enum {string} */
-                event_type: "device.disconnected" | "device.connected" | "device.deleted" | "device.health_changed" | "device.quality_changed" | "device.messaging_limit_changed" | "device.display_name_reviewed" | "billing.payment_failed" | "billing.plan_blocked" | "billing.upcoming_charge" | "subscription.expiring" | "subscription.trial_ending" | "subscription.reactivated" | "subscription.cancellation_confirmed" | "subscription.dormant_ending" | "ai_quota.low_balance" | "ai_quota.topup_succeeded" | "ai_quota.topup_failed" | "mac.usage_80" | "mac.usage_100" | "mac.expiring" | "account.blocked";
-                enabled?: boolean;
-            }[];
-        };
-        /** UpdateWebhookEndpointRequest */
-        UpdateWebhookEndpointRequest: {
-            /** Format: uri */
-            url?: string;
-            description?: string | null;
+        /** UpdateOrCreateContactRequest */
+        UpdateOrCreateContactRequest: {
+            phone: string;
+            name?: string | null;
+            /** Format: email */
+            email?: string | null;
             /**
-             * @description Prender y apagar el endpoint entero, sin perder sus suscripciones
-             *     ni su secreto.
-             * @enum {string}
+             * @description Opcional. Valores de campos personalizados para el contacto, hasta 100 ítems `{id, value}`: `id` es el de un campo de tu cuenta (`GET /custom-fields`) y `value`, su valor (siempre texto, en el formato del tipo del campo). Si un `id` no es de tu cuenta o de tu workspace, o un `value` no cumple el formato de su tipo, la llamada responde 422 y no crea ni cambia nada.
+             * @example [
+             *       {
+             *         "id": 12,
+             *         "value": "Mayorista"
+             *       },
+             *       {
+             *         "id": 15,
+             *         "value": "2026-11-30"
+             *       }
+             *     ]
              */
-            status?: "enabled" | "disabled";
+            custom_fields?: {
+                /** @description El `id` de un campo personalizado de tu cuenta (`GET /custom-fields`). */
+                id: number;
+                /** @description Valor del campo para el contacto. Siempre es un texto (`"1500"`, no `1500`). Al ponerlo con tu clave se valida contra el tipo del campo (numérico, fecha o URL) y, si no cumple su formato, la API responde 422: el formato de cada tipo está en la descripción de `type` de `GET /custom-fields`. */
+                value: string;
+            }[];
         };
         /**
          * UpdateWebhookSubscriptionRequest
@@ -10621,7 +10225,7 @@ export interface components {
             /** Format: uri */
             url: string;
             description?: string | null;
-            events: ("device.disconnected" | "device.connected" | "device.deleted" | "device.health_changed" | "device.quality_changed" | "device.messaging_limit_changed" | "device.display_name_reviewed" | "billing.payment_failed" | "billing.plan_blocked" | "billing.upcoming_charge" | "subscription.expiring" | "subscription.trial_ending" | "subscription.reactivated" | "subscription.cancellation_confirmed" | "subscription.dormant_ending" | "ai_quota.low_balance" | "ai_quota.topup_succeeded" | "ai_quota.topup_failed" | "mac.usage_80" | "mac.usage_100" | "mac.expiring" | "account.blocked" | "message.received" | "flow.completed" | "broadcast.finished" | "contact.stage_changed" | "message.status_changed" | "conversation.closed" | "conversation.assigned" | "contact.tag_added" | "broadcast.paused" | "contact.tag_removed" | "contact.created" | "template.status_changed" | "flow.failed" | "whatsapp_form.completed" | "group.created" | "group.invite_link_down" | "group.invite_link_renewed" | "group_participant.joined" | "group_participant.left" | "scheduled_message.group_delivery_failed" | "scheduled_message.response_received" | "poll.voted" | "pipeline.finished" | "group.blocked" | "group.recovered" | "campaign.status_changed" | "scheduled_message.finished" | "group_action.failed" | "daily_report.generated" | "campaign.no_groups_available" | "group.full" | "group_action.completed" | "group.message_received" | "group.reaction_added" | "group_join_request.created" | "group_join_request.revoked")[];
+            events: ("device.disconnected" | "device.connected" | "device.deleted" | "device.health_changed" | "device.quality_changed" | "device.messaging_limit_changed" | "device.display_name_reviewed" | "billing.payment_failed" | "billing.upcoming_charge" | "subscription.trial_ending" | "subscription.reactivated" | "subscription.cancellation_confirmed" | "subscription.dormant_ending" | "mac.usage_80" | "mac.usage_100" | "mac.expiring" | "account.blocked" | "message.received" | "flow.completed" | "broadcast.finished" | "contact.stage_changed" | "message.status_changed" | "conversation.closed" | "conversation.assigned" | "contact.tag_added" | "broadcast.paused" | "contact.tag_removed" | "contact.created" | "template.status_changed" | "flow.failed" | "whatsapp_form.completed" | "contact.updated" | "message.reaction_failed" | "group.created" | "group.invite_link_down" | "group.invite_link_renewed" | "group_participant.joined" | "group_participant.left" | "scheduled_message.group_delivery_failed" | "scheduled_message.response_received" | "poll.voted" | "pipeline.finished" | "group.blocked" | "group.recovered" | "campaign.status_changed" | "scheduled_message.finished" | "group_action.failed" | "daily_report.generated" | "campaign.no_groups_available" | "group.full" | "group_action.completed" | "group.message_received" | "group.reaction_added" | "group_join_request.created" | "group_join_request.revoked")[];
             filters?: {
                 campaign_ids?: string[] | null;
             };
@@ -10634,9 +10238,10 @@ export interface components {
             action: components["schemas"]["AlertAction"];
             enabled: boolean;
         };
-        /** VerifyAlertOtpRequest */
-        VerifyAlertOtpRequest: {
-            code: string;
+        /** UserResource */
+        UserResource: {
+            id: string;
+            name: string;
         };
         /** WabaCapiDatasetResource */
         WabaCapiDatasetResource: {
@@ -10645,60 +10250,6 @@ export interface components {
             scope_ok: boolean;
             consented_at: string | null;
             last_verified_at: string | null;
-        };
-        /** WebhookDeliveryResource */
-        WebhookDeliveryResource: {
-            id: number;
-            /**
-             * @description El id del sobre: agrupa los intentos de un mismo evento y es el
-             *     mismo valor que el receptor vio en el cuerpo.
-             */
-            event_id: string;
-            event_type: string;
-            attempt: number;
-            url: string;
-            response_status: number | null;
-            succeeded: boolean;
-            error: string | null;
-            duration_ms: number | null;
-            attempted_at: string;
-        };
-        /** WebhookEndpointCreatedResource */
-        WebhookEndpointCreatedResource: {
-            id: number;
-            url: string;
-            description: string | null;
-            status: string;
-            disabled_reason: string | null;
-            events?: string[];
-            health: {
-                consecutive_failures: number;
-                last_delivery_at: string | null;
-                last_success_at: string | null;
-            };
-            secret_rotated_at: string | null;
-            created_at: string | null;
-            updated_at: string | null;
-            secret: string;
-            /** @constant */
-            secret_notice: "Guarda este secreto ahora: es la única vez que se muestra. Con él validas la firma del header de cada entrega.";
-        };
-        /** WebhookEndpointResource */
-        WebhookEndpointResource: {
-            id: number;
-            url: string;
-            description: string | null;
-            status: string;
-            disabled_reason: string | null;
-            events?: string[];
-            health: {
-                consecutive_failures: number;
-                last_delivery_at: string | null;
-                last_success_at: string | null;
-            };
-            secret_rotated_at: string | null;
-            created_at: string | null;
-            updated_at: string | null;
         };
         /** WebhookSubscriptionCreatedResource */
         WebhookSubscriptionCreatedResource: {
@@ -10793,106 +10344,83 @@ export interface components {
         WhatsappCostSummaryResource: {
             [key: string]: unknown;
         };
-        PendingWebhookSubscriptionFilters: {
-            /** @description Only delivers the events of these campaigns. An event without a campaign does not pass the filter. */
-            campaign_ids?: string[];
-        };
-        /** @description A unified webhook subscription. It never carries the secret. */
-        PendingWebhookSubscription: {
-            /**
-             * Format: uuid
-             * @description Identifier of the subscription. Store it when you create it: it is what tells yours apart.
-             */
-            id: string;
-            url: string;
-            description: string | null;
-            events: string[];
-            filters: components["schemas"]["PendingWebhookSubscriptionFilters"];
-            /** @enum {string} */
-            status: "active" | "paused" | "disabled";
-            /** @enum {string|null} */
-            disabled_reason: "too_many_failures" | "key_revoked" | null;
+        /** WhatsappForm */
+        WhatsappForm: {
+            id: number;
+            user_id: number;
+            workspace_id: number | null;
+            phone_number_id: string;
+            family_id: number;
+            name: string;
+            category: string;
+            status: string;
+            version: number;
+            parent_flow_id: number | null;
+            definition: unknown[];
+            flow_json: unknown[] | null;
+            flow_json_hash: string | null;
+            fields: unknown[] | null;
+            mapping: unknown[] | null;
+            tag_rules: unknown[] | null;
+            has_endpoint: boolean;
+            first_screen: string | null;
+            first_screen_dynamic: boolean;
+            meta_flow_id: string | null;
+            validation_errors: unknown[] | null;
+            lint_errors_count: number;
+            retained_reason: string | null;
             /** Format: date-time */
-            last_delivery_at: string | null;
+            published_at: string | null;
             /** Format: date-time */
-            last_success_at: string | null;
-            /** Format: date-time */
-            secret_rotated_at: string | null;
+            deprecated_at: string | null;
             /** Format: date-time */
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
-            migration: {
-                origin: string;
-                status: string;
-                activated_via: string | null;
-                /** Format: date-time */
-                activated_at: string | null;
-                last_result: unknown;
-            } | null;
+            /** Format: date-time */
+            deleted_at: string | null;
+            actor_user_id: number | null;
         };
-        PendingWebhookSubscriptionWithSecret: components["schemas"]["PendingWebhookSubscription"] & {
-            /** @description The full secret to verify the signature. It is shown only once: store it. */
-            secret: string;
-            secret_notice: string;
-        };
-        PendingFormLintIssue: {
-            code: string;
-            severity: string;
-            screenId?: string | null;
-            itemId?: string | null;
-            message: string;
-        };
-        /** @description A number where the form is published (or being published). */
-        PendingFormNumber: {
-            device_id: number | null;
-            primary: boolean;
-            /** @enum {string} */
-            status: "draft" | "publishing" | "published" | "failed";
-            error: string | null;
-        };
-        /** @description One version of a form. `id` is the version; `family_id` is the form itself: the `form_id` you send it with and the `form.id` of `whatsapp_form.completed`. */
-        PendingForm: {
-            /** @description The version. */
+        /** WhatsappFormResource */
+        WhatsappFormResource: {
             id: number;
-            /** @description The form (every version). */
             family_id: number;
-            /** @description The name in Meta (with the `__vN` suffix). */
             name: string;
-            /** @description The display name. */
             label: string;
-            category?: string | null;
-            /** @enum {string} */
-            status: "draft" | "published" | "deprecated";
+            category: string;
+            status: string;
             version: number;
-            /** @description The definition of the form (screens and fields). Only in the detail. */
-            definition?: unknown;
-            /** @description Only in the detail. */
-            fields?: unknown;
-            /** @description Only in the detail. */
-            mapping?: unknown;
-            /** @description Only in the detail. */
-            tag_rules?: unknown;
-            has_endpoint?: boolean;
-            first_screen?: string | null;
-            first_screen_dynamic?: boolean | null;
-            lint_errors_count?: number | null;
-            /** @description Only in the list: the draft of the family, when it is not this row. */
+            definition?: unknown[];
+            fields?: unknown[] | null;
+            mapping?: unknown[] | null;
+            tag_rules?: unknown[] | null;
+            has_endpoint: boolean;
+            first_screen: string | null;
+            first_screen_dynamic: boolean;
+            lint_errors_count: number;
             draft_id?: number;
             draft_version?: number;
-            /** @description Only in the list. */
             sends?: number;
-            /** @description Only in the list. */
             responses?: number;
-            meta_flow_id?: string | null;
-            /** @description Only in the detail. */
-            flow_json?: unknown;
-            /** @description Only in the detail. */
-            validation_errors?: unknown;
+            meta_flow_id: string | null;
+            flow_json?: unknown[] | null;
+            validation_errors?: unknown[] | null;
+            published_at: string | null;
+            updated_at: string | null;
+        };
+        /** WhatsappFormTemplate */
+        WhatsappFormTemplate: {
+            id: number;
+            key: string;
+            title: string;
+            description: string;
+            category: string;
+            definition: unknown[];
+            sort: number;
             /** Format: date-time */
-            published_at?: string | null;
+            created_at: string | null;
             /** Format: date-time */
-            updated_at?: string | null;
+            updated_at: string | null;
         };
         /**
          * @description `qr`: connected by scanning a QR code (not official). `coexistence`: WhatsApp Cloud API together with the WhatsApp Business app. `dedicated`: WhatsApp Cloud API only. `null` when it cannot be told yet.
@@ -11210,6 +10738,23 @@ export interface operations {
                     lead_score_categories?: ("insufficient_data" | "hot" | "warm" | "cold")[] | null;
                     lead_score_min?: number | null;
                     lead_score_max?: number | null;
+                    custom_field_filters?: {
+                        custom_field_ids: number[];
+                        /** @enum {integer} */
+                        type: "0" | "1" | "2" | "3" | "4";
+                        /** @enum {string|null} */
+                        mode?: "any" | "all" | "exclude" | null;
+                        value?: string | null;
+                        /** @enum {string|null} */
+                        numeric_operator?: "lt" | "eq" | "gt" | null;
+                        numeric_value?: number | null;
+                        /** @enum {string|null} */
+                        date_operator?: "lt" | "gt" | "eq" | "period" | null;
+                        /** Format: date */
+                        date_from?: string | null;
+                        /** Format: date */
+                        date_to?: string | null;
+                    }[] | null;
                     per_page?: number | null;
                 };
             };
@@ -11279,6 +10824,23 @@ export interface operations {
                     lead_score_categories?: ("insufficient_data" | "hot" | "warm" | "cold")[] | null;
                     lead_score_min?: number | null;
                     lead_score_max?: number | null;
+                    custom_field_filters?: {
+                        custom_field_ids: number[];
+                        /** @enum {integer} */
+                        type: "0" | "1" | "2" | "3" | "4";
+                        /** @enum {string|null} */
+                        mode?: "any" | "all" | "exclude" | null;
+                        value?: string | null;
+                        /** @enum {string|null} */
+                        numeric_operator?: "lt" | "eq" | "gt" | null;
+                        numeric_value?: number | null;
+                        /** @enum {string|null} */
+                        date_operator?: "lt" | "gt" | "eq" | "period" | null;
+                        /** Format: date */
+                        date_from?: string | null;
+                        /** Format: date */
+                        date_to?: string | null;
+                    }[] | null;
                 };
             };
         };
@@ -11342,6 +10904,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
         };
     };
@@ -11834,6 +11397,7 @@ export interface operations {
                 custom_field_numeric_value?: number;
                 only_with_phone?: string;
                 only_with_mac?: string;
+                only_paused?: string;
                 scopeToAdvisor?: string;
                 "lead_score_categories[]"?: "insufficient_data" | "hot" | "warm" | "cold";
                 lead_score_min?: number;
@@ -11845,8 +11409,11 @@ export interface operations {
                     tag_ids?: number[];
                 }[];
                 custom_field_filters?: {
-                    /** @enum {integer} */
-                    type: "0" | "1" | "2" | "3" | "4";
+                    /**
+                     * @description Tipo de los campos de `custom_field_ids` (0 Texto, 1 Numérico, 2 Fecha, 3 URL, 4 Alfanumérico). Decide cómo se filtra: uno numérico (1) usa `numeric_operator` y `numeric_value`; uno de fecha (2) usa `date_operator`, `date_from` y `date_to` (`AAAA-MM-DD`); los demás usan `mode` y `value`.
+                     * @enum {integer}
+                     */
+                    type: 0 | 1 | 2 | 3 | 4;
                     /** @enum {string|null} */
                     mode?: "all" | "any" | "exclude" | null;
                     value?: string | null;
@@ -11942,12 +11509,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    phone: string;
-                    name?: string | null;
-                    /** Format: email */
-                    email?: string | null;
-                };
+                "application/json": components["schemas"]["UpdateOrCreateContactRequest"];
             };
         };
         responses: {
@@ -11977,6 +11539,96 @@ export interface operations {
             422: components["responses"]["ConversationsValidationException"];
         };
     };
+    "contact.addTags": {
+        parameters: {
+            query?: {
+                bulk?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    contactId: number;
+                    tag: {
+                        id: number;
+                        name?: string;
+                    };
+                }[];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        message: string;
+                        errors: {
+                            [key: string]: string[];
+                        };
+                    };
+                };
+            };
+        };
+    };
+    "contact.removeTags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    contactId: number;
+                    tag: {
+                        id: number;
+                        name?: string;
+                    };
+                }[];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        message: string;
+                        errors: {
+                            [key: string]: string[];
+                        };
+                    };
+                };
+            };
+        };
+    };
     "contact.attachCustomField": {
         parameters: {
             query?: never;
@@ -11989,6 +11641,7 @@ export interface operations {
                 "application/json": {
                     customFieldId: number;
                     contactId: number;
+                    /** @description Valor del campo para el contacto. Siempre es un texto (`"1500"`, no `1500`). Al ponerlo con tu clave se valida contra el tipo del campo (numérico, fecha o URL) y, si no cumple su formato, la API responde 422: el formato de cada tipo está en la descripción de `type` de `GET /custom-fields`. */
                     value: string;
                 }[];
             };
@@ -12010,6 +11663,10 @@ export interface operations {
                         message: "No autorizado: el contacto no pertenece al usuario autenticado.";
                         /** @constant */
                         status: 403;
+                    } | {
+                        message: string | null;
+                        /** @constant */
+                        status: 422;
                     } | {
                         /** @constant */
                         message: "Custom field value attached successfully.";
@@ -12361,7 +12018,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, unknown>;
+                    "application/json": null;
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
@@ -12935,46 +12592,6 @@ export interface operations {
             422: components["responses"]["ConversationsValidationException"];
         };
     };
-    "conversation.update": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                contact: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    favorite?: boolean;
-                    active_conversation?: boolean;
-                    unread_messages?: number;
-                    adviser_id?: number | null;
-                    device_id?: number;
-                    text?: string;
-                    notes?: string | null;
-                    custom_fields?: string[];
-                    manually_unread?: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            401: components["responses"]["ConversationsAuthenticationException"];
-            403: components["responses"]["ConversationsAuthorizationException"];
-            404: components["responses"]["ConversationsModelNotFoundException"];
-            422: components["responses"]["ConversationsValidationException"];
-        };
-    };
     "conversation.sendMessage": {
         parameters: {
             query?: never;
@@ -13076,7 +12693,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["ConversationsMessageResource"][];
+                        data: components["schemas"]["MessageResource"][];
                         links: {
                             first: string | null;
                             last: string | null;
@@ -13103,7 +12720,7 @@ export interface operations {
             query?: {
                 name?: string;
                 description?: string;
-                type?: number;
+                type?: 0 | 1 | 2 | 3 | 4;
                 withContactCount?: boolean;
                 perPage?: number;
                 orderBy?: "name" | "created_at" | "updated_at";
@@ -13163,7 +12780,23 @@ export interface operations {
                 "application/json": {
                     name: string;
                     description?: string | null;
-                    type: number;
+                    /**
+                     * @description Tipo del campo. Se elige al crearlo y no se puede cambiar después. Indica cómo escribir su valor:
+                     *
+                     *     | `type` | Tipo | Cómo escribir `value` | Ejemplo |
+                     *     |---|---|---|---|
+                     *     | 0 | Texto | Cualquier texto. | `"Cliente mayorista"` |
+                     *     | 1 | Numérico | Un número, con punto decimal y sin separador de miles; puede llevar `-` adelante. | `"1500"`, `"99.90"` |
+                     *     | 2 | Fecha | `AAAA-MM-DD`, una fecha que exista. | `"2026-11-30"` |
+                     *     | 3 | URL | La dirección completa, con `https://` o `http://`. | `"https://ejemplo.com/pedido/123"` |
+                     *     | 4 | Alfanumérico | Pensado para códigos con letras y números; acepta cualquier texto. | `"AB1234"` |
+                     *
+                     *     **La API valida el valor contra el tipo.** Al poner un valor con tu clave (`POST /contacts/attach-custom-field`, o `custom_fields` en `POST /contacts` y `POST /contacts/update-or-create`), un campo numérico, de fecha o de URL solo acepta el formato de la tabla; con otro formato la API responde **422** con un mensaje que dice qué formato espera ese campo, y no lo guarda. Texto y alfanumérico aceptan cualquier texto. `value` es siempre un texto, también para un número o una fecha (`"1500"`, no `1500`).
+                     *
+                     *     Es el formato que escribe el panel y el que entienden los filtros de `GET /contacts` (`custom_field_filters`), que comparan un campo numérico como número y uno de fecha como fecha. Un valor que no escribió tu clave (desde el panel, un flujo o una importación) puede tener otro formato.
+                     * @enum {integer}
+                     */
+                    type: 0 | 1 | 2 | 3 | 4;
                 };
             };
         };
@@ -13527,7 +13160,34 @@ export interface operations {
             422: components["responses"]["ConversationsValidationException"];
         };
     };
-    "flow.activeContactsList": {
+    "flow.pausedContacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                flow: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        paused_contacts_count: number;
+                    };
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+            404: components["responses"]["ConversationsModelNotFoundException"];
+        };
+    };
+    "flow.pausedContactsList": {
         parameters: {
             query?: {
                 search?: string;
@@ -14355,6 +14015,8 @@ export interface operations {
                 leadScoreMax?: number;
                 leadScoreDisqualified?: "include" | "exclude" | "only" | null;
                 followUp?: "due" | "overdue" | "upcoming" | "none";
+                followUpFrom?: string;
+                followUpTo?: string;
                 page?: number;
                 perPage?: number;
                 orderBy?: "name" | "last_message_time" | "stage_since" | "follow_up_date";
@@ -14427,35 +14089,6 @@ export interface operations {
             401: components["responses"]["ConversationsAuthenticationException"];
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
-        };
-    };
-    "leadScoreEventIngest.ingest": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["IngestLeadScoreEventsRequest"];
-            };
-        };
-        responses: {
-            /** @description Accepted */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        success: boolean;
-                    };
-                };
-            };
-            401: components["responses"]["ConversationsAuthenticationException"];
-            403: components["responses"]["ConversationsAuthorizationException"];
-            422: components["responses"]["ConversationsValidationException"];
         };
     };
     "leadScoreSettings.show": {
@@ -14849,18 +14482,26 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+            /** @description Not Found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, unknown>;
+                    "application/json": {
+                        message: string;
+                    };
                 };
             };
-            401: components["responses"]["ConversationsAuthenticationException"];
-            403: components["responses"]["ConversationsAuthorizationException"];
-            404: components["responses"]["ConversationsModelNotFoundException"];
             /** @description Unprocessable Content */
             422: {
                 headers: {
@@ -14875,6 +14516,10 @@ export interface operations {
                     } | {
                         /** @enum {string} */
                         error: "recipient_unsupported";
+                        message: string;
+                    } | {
+                        /** @enum {string} */
+                        error: "no_provider_uid" | "message_not_reactable" | "message_deleted" | "device_disconnected" | "provider_unsupported" | "window_expired";
                         message: string;
                     };
                 };
@@ -14907,18 +14552,26 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+            /** @description Not Found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, unknown>;
+                    "application/json": {
+                        message: string;
+                    };
                 };
             };
-            401: components["responses"]["ConversationsAuthenticationException"];
-            403: components["responses"]["ConversationsAuthorizationException"];
-            404: components["responses"]["ConversationsModelNotFoundException"];
             /** @description Unprocessable Content */
             422: {
                 headers: {
@@ -14931,6 +14584,10 @@ export interface operations {
                     } | {
                         /** @enum {string} */
                         error: "recipient_unsupported";
+                        message: string;
+                    } | {
+                        /** @enum {string} */
+                        error: "no_provider_uid" | "message_not_reactable" | "message_deleted" | "device_disconnected" | "provider_unsupported" | "window_expired";
                         message: string;
                     };
                 };
@@ -15103,33 +14760,6 @@ export interface operations {
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
-        };
-    };
-    "messageTemplate.quickReplyButtons": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                template: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown[];
-                    };
-                };
-            };
-            401: components["responses"]["ConversationsAuthenticationException"];
-            403: components["responses"]["ConversationsAuthorizationException"];
-            404: components["responses"]["ConversationsModelNotFoundException"];
         };
     };
     "messageTemplate.sync": {
@@ -16334,7 +15964,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ConversationsUserResource"] | Record<string, unknown>;
+                    "application/json": components["schemas"]["UserResource"] | Record<string, unknown>;
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
@@ -16346,9 +15976,8 @@ export interface operations {
         parameters: {
             query?: {
                 name?: string;
-                email?: string;
                 perPage?: number;
-                orderBy?: "name" | "email" | "created_at";
+                orderBy?: "name" | "created_at";
                 orderByMethod?: "asc" | "desc";
             };
             header?: never;
@@ -16391,6 +16020,795 @@ export interface operations {
             401: components["responses"]["ConversationsAuthenticationException"];
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
+        };
+    };
+    "whatsappForm.templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["WhatsappFormTemplate"][];
+                    };
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+        };
+    };
+    "whatsappForm.index": {
+        parameters: {
+            query?: {
+                q?: string | null;
+                status?: "draft" | "published" | "deprecated" | null;
+                device_id?: number | null;
+                page?: number | null;
+                perPage?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["WhatsappFormResource"][];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            path: string;
+                            per_page: number;
+                            to: number | null;
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+            422: components["responses"]["ConversationsValidationException"];
+        };
+    };
+    "whatsappForm.store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoreWhatsappFormRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["WhatsappFormResource"];
+                        lint: unknown[];
+                        numbers: [
+                            {
+                                device_id: unknown;
+                                primary: boolean;
+                                status: string;
+                                error: string;
+                            }
+                        ];
+                    };
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+            422: components["responses"]["ConversationsValidationException"];
+        };
+    };
+    "whatsappForm.metrics": {
+        parameters: {
+            query?: {
+                from?: string | null;
+                to?: string | null;
+                version_id?: number | null;
+                origin?: string | null;
+                status?: string | null;
+                kind?: string | null;
+                effect_status?: string | null;
+                search?: string | null;
+                per_page?: number | null;
+                page?: number | null;
+            };
+            header?: never;
+            path: {
+                familyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            not_sent: number;
+                            not_sent_reasons: ({
+                                reason: string;
+                                label: string;
+                                count: number;
+                            } | {
+                                /** @constant */
+                                reason: "desconocido";
+                                /** @constant */
+                                label: "sin motivo registrado";
+                                count: number;
+                            })[];
+                            sent: number;
+                            delivered: number;
+                            read: number;
+                            completed: number;
+                            pending: number;
+                            unfinished: number;
+                            partial: number;
+                            completion_rate: number | null;
+                            delivery_rate: number | null;
+                            read_rate: number | null;
+                            median_seconds_to_complete: number | null;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+            422: components["responses"]["ConversationsValidationException"];
+        };
+    };
+    "whatsappForm.responses": {
+        parameters: {
+            query?: {
+                from?: string | null;
+                to?: string | null;
+                version_id?: number | null;
+                origin?: string | null;
+                status?: string | null;
+                kind?: string | null;
+                effect_status?: string | null;
+                search?: string | null;
+                page?: number | null;
+                perPage?: number;
+            };
+            header?: never;
+            path: {
+                familyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: Record<string, unknown>[];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            path: string;
+                            per_page: number;
+                            to: number | null;
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+            422: components["responses"]["ConversationsValidationException"];
+        };
+    };
+    "whatsappForm.response": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                familyId: number;
+                runId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: number;
+                            flow_token: string;
+                            contact: {
+                                id: number;
+                                name: string | null;
+                                phone: string | null;
+                            };
+                            status: {
+                                /** @constant */
+                                key: "completed";
+                                /** @constant */
+                                label: "Completado";
+                            } | {
+                                /** @constant */
+                                key: "pending";
+                                /** @constant */
+                                label: "Esperando respuesta";
+                            } | {
+                                /** @constant */
+                                key: "unfinished";
+                                /** @constant */
+                                label: "Sin completar";
+                            } | {
+                                /** @constant */
+                                key: "not_sent";
+                                /** @constant */
+                                label: "No enviado";
+                            };
+                            origin: string;
+                            node_id: string | null;
+                            automation_run_id: number | null;
+                            conversation_id: number | null;
+                            version: number;
+                            version_id: number;
+                            output_id: string | null;
+                            output_label: string | null;
+                            reason: string | null;
+                            reason_label: string | null;
+                            completed_after_expiry: boolean;
+                            partial: string;
+                            last_screen_id: string | null;
+                            sent_at: string | null;
+                            delivered_at: string | null;
+                            read_at: string | null;
+                            responded_at: string | null;
+                            expires_at: string | null;
+                            answers: {
+                                name: string;
+                                label: string;
+                                value: string;
+                                unknown: boolean;
+                            }[];
+                            effects: (unknown[] | {
+                                id: number;
+                                run_id: number;
+                                kind: string;
+                                kind_label: string;
+                                status: string;
+                                attempts: number;
+                                max_attempts: number;
+                                next_attempt_at: string | null;
+                                payload: unknown[];
+                                request_excerpt: string | null;
+                                response_excerpt: string | null;
+                                created_at: string | null;
+                            })[];
+                            response_json: unknown[] | null;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+        };
+    };
+    "whatsappForm.versions": {
+        parameters: {
+            query?: {
+                perPage?: number;
+            };
+            header?: never;
+            path: {
+                familyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: number;
+                            version: number;
+                            name: string;
+                            status: string;
+                            is_current: boolean;
+                            published_at: string | null;
+                            deprecated_at: string | null;
+                            meta_flow_id: string | null;
+                            retained_reason: string | null;
+                            responses: number;
+                            templates: number;
+                        }[];
+                        links: {
+                            first: string | null;
+                            last: string | null;
+                            prev: string | null;
+                            next: string | null;
+                        };
+                        meta: {
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            links: {
+                                url: string | null;
+                                label: string;
+                                active: boolean;
+                            }[];
+                            path: string;
+                            per_page: number;
+                            to: number | null;
+                            total: number;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+        };
+    };
+    "whatsappForm.definition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                familyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            family_id: number;
+                            form_id: number;
+                            name: string;
+                            status: string;
+                            version: number;
+                            definition: unknown[] | {
+                                screens: string[];
+                            };
+                        };
+                    } | {
+                        data: null;
+                    };
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+        };
+    };
+    "whatsappForm.show": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["WhatsappFormResource"];
+                        lint: unknown[];
+                        versions: components["schemas"]["WhatsappForm"][];
+                        numbers: [
+                            {
+                                device_id: unknown;
+                                primary: boolean;
+                                status: string;
+                                error: string;
+                            }
+                        ];
+                    };
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+        };
+    };
+    "whatsappForm.update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveWhatsappFormRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["WhatsappFormResource"];
+                        lint: unknown[];
+                    };
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+            422: components["responses"]["ConversationsValidationException"];
+        };
+    };
+    "whatsappForm.destroy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown[];
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        error: "PUBLISHED";
+                        /** @constant */
+                        message: "Un formulario publicado no se elimina; se depreca.";
+                    };
+                };
+            };
+        };
+    };
+    "whatsappForm.numbersIndex": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        numbers: [
+                            {
+                                device_id: unknown;
+                                primary: boolean;
+                                status: string;
+                                error: string;
+                            }
+                        ];
+                    };
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+        };
+    };
+    "whatsappForm.addNumber": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddFormNumberRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        numbers: [
+                            {
+                                device_id: unknown;
+                                primary: boolean;
+                                status: string;
+                                error: string;
+                            }
+                        ];
+                    };
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+            422: components["responses"]["ConversationsValidationException"];
+        };
+    };
+    "whatsappForm.storeVersion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+        };
+    };
+    "whatsappForm.sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["WhatsappFormResource"];
+                        lint: unknown[];
+                        numbers: [
+                            {
+                                device_id: unknown;
+                                primary: boolean;
+                                status: string;
+                                error: string;
+                            }
+                        ];
+                    };
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+        };
+    };
+    "whatsappForm.publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["WhatsappFormResource"];
+                        lint: unknown[];
+                        numbers: [
+                            {
+                                device_id: unknown;
+                                primary: boolean;
+                                status: string;
+                                error: string;
+                            }
+                        ];
+                    };
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+        };
+    };
+    "whatsappForm.removeNumber": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                deviceId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        numbers: [
+                            {
+                                device_id: unknown;
+                                primary: boolean;
+                                status: string;
+                                error: string;
+                            }
+                        ];
+                    };
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example  */
+                        message: string;
+                    };
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        error: "PRIMARY_NUMBER";
+                        /** @constant */
+                        message: "El número con el que se creó el formulario no se puede quitar.";
+                    };
+                };
+            };
+        };
+    };
+    "whatsappForm.retryNumbers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        numbers: [
+                            {
+                                device_id: unknown;
+                                primary: boolean;
+                                status: string;
+                                error: string;
+                            }
+                        ];
+                    };
+                };
+            };
+            401: components["responses"]["ConversationsAuthenticationException"];
+            403: components["responses"]["ConversationsAuthorizationException"];
         };
     };
     "whatsappFormSend.store": {
@@ -17510,88 +17928,6 @@ export interface operations {
             422: components["responses"]["CommunitiesValidationException"];
         };
     };
-    "group.messages": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The group uid */
-                group: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Paginated set of `MessageResource` */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["CommunitiesMessageResource"][];
-                        links: {
-                            first: string | null;
-                            last: string | null;
-                            prev: string | null;
-                            next: string | null;
-                        };
-                        meta: {
-                            current_page: number;
-                            from: number | null;
-                            last_page: number;
-                            /** @description Generated paginator links. */
-                            links: {
-                                url: string | null;
-                                label: string;
-                                active: boolean;
-                            }[];
-                            /** @description Base path for paginator generated URLs. */
-                            path: string | null;
-                            /** @description Number of items shown per page. */
-                            per_page: number;
-                            /** @description Number of the last item in the slice. */
-                            to: number | null;
-                            /** @description Total number of items being paginated. */
-                            total: number;
-                        };
-                    };
-                };
-            };
-            401: components["responses"]["CommunitiesAuthenticationException"];
-            403: components["responses"]["CommunitiesAuthorizationException"];
-            404: components["responses"]["CommunitiesModelNotFoundException"];
-        };
-    };
-    "apiGroupAction.sendMessage": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                group: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SendGroupMessageRequest"];
-            };
-        };
-        responses: {
-            /** @description `ApiGroupActionAcceptedResource` */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiGroupActionAcceptedResource"];
-                };
-            };
-            401: components["responses"]["CommunitiesAuthenticationException"];
-            403: components["responses"]["CommunitiesAuthorizationException"];
-            422: components["responses"]["CommunitiesValidationException"];
-        };
-    };
     "group.scheduledMessages": {
         parameters: {
             query?: {
@@ -17909,6 +18245,35 @@ export interface operations {
             422: components["responses"]["CommunitiesValidationException"];
         };
     };
+    "apiGroupAction.sendMessage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendGroupMessageRequest"];
+            };
+        };
+        responses: {
+            /** @description `ApiGroupActionAcceptedResource` */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiGroupActionAcceptedResource"];
+                };
+            };
+            401: components["responses"]["CommunitiesAuthenticationException"];
+            403: components["responses"]["CommunitiesAuthorizationException"];
+            422: components["responses"]["CommunitiesValidationException"];
+        };
+    };
     "apiGroupAction.renewInviteLink": {
         parameters: {
             query?: never;
@@ -18052,131 +18417,6 @@ export interface operations {
             };
             401: components["responses"]["CommunitiesAuthenticationException"];
             403: components["responses"]["CommunitiesAuthorizationException"];
-            422: components["responses"]["CommunitiesValidationException"];
-        };
-    };
-    "campaign.participants": {
-        parameters: {
-            query?: {
-                phone?: string | null;
-                orderBy?: string | null;
-                orderByMethod?: "asc" | "desc" | null;
-                perPage?: number | null;
-            };
-            header?: never;
-            path: {
-                /** @description The campaign ID */
-                campaign: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Paginated set of `ParticipantResource` */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["ParticipantResource"][];
-                        links: {
-                            first: string | null;
-                            last: string | null;
-                            prev: string | null;
-                            next: string | null;
-                        };
-                        meta: {
-                            current_page: number;
-                            from: number | null;
-                            last_page: number;
-                            /** @description Generated paginator links. */
-                            links: {
-                                url: string | null;
-                                label: string;
-                                active: boolean;
-                            }[];
-                            /** @description Base path for paginator generated URLs. */
-                            path: string | null;
-                            /** @description Number of items shown per page. */
-                            per_page: number;
-                            /** @description Number of the last item in the slice. */
-                            to: number | null;
-                            /** @description Total number of items being paginated. */
-                            total: number;
-                        };
-                    };
-                };
-            };
-            401: components["responses"]["CommunitiesAuthenticationException"];
-            403: components["responses"]["CommunitiesAuthorizationException"];
-            404: components["responses"]["CommunitiesModelNotFoundException"];
-            422: components["responses"]["CommunitiesValidationException"];
-        };
-    };
-    "campaign.campaignParticipants": {
-        parameters: {
-            query?: {
-                search?: string | null;
-                status?: "active" | "exited" | null;
-                orderBy?: "joined_at" | "left_at" | null;
-                orderByMethod?: "asc" | "desc" | "ASC" | "DESC" | null;
-                perPage?: number | null;
-                start_date?: string | null;
-                end_date?: string | null;
-                timezone?: string | null;
-                date_rule?: "1" | "2" | "3" | null;
-                selection_type?: "all" | "none" | null;
-                "groups_uids[]"?: string[];
-            };
-            header?: never;
-            path: {
-                /** @description The campaign ID */
-                campaign: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Paginated set of `CampaignParticipantResource` */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["CampaignParticipantResource"][];
-                        links: {
-                            first: string | null;
-                            last: string | null;
-                            prev: string | null;
-                            next: string | null;
-                        };
-                        meta: {
-                            current_page: number;
-                            from: number | null;
-                            last_page: number;
-                            /** @description Generated paginator links. */
-                            links: {
-                                url: string | null;
-                                label: string;
-                                active: boolean;
-                            }[];
-                            /** @description Base path for paginator generated URLs. */
-                            path: string | null;
-                            /** @description Number of items shown per page. */
-                            per_page: number;
-                            /** @description Number of the last item in the slice. */
-                            to: number | null;
-                            /** @description Total number of items being paginated. */
-                            total: number;
-                        };
-                    };
-                };
-            };
-            401: components["responses"]["CommunitiesAuthenticationException"];
-            403: components["responses"]["CommunitiesAuthorizationException"];
-            404: components["responses"]["CommunitiesModelNotFoundException"];
             422: components["responses"]["CommunitiesValidationException"];
         };
     };
@@ -19053,118 +19293,6 @@ export interface operations {
             422: components["responses"]["CommunitiesValidationException"];
         };
     };
-    "stats.countryList": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: {
-                            country_code: string | null;
-                            country_name: string | null;
-                        }[];
-                    };
-                };
-            };
-            401: components["responses"]["CommunitiesAuthenticationException"];
-            403: components["responses"]["CommunitiesAuthorizationException"];
-        };
-    };
-    "campaignWebhook.index": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The campaign ID */
-                campaign: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Array of `CampaignWebhookResource` */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CampaignWebhookResource"][];
-                };
-            };
-            401: components["responses"]["CommunitiesAuthenticationException"];
-            403: components["responses"]["CommunitiesAuthorizationException"];
-            404: components["responses"]["CommunitiesModelNotFoundException"];
-        };
-    };
-    "campaignWebhook.logs": {
-        parameters: {
-            query?: {
-                start_date?: string;
-                end_date?: string;
-                status?: "0" | "1" | "2";
-                type?: "0" | "1" | "2";
-                per_page?: number;
-            };
-            header?: never;
-            path: {
-                /** @description The campaign ID */
-                campaign: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Paginated set of `CampaignWebhookLogResource` */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["CampaignWebhookLogResource"][];
-                        links: {
-                            first: string | null;
-                            last: string | null;
-                            prev: string | null;
-                            next: string | null;
-                        };
-                        meta: {
-                            current_page: number;
-                            from: number | null;
-                            last_page: number;
-                            /** @description Generated paginator links. */
-                            links: {
-                                url: string | null;
-                                label: string;
-                                active: boolean;
-                            }[];
-                            /** @description Base path for paginator generated URLs. */
-                            path: string | null;
-                            /** @description Number of items shown per page. */
-                            per_page: number;
-                            /** @description Number of the last item in the slice. */
-                            to: number | null;
-                            /** @description Total number of items being paginated. */
-                            total: number;
-                        };
-                    };
-                };
-            };
-            401: components["responses"]["CommunitiesAuthenticationException"];
-            403: components["responses"]["CommunitiesAuthorizationException"];
-            404: components["responses"]["CommunitiesModelNotFoundException"];
-            422: components["responses"]["CommunitiesValidationException"];
-        };
-    };
     "alertCampaign.index": {
         parameters: {
             query?: {
@@ -19319,7 +19447,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Los destinos de la cuenta. */
+            /** @description Los destinos del workspace. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -19357,261 +19485,6 @@ export interface operations {
             };
             401: components["responses"]["AccountsAuthenticationException"];
             403: components["responses"]["AccountsAuthorizationException"];
-        };
-    };
-    "alertDestination.store": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StoreAlertDestinationRequest"];
-            };
-        };
-        responses: {
-            /** @description El destino creado. Para un `webhook`, con su `secret`. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AlertDestinationResource"] | components["schemas"]["AlertDestinationCreatedResource"];
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            /** @description Datos inválidos, se llegó al tope de 10 destinos de ese tipo o la URL del webhook no es `https` o no resuelve a una dirección pública. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @enum {string|null} */
-                        message: "La URL del webhook no es un destino permitido. Debe ser https y resolver a una dirección pública de internet." | "El destino webhook debe ser una URL https." | null;
-                    } | {
-                        /** @constant */
-                        message: "Has alcanzado el límite de 10 destinos de tipo webhook.";
-                    } | {
-                        /** @constant */
-                        message: "Has alcanzado el límite de 10 destinos de tipo teléfono.";
-                    };
-                };
-            };
-        };
-    };
-    "alertDestination.destroy": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Borrado. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": string;
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            /** @description El destino no existe o no es de la cuenta. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        message: "Destino no encontrado.";
-                    };
-                };
-            };
-        };
-    };
-    "alertDestination.update": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["UpdateAlertDestinationRequest"];
-            };
-        };
-        responses: {
-            /** @description El destino editado. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AlertDestinationResource"];
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            /** @description El destino no existe o no es de la cuenta. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        message: "Destino no encontrado.";
-                    };
-                };
-            };
-            /** @description Datos inválidos, el destino no es un `webhook` o la URL no es `https` o no resuelve a una dirección pública. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @enum {string|null} */
-                        message: "La URL del webhook no es un destino permitido. Debe ser https y resolver a una dirección pública de internet." | "El destino webhook debe ser una URL https." | null;
-                    } | {
-                        /** @constant */
-                        message: "Solo se puede modificar la URL de un destino webhook.";
-                    };
-                };
-            };
-        };
-    };
-    "alertOtp.send": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Código enviado. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        message: "Código enviado.";
-                    };
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            /** @description El destino no existe o no es de la cuenta. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        message: "Destino no encontrado.";
-                    };
-                };
-            };
-            /** @description El destino no es un teléfono o ya está verificado. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Hay que esperar antes de pedir otro código (`retry_after_seconds` dice cuántos segundos) o se llegó al límite de envíos por hora. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        message: "Alcanzaste el límite de reenvíos por hora. Intenta más tarde.";
-                    } | {
-                        /** @constant */
-                        message: "Debes esperar antes de solicitar un nuevo código.";
-                        retry_after_seconds: number;
-                    };
-                };
-            };
-        };
-    };
-    "alertOtp.verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["VerifyAlertOtpRequest"];
-            };
-        };
-        responses: {
-            /** @description El destino, ya verificado. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AlertDestinationResource"];
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            /** @description El destino no existe o no es de la cuenta. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        message: "Destino no encontrado.";
-                    };
-                };
-            };
-            /** @description El código es incorrecto o venció, el destino no es un teléfono o ya está verificado. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        message: "Código inválido o expirado.";
-                    } | {
-                        message: string;
-                    };
-                };
-            };
         };
     };
     "alertQuietHour.show": {
@@ -19693,7 +19566,7 @@ export interface operations {
             };
             401: components["responses"]["AccountsAuthenticationException"];
             403: components["responses"]["AccountsAuthorizationException"];
-            /** @description El destino no existe o no es de la cuenta. */
+            /** @description El destino no existe o no es del workspace. */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -19714,64 +19587,6 @@ export interface operations {
                     "application/json": {
                         /** @constant */
                         message: "El destino debe estar verificado para configurar alertas.";
-                    };
-                };
-            };
-        };
-    };
-    "alertWebhookTest.test": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description El resultado de la entrega de prueba. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        status: number | null;
-                        ok: boolean;
-                        latency: number;
-                    };
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            /** @description El destino no existe o no es de la cuenta. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        message: "Destino no encontrado.";
-                    };
-                };
-            };
-            /** @description El destino no es un `webhook`, o su URL no es un destino permitido y no se envió nada. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                        status: null;
-                        ok: boolean;
-                        /** @constant */
-                        latency: 0;
-                    } | {
-                        /** @constant */
-                        message: "Solo los destinos webhook pueden ser probados.";
                     };
                 };
             };
@@ -20467,114 +20282,6 @@ export interface operations {
             };
         };
     };
-    "device.me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The device ID */
-                device: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        phone: string;
-                        /** @constant */
-                        locale: "";
-                        name: string;
-                        avatar: string;
-                        isBusiness: boolean;
-                        /** @constant */
-                        about: "";
-                    } | null;
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            404: components["responses"]["AccountsModelNotFoundException"];
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        message: "El número no está conectado a WhatsApp. Conéctalo desde el panel de Funnelchat y vuelve a intentar.";
-                        /** @constant */
-                        error: "device_not_connected";
-                    };
-                };
-            };
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string | "An error has occurred";
-                    };
-                };
-            };
-        };
-    };
-    "device.checkPhone": {
-        parameters: {
-            query: {
-                phone: string;
-            };
-            header?: never;
-            path: {
-                /** @description The device ID */
-                device: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": null;
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            404: components["responses"]["AccountsModelNotFoundException"];
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        message: "El número no está conectado a WhatsApp. Conéctalo desde el panel de Funnelchat y vuelve a intentar.";
-                        /** @constant */
-                        error: "device_not_connected";
-                    };
-                };
-            };
-            422: components["responses"]["AccountsValidationException"];
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string | "An error has occurred";
-                    };
-                };
-            };
-        };
-    };
     "device.show": {
         parameters: {
             query?: never;
@@ -20763,56 +20470,6 @@ export interface operations {
             };
         };
     };
-    "device.updateWebhookReceived": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The device ID */
-                device: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            404: components["responses"]["AccountsModelNotFoundException"];
-        };
-    };
-    "device.updateWebhookReceivedAndDelivery": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The device ID */
-                device: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            404: components["responses"]["AccountsModelNotFoundException"];
-        };
-    };
     "device.clean": {
         parameters: {
             query?: never;
@@ -20849,94 +20506,6 @@ export interface operations {
                     "application/json": unknown[];
                 };
             };
-        };
-    };
-    "device.chats": {
-        parameters: {
-            query?: {
-                phone?: string;
-                page?: number;
-                pageSize?: number;
-                type?: "1" | "2";
-            };
-            header?: never;
-            path: {
-                /** @description The device ID */
-                device: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        phones: unknown[];
-                        total: number;
-                        page: string | 1;
-                        per_page: string | 25;
-                        last_page: number;
-                    } | null;
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            404: components["responses"]["AccountsModelNotFoundException"];
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        message: "El número no está conectado a WhatsApp. Conéctalo desde el panel de Funnelchat y vuelve a intentar.";
-                        /** @constant */
-                        error: "device_not_connected";
-                    };
-                };
-            };
-            422: components["responses"]["AccountsValidationException"];
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string | "An error has occurred";
-                    };
-                };
-            };
-        };
-    };
-    "device.openConversations": {
-        parameters: {
-            query: {
-                "phones[]": string[];
-            };
-            header?: never;
-            path: {
-                /** @description The device ID */
-                device: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, unknown> | unknown[];
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            404: components["responses"]["AccountsModelNotFoundException"];
-            422: components["responses"]["AccountsValidationException"];
         };
     };
     "device.messageQueue": {
@@ -21089,61 +20658,6 @@ export interface operations {
             404: components["responses"]["AccountsModelNotFoundException"];
         };
     };
-    "device.extensionToken": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The device ID */
-                device: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description El código y cuándo vence. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExtensionTokenResource"];
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            /** @description El número no existe o no es de la cuenta. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Error overview. */
-                        message: string;
-                    };
-                };
-            };
-            /** @description El número todavía no tiene sesión y no se pudo preparar ahora (el código de `error` dice por qué). */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": string;
-                };
-            };
-            /** @description Este número no admite la extensión. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": string;
-                };
-            };
-        };
-    };
     "deviceConnectionEvent.index": {
         parameters: {
             query?: {
@@ -21199,120 +20713,6 @@ export interface operations {
             401: components["responses"]["AccountsAuthenticationException"];
             403: components["responses"]["AccountsAuthorizationException"];
             404: components["responses"]["AccountsModelNotFoundException"];
-            422: components["responses"]["AccountsValidationException"];
-        };
-    };
-    "deviceDisconnectSurvey.show": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The device ID */
-                device: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Si la encuesta está pendiente. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DisconnectSurveyResource"];
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            404: components["responses"]["AccountsModelNotFoundException"];
-        };
-    };
-    "deviceDisconnectSurvey.store": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The device ID */
-                device: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StoreDisconnectReasonRequest"];
-            };
-        };
-        responses: {
-            /** @description Motivo guardado. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            404: components["responses"]["AccountsModelNotFoundException"];
-            /** @description El número no tiene una encuesta pendiente. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": string;
-                };
-            };
-            422: components["responses"]["AccountsValidationException"];
-        };
-    };
-    "deviceFleetLogs.index": {
-        parameters: {
-            query?: {
-                range?: "1h" | "6h" | "24h" | "7d" | "30d" | null;
-                from?: string | null;
-                to?: string | null;
-                only_errors?: boolean | null;
-                exclude_sends?: boolean | null;
-                "methods[]"?: string[];
-                cursor?: string | null;
-                limit?: number | null;
-                per_device_cap?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Una página del registro, con su ventana y, en la primera página, el resumen. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["DeviceFleetLogResource"][];
-                        devices: {
-                            device_id: number;
-                            label: string;
-                            connected: boolean;
-                            activity_count: number;
-                            truncated: string | boolean;
-                        }[];
-                        next_cursor: string;
-                        has_more: string;
-                        window: {
-                            from: string;
-                            to: string;
-                        };
-                        summary: string;
-                    };
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
             422: components["responses"]["AccountsValidationException"];
         };
     };
@@ -21417,90 +20817,6 @@ export interface operations {
                     };
                 };
             };
-        };
-    };
-    "deviceLogs.index": {
-        parameters: {
-            query?: {
-                range?: "1h" | "6h" | "24h" | "7d" | "30d" | null;
-                from?: string | null;
-                to?: string | null;
-                only_errors?: boolean | null;
-                exclude_sends?: boolean | null;
-                "methods[]"?: string[];
-                cursor?: string | null;
-                limit?: number | null;
-            };
-            header?: never;
-            path: {
-                /** @description The device ID */
-                device: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Una página del registro, con su ventana y, en la primera página, el resumen. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["DeviceLogResource"][];
-                        next_cursor: string;
-                        has_more: string;
-                        window: {
-                            from: string;
-                            to: string;
-                        };
-                        summary: {
-                            total: number;
-                            errors: number;
-                        } | {
-                            /** @constant */
-                            total: 0;
-                            /** @constant */
-                            errors: 0;
-                        };
-                    };
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            404: components["responses"]["AccountsModelNotFoundException"];
-            422: components["responses"]["AccountsValidationException"];
-        };
-    };
-    "deviceLogs.health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The device ID */
-                device: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description El veredicto y las llamadas que lo explican. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        verdict: string;
-                        fail_count: string;
-                        sample_size: string;
-                        requests: components["schemas"]["DeviceLogResource"][];
-                    };
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            404: components["responses"]["AccountsModelNotFoundException"];
         };
     };
     "deviceProvisioning.qr": {
@@ -21740,357 +21056,6 @@ export interface operations {
                     "application/json": string;
                 };
             };
-        };
-    };
-    "webhookDelivery.index": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Los intentos de entrega, paginados. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["WebhookDeliveryResource"][];
-                        links: {
-                            first: string | null;
-                            last: string | null;
-                            prev: string | null;
-                            next: string | null;
-                        };
-                        meta: {
-                            current_page: number;
-                            from: number | null;
-                            last_page: number;
-                            /** @description Generated paginator links. */
-                            links: {
-                                url: string | null;
-                                label: string;
-                                active: boolean;
-                            }[];
-                            /** @description Base path for paginator generated URLs. */
-                            path: string | null;
-                            /** @description Number of items shown per page. */
-                            per_page: number;
-                            /** @description Number of the last item in the slice. */
-                            to: number | null;
-                            /** @description Total number of items being paginated. */
-                            total: number;
-                        };
-                    };
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            /** @description El endpoint no existe o no es de la cuenta. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        message: "Endpoint de webhook no encontrado.";
-                    };
-                };
-            };
-        };
-    };
-    "webhookEndpoint.index": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Los endpoints de la cuenta. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WebhookEndpointResource"][] | {
-                        data: components["schemas"]["WebhookEndpointResource"][];
-                        links: {
-                            first: string | null;
-                            last: string | null;
-                            prev: string | null;
-                            next: string | null;
-                        };
-                        meta: {
-                            current_page: number;
-                            from: number | null;
-                            last_page: number;
-                            /** @description Generated paginator links. */
-                            links: {
-                                url: string | null;
-                                label: string;
-                                active: boolean;
-                            }[];
-                            /** @description Base path for paginator generated URLs. */
-                            path: string | null;
-                            /** @description Number of items shown per page. */
-                            per_page: number;
-                            /** @description Number of the last item in the slice. */
-                            to: number | null;
-                            /** @description Total number of items being paginated. */
-                            total: number;
-                        };
-                    };
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-        };
-    };
-    "webhookEndpoint.store": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StoreWebhookEndpointRequest"];
-            };
-        };
-        responses: {
-            /** @description El endpoint registrado, con su secreto de firma (`secret`). Es la única vez que aparece. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WebhookEndpointCreatedResource"];
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            /** @description Datos inválidos, se llegó al tope de 10 endpoints o la URL no es `https` o no resuelve a una dirección pública. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @enum {string|null} */
-                        message: "La URL del webhook no es un destino permitido. Debe ser https y resolver a una dirección pública de internet." | "La URL del webhook debe ser https." | null;
-                    } | {
-                        /** @constant */
-                        message: "Alcanzaste el límite de 10 endpoints de webhook.";
-                    };
-                };
-            };
-        };
-    };
-    "webhookEndpoint.show": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description El endpoint, con sus suscripciones. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WebhookEndpointResource"];
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            /** @description El endpoint no existe o no es de la cuenta. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        message: "Endpoint de webhook no encontrado.";
-                    };
-                };
-            };
-        };
-    };
-    "webhookEndpoint.destroy": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Borrado. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            /** @description El endpoint no existe o no es de la cuenta. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        message: "Endpoint de webhook no encontrado.";
-                    };
-                };
-            };
-            /** @description El endpoint ya se pasó a las suscripciones unificadas (`webhooks`): se administra desde ahí. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-        };
-    };
-    "webhookEndpoint.update": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["UpdateWebhookEndpointRequest"];
-            };
-        };
-        responses: {
-            /** @description El endpoint editado. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            /** @description El endpoint no existe o no es de la cuenta. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": string;
-                };
-            };
-            /** @description El endpoint ya se pasó a las suscripciones unificadas (`webhooks`): se administra desde ahí. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Datos inválidos, la URL no es `https` o no resuelve a una dirección pública, o se quiso habilitar un endpoint cuya clave de API fue revocada. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Errors overview. */
-                        message: string;
-                        /** @description A detailed description of each field that failed validation. */
-                        errors: {
-                            [key: string]: string[];
-                        };
-                    };
-                };
-            };
-        };
-    };
-    "webhookEndpointEvent.update": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateWebhookEndpointEventsRequest"];
-            };
-        };
-        responses: {
-            /** @description El endpoint, con sus suscripciones nuevas. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, unknown>;
-                };
-            };
-            401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
-            /** @description El endpoint no existe o no es de la cuenta. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description El endpoint ya se pasó a las suscripciones unificadas (`webhooks`): se administra desde ahí. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            422: components["responses"]["AccountsValidationException"];
         };
     };
     "webhookEventCatalog.index": {
@@ -22591,572 +21556,6 @@ export interface operations {
             };
             401: components["responses"]["AccountsAuthenticationException"];
             403: components["responses"]["AccountsAuthorizationException"];
-        };
-    };
-    "pendingWebhookSubscription.rotateSecret": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PendingWebhookSubscriptionWithSecret"];
-                };
-            };
-        };
-    };
-    "pendingForms.list": {
-        parameters: {
-            query?: {
-                q?: string;
-                status?: "draft" | "published" | "deprecated";
-                device_id?: number;
-                /** @description 25 by default. */
-                perPage?: number;
-                page?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["PendingForm"][];
-                        links?: Record<string, unknown>;
-                        meta?: Record<string, unknown>;
-                    };
-                };
-            };
-        };
-    };
-    "pendingForms.create": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The primary number. */
-                    device_id: number;
-                    /** @description Other numbers to publish it on. */
-                    device_ids?: number[];
-                    /** @description A `key` of `GET /api/v1/forms/templates`. */
-                    template_key?: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Created as a draft. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["PendingForm"];
-                        lint?: components["schemas"]["PendingFormLintIssue"][];
-                        numbers?: components["schemas"]["PendingFormNumber"][];
-                    };
-                };
-            };
-        };
-    };
-    "pendingForms.templates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: {
-                            key: string;
-                            title: string;
-                            description?: string | null;
-                            category?: string | null;
-                        }[];
-                    };
-                };
-            };
-        };
-    };
-    "pendingForms.retrieve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The version of the form. */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["PendingForm"];
-                        lint?: components["schemas"]["PendingFormLintIssue"][];
-                        versions?: {
-                            id?: number;
-                            version?: number;
-                            status?: string;
-                            published_at?: string | null;
-                        }[];
-                        numbers?: components["schemas"]["PendingFormNumber"][];
-                    };
-                };
-            };
-        };
-    };
-    "pendingForms.update": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The version of the form. */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    name?: string;
-                    /** @description Screens and fields of the form. */
-                    definition: Record<string, unknown>;
-                    /** @description The `updated_at` you read: if it changed since then, it answers `409 STALE`. */
-                    expected_updated_at?: string | null;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["PendingForm"];
-                        lint?: components["schemas"]["PendingFormLintIssue"][];
-                    };
-                };
-            };
-        };
-    };
-    "pendingForms.delete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The version of the form. */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Deleted. A published version answers `409 PUBLISHED`. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    "pendingForms.createVersion": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The version of the form. */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description There was a draft already: this is it (`created: false`). */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["PendingForm"];
-                        lint?: components["schemas"]["PendingFormLintIssue"][];
-                        created?: boolean;
-                        numbers?: components["schemas"]["PendingFormNumber"][];
-                    };
-                };
-            };
-            /** @description New draft (`created: true`). */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["PendingForm"];
-                        lint?: components["schemas"]["PendingFormLintIssue"][];
-                        created?: boolean;
-                        numbers?: components["schemas"]["PendingFormNumber"][];
-                    };
-                };
-            };
-        };
-    };
-    "pendingForms.sync": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The version of the form. */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["PendingForm"];
-                        lint?: components["schemas"]["PendingFormLintIssue"][];
-                        numbers?: components["schemas"]["PendingFormNumber"][];
-                    };
-                };
-            };
-        };
-    };
-    "pendingForms.publish": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The version of the form. */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Published. If Meta rejects it: `502 META` with `meta_code` and `lint`; if it does not pass validation: `422 LINT`. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["PendingForm"];
-                        lint?: components["schemas"]["PendingFormLintIssue"][];
-                        numbers?: components["schemas"]["PendingFormNumber"][];
-                    };
-                };
-            };
-        };
-    };
-    "pendingForms.numbers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The version of the form. */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        numbers: components["schemas"]["PendingFormNumber"][];
-                    };
-                };
-            };
-        };
-    };
-    "pendingForms.addNumber": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The version of the form. */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    device_id: number;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        numbers: components["schemas"]["PendingFormNumber"][];
-                    };
-                };
-            };
-        };
-    };
-    "pendingForms.removeNumber": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The version of the form. */
-                id: number;
-                deviceId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The primary number cannot be taken off: `422 PRIMARY_NUMBER`. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        numbers: components["schemas"]["PendingFormNumber"][];
-                    };
-                };
-            };
-        };
-    };
-    "pendingForms.retryNumbers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The version of the form. */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        numbers: components["schemas"]["PendingFormNumber"][];
-                    };
-                };
-            };
-        };
-    };
-    "pendingForms.definition": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The form (`family_id`). */
-                familyId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: {
-                            family_id?: number;
-                            form_id?: number;
-                            name?: string;
-                            status?: string;
-                            version?: number;
-                            definition?: unknown;
-                        } | null;
-                    };
-                };
-            };
-        };
-    };
-    "pendingForms.versions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The form (`family_id`). */
-                familyId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: {
-                            id?: number;
-                            version?: number;
-                            name?: string;
-                            status?: string;
-                            is_current?: boolean;
-                            published_at?: string | null;
-                            deprecated_at?: string | null;
-                            meta_flow_id?: string | null;
-                            retained_reason?: string | null;
-                            responses?: number;
-                            templates?: unknown;
-                        }[];
-                    };
-                };
-            };
-        };
-    };
-    "pendingForms.responses": {
-        parameters: {
-            query?: {
-                from?: string;
-                to?: string;
-                version_id?: number;
-                origin?: string;
-                status?: string;
-                search?: string;
-                page?: number;
-            };
-            header?: never;
-            path: {
-                /** @description The form (`family_id`). */
-                familyId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: Record<string, unknown>[];
-                        columns?: unknown[];
-                    };
-                };
-            };
-        };
-    };
-    "pendingForms.response": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The form (`family_id`). */
-                familyId: number;
-                runId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                    };
-                };
-            };
-        };
-    };
-    "pendingForms.metrics": {
-        parameters: {
-            query?: {
-                from?: string;
-                to?: string;
-                version_id?: number;
-            };
-            header?: never;
-            path: {
-                /** @description The form (`family_id`). */
-                familyId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                    };
-                };
-            };
         };
     };
     "webhook.group_created": {

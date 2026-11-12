@@ -1,5 +1,5 @@
 /**
- * What each send answers (conversations v1.18.10: Message/Support/ApiKeySendResponse.php) and the
+ * What each send answers (conversations v1.18.10, in production) and the
  * message lookup by id.
  */
 import { describe, expect, it } from 'vitest';

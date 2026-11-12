@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { routes, webhookEvents } from '../src/index.js';
+import { routeGroups, routes, webhookEvents } from '../src/index.js';
 
 type Operation = Record<string, unknown>;
 type PathItems = Record<string, Record<string, Operation>>;
@@ -17,6 +17,23 @@ interface SpecFile {
   operationPatches?: Patch[];
   responsePatches?: Patch[];
 }
+interface PortalGroup {
+  name: string;
+  category: string | null;
+  description: string | null;
+}
+interface PortalCategory {
+  name: string;
+  url: string | null;
+}
+interface Generator {
+  portalGroups(spec: object): { groups: Map<string, PortalGroup>; warnings: string[]; categories: PortalCategory[] };
+  readmeBlock(groups: { name: string; category: string | null }[], operations: number, events: number, catalog?: PortalCategory[]): string;
+}
+
+// A specifier the type checker does not resolve: the generator is a plain script.
+const GENERATOR = new URL('../scripts/generate.mjs', import.meta.url).href;
+const generator = (): Promise<Generator> => import(GENERATOR) as Promise<Generator>;
 
 // Everything is derived from the spec files, so a regeneration does not need to touch this test.
 const readJson = (file: string) => JSON.parse(readFileSync(new URL(`../spec/${file}`, import.meta.url), 'utf8')) as SpecFile;
@@ -48,11 +65,21 @@ describe('generated layer and the pending-of-the-spec layer', () => {
     for (const { method, path } of snapshotOps) expect(routeKeys.has(key(method, path))).toBe(true);
   });
 
-  it('adds the pending operations the snapshot lacks, flagged, and nothing else', () => {
-    const missing = operationsOf(pending.paths).filter(({ method, path }) => !snapshotOp(method, path));
-    for (const { method, path } of missing) expect(routeKeys.get(key(method, path))?.pending).toBe(true);
-    const added = routes.filter((r) => !snapshotOp(r.method.toLowerCase(), r.path));
-    expect(added.map((r) => key(r.method, r.path)).sort()).toEqual(missing.map((m) => key(m.method, m.path)).sort());
+  it('adds no operation the spec does not publish', () => {
+    expect(pending.paths).toBeUndefined();
+    expect(routes.filter((r) => !snapshotOp(r.method.toLowerCase(), r.path)).map((r) => key(r.method, r.path))).toEqual([]);
+    expect(routes.length).toBe(operationsOf(snapshot.paths).length);
+  });
+
+  it('gives each route its group and whether it can be undone, as the spec says', () => {
+    for (const r of routes) {
+      const op = snapshotOp(r.method.toLowerCase(), r.path)!;
+      const destructive = op['x-fc-destructive'];
+      expect(r.destructive).toBe(typeof destructive === 'boolean' ? destructive : null);
+      expect(r.tag).toBe((op.tags as string[] | undefined)?.[0] ?? null);
+      expect(r.category).toBe(routeGroups.find((g) => g.name === r.tag)?.category ?? null);
+    }
+    expect(routeGroups.reduce((sum, g) => sum + g.operations, 0)).toBe(routes.filter((r) => r.tag).length);
   });
 
   // A patch without `while` applies while the snapshot operation lacks one of its properties or parameters.
@@ -74,11 +101,82 @@ describe('generated layer and the pending-of-the-spec layer', () => {
     }
   });
 
-  it('knows every event of the snapshot and of the pending layer, once', () => {
+  it('knows exactly the events the spec publishes, once', () => {
     const types = webhookEvents.map((e) => e.type);
     expect(new Set(types).size).toBe(types.length);
-    const expected = new Set([...Object.keys(snapshot.webhooks ?? {}), ...Object.keys(pending.webhooks ?? {})].map(eventType));
-    expect(new Set(types)).toEqual(expected);
+    expect(new Set(types)).toEqual(new Set(Object.keys(snapshot.webhooks ?? {}).map(eventType)));
+  });
+});
+
+describe('groups and categories of the portal', () => {
+  const tags = [{ name: 'Números' }, { name: 'Mensajes' }, { name: 'Ventas' }];
+  const categories = async (spec: object) => {
+    const { groups, warnings } = (await generator()).portalGroups(spec);
+    return { categories: Object.fromEntries([...groups.values()].map((g) => [g.name, g.category])), warnings };
+  };
+
+  it('has no category while every x-tagGroups entry is one tag under its own name', async () => {
+    const spec = { tags, 'x-tagGroups': tags.map((t) => ({ name: t.name, tags: [t.name] })) };
+    expect(await categories(spec)).toEqual({ categories: { Números: null, Mensajes: null, Ventas: null }, warnings: [] });
+  });
+
+  it('reads the category of an x-tagGroups entry: a key of its own, an id the root names, or a group of tags', async () => {
+    const own = {
+      tags,
+      'x-tagGroups': [
+        { name: 'Números', tags: ['Números'], 'x-fc-categoria': 'Funciones de WhatsApp' },
+        { name: 'Mensajes', tags: ['Mensajes'], 'x-fc-categoria': { nombre: 'Funciones de WhatsApp' } },
+        { name: 'Ventas', tags: ['Ventas'], 'x-fc-categoria': 'funnelchat' },
+      ],
+      'x-fc-categorias': [{ id: 'funnelchat', title: 'Funciones de Funnelchat', url: 'https://developers-portal.funnelchat.app/docs/mas-funciones/funnelchat/' }],
+    };
+    const grouped = {
+      tags,
+      'x-tagGroups': [
+        { name: 'Funciones de WhatsApp', tags: ['Números', 'Mensajes'] },
+        { name: 'Funciones de Funnelchat', tags: ['Ventas'] },
+      ],
+    };
+    const expected = { Números: 'Funciones de WhatsApp', Mensajes: 'Funciones de WhatsApp', Ventas: 'Funciones de Funnelchat' };
+    expect(await categories(own)).toEqual({ categories: expected, warnings: [] });
+    expect(await categories(grouped)).toEqual({ categories: expected, warnings: [] });
+  });
+
+  it('warns about a category it cannot read, and leaves that group without one', async () => {
+    const spec = { tags, 'x-tagGroups': [{ name: 'Números', tags: ['Números'], 'x-fc-categoria': ['a', 'b'] }] };
+    const { categories: found, warnings } = await categories(spec);
+    expect(found['Números']).toBeNull();
+    expect(warnings).toHaveLength(1);
+  });
+
+  it('lists the groups in the README by category once the spec gives one', async () => {
+    const { readmeBlock } = await generator();
+    expect(readmeBlock([{ name: 'Números', category: null }, { name: 'Ventas', category: null }], 2, 1)).toContain('\n- Números, Ventas.');
+    const block = readmeBlock(
+      [
+        { name: 'Números', category: 'Funciones de WhatsApp' },
+        { name: 'Ventas', category: 'Funciones de Funnelchat' },
+        { name: 'Mensajes', category: 'Funciones de WhatsApp' },
+      ],
+      3,
+      1,
+    );
+    expect(block).toContain('\n- **Funciones de WhatsApp:** Números, Mensajes.\n- **Funciones de Funnelchat:** Ventas.');
+    // In the order of the spec's list of categories, each one with its page; a group without one goes last.
+    const catalog = [
+      { name: 'Funciones de Funnelchat', url: 'https://example.com/funnelchat/' },
+      { name: 'Funciones de WhatsApp', url: null },
+    ];
+    const ordered = readmeBlock([{ name: 'Números', category: 'Funciones de WhatsApp' }, { name: 'Notas', category: null }, { name: 'Ventas', category: 'Funciones de Funnelchat' }], 3, 1, catalog);
+    expect(ordered).toContain(
+      '\n- **[Funciones de Funnelchat](https://example.com/funnelchat/):** Ventas.\n- **Funciones de WhatsApp:** Números.\n- **Without a category:** Notas.',
+    );
+  });
+
+  it('keeps the README block up to date with the route table and the event catalog', async () => {
+    const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
+    const { portalGroups, readmeBlock } = await generator();
+    expect(readme).toContain(readmeBlock([...routeGroups], routes.length, webhookEvents.length, portalGroups(snapshot).categories));
   });
 });
 

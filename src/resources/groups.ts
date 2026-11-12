@@ -9,8 +9,8 @@ type ActionId = PathParams<'/api/v1/groups/actions/{action}', 'GET'>['action'];
 type FollowGroup = PathParams<'/api/v1/groups/{group}/import', 'POST'>['group'];
 
 /**
- * WhatsApp groups (communities area): read them, their participants, events and messages, and send a
- * message to a group. Reading needs **Groups and campaigns → View**; sending,
+ * WhatsApp groups (communities area): read them, their participants and who joins and leaves, and
+ * send a message to a group. Reading needs **Groups and campaigns → View**; sending,
  * **Groups and campaigns → Send**.
  *
  * Whoever joins or leaves a group arrives by the `group_participant.joined` and
@@ -49,11 +49,6 @@ export class Groups extends Resource {
   /** `GET /api/v1/groups/{group}/participant-events`, paginated: joins and leaves. */
   listParticipantEvents(group: GroupId, query?: Query<'/api/v1/groups/{group}/participant-events'>, options?: RequestOptions) {
     return this.client.paginate('/api/v1/groups/{group}/participant-events', { ...options, path: { group }, query });
-  }
-
-  /** `GET /api/v1/groups/{group}/messages`, paginated. */
-  listMessages(group: GroupId, query?: Query<'/api/v1/groups/{group}/messages'>, options?: RequestOptions) {
-    return this.client.paginate('/api/v1/groups/{group}/messages', { ...options, path: { group }, query });
   }
 
   /** `GET /api/v1/groups/{group}/scheduled-messages`, paginated. */
