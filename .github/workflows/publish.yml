@@ -1,6 +1,8 @@
 name: Publish to npm
 
 # Publishes through npm Trusted Publishing (OIDC): no npm token is stored in this repo.
+# A tag vX.Y.Z publishes only when it matches package.json, its commit is on main and CI passes on it.
+# A pre-release tag (vX.Y.Z-rc.N, vX.Y.Z-beta.N) is published with the `next` dist-tag, never as `latest`.
 # A manual run (workflow_dispatch) publishes nothing; it only checks that the OIDC exchange with npm works.
 
 on:
@@ -10,7 +12,6 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write
   contents: read
 
 concurrency:
@@ -18,12 +19,62 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish:
+  release:
+    name: Check the tag
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    outputs:
+      dist-tag: ${{ steps.dist-tag.outputs.dist-tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check that the tag matches the package version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "$TAG" != "v$version" ]; then
+            echo "::error::Tag $TAG does not match package.json version $version (expected v$version)"
+            exit 1
+          fi
+
+      - name: Check that the tagged commit is on main
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "::error::Tag $TAG points to $(git rev-parse --short HEAD), which is not on main: tag a commit of main"
+            exit 1
+          fi
+
+      - name: Choose the npm dist-tag
+        id: dist-tag
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          # A pre-release (0.5.0-rc.1, 0.5.0-beta.2) never becomes the version `npm install` gets by default.
+          if [[ "$version" == *-* ]]; then dist_tag=next; else dist_tag=latest; fi
+          echo "dist-tag=$dist_tag" >> "$GITHUB_OUTPUT"
+          echo "::notice::$version will be published with --tag $dist_tag"
+
+  checks:
+    name: CI on the tag
+    needs: release
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    name: Publish
+    needs: [release, checks]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
-      # The SDK runs on Node 18 or later, but prepublishOnly runs vitest 4 and eslint 9, which need Node 20 or later.
+      # The SDK runs on Node 18 or later, but prepublishOnly runs vitest 4 and eslint 9, which need Node 20.19 or later.
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -32,8 +83,38 @@ jobs:
       # Trusted Publishing needs npm 11.5.1 or later; npm 12 asks for Node versions the runners do not guarantee yet.
       - run: npm install -g npm@^11.5.1
 
+      - name: Check whether this version is already on npm
+        id: published
+        run: |
+          name="$(node -p "require('./package.json').name")"
+          version="$(node -p "require('./package.json').version")"
+          if [ "$(npm view "$name@$version" version 2>/dev/null)" = "$version" ]; then
+            echo "::notice::$name@$version is already on npm; nothing to publish"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - run: npm ci
+        if: steps.published.outputs.exists != 'true'
+
+      # prepublishOnly runs generate:check, typecheck, lint, test and build again, on what is published.
+      - run: npm publish --provenance --access public --tag "$DIST_TAG"
+        if: steps.published.outputs.exists != 'true'
+        env:
+          DIST_TAG: ${{ needs.release.outputs.dist-tag }}
+
+  oidc:
+    name: Check the OIDC exchange with npm
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
       - name: Check the OIDC exchange with npm
-        if: github.event_name == 'workflow_dispatch'
         run: |
           name="$(node -p "require('./package.json').name")"
           response="$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
@@ -54,34 +135,3 @@ jobs:
             exit 1
           fi
           echo "Trusted publishing OK for $name"
-
-      - name: Check that the tag matches the package version
-        if: github.event_name != 'workflow_dispatch'
-        env:
-          TAG: ${{ github.ref_name }}
-        run: |
-          version="$(node -p "require('./package.json').version")"
-          if [ "$TAG" != "v$version" ]; then
-            echo "::error::Tag $TAG does not match package.json version $version (expected v$version)"
-            exit 1
-          fi
-
-      - name: Check whether this version is already on npm
-        id: published
-        if: github.event_name != 'workflow_dispatch'
-        run: |
-          name="$(node -p "require('./package.json').name")"
-          version="$(node -p "require('./package.json').version")"
-          if [ "$(npm view "$name@$version" version 2>/dev/null)" = "$version" ]; then
-            echo "::notice::$name@$version is already on npm; nothing to publish"
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - run: npm ci
-        if: github.event_name != 'workflow_dispatch' && steps.published.outputs.exists != 'true'
-
-      # prepublishOnly runs generate:check, typecheck, lint, test and build before publishing.
-      - run: npm publish --provenance --access public
-        if: github.event_name != 'workflow_dispatch' && steps.published.outputs.exists != 'true'
