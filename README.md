@@ -600,9 +600,11 @@ npm run build            # dist/ in ESM and CJS, with .d.ts
 FUNNELCHAT_SANDBOX_URL=http://127.0.0.1:4010 npm run test:e2e   # against a running sandbox
 ```
 
-The SDK runs on Node 18 or later; the development tools (vitest 4, eslint 9) need Node 20 or later.
+The SDK runs on Node 18 or later; the development tools (vitest 4, eslint 9) need Node 20.19 or later.
 
-To release, push a `vX.Y.Z` tag on `main` matching the `version` in `package.json`; GitHub Actions publishes it through npm Trusted Publishing (`.github/workflows/publish.yml`), with provenance.
+Every pull request and every push to `main` runs `.github/workflows/ci.yml`: the checks above on Node 20, 22 and 24, and the built package on Node 18 (`scripts/smoke.mjs`).
+
+To release, push a `vX.Y.Z` tag on a commit of `main` matching the `version` in `package.json`. `.github/workflows/publish.yml` fails before publishing when the tag does not match or its commit is not on `main`, runs CI on it, and publishes through npm Trusted Publishing, with provenance. A pre-release (`vX.Y.Z-rc.N`, `vX.Y.Z-beta.N`) is published with the `next` dist-tag, never as `latest`.
 
 Everything generated comes from one script:
 
