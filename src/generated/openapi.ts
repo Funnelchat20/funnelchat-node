@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 3e5bc8ef01a2c746…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 7db2ead826697c80…) + spec/pending.json.
  */
 /* eslint-disable */
 export interface paths {
@@ -660,7 +660,7 @@ export interface paths {
          * Mandar una tarjeta de contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Enviar**
          *
-         *     Si el límite de contactos activos (MAC) frena el envío, responde `429` con `error` = `mac_lockout_24h` o `mac_limit_reached` y sin `Retry-After`: reintentar no sirve hasta que sumes capacidad o empiece un ciclo nuevo. El envío no sale, pero queda en el historial del contacto un mensaje con estado de error que lleva tu `client_reference`. Detalle en «Errores y límites».
+         *     Si el límite de contactos activos (MAC) frena el envío, responde `429` con `error` = `mac_lockout_24h` o `mac_limit_reached` y sin `Retry-After`: reintentar no sirve hasta que sumes capacidad o empiece un ciclo nuevo. El envío no sale y no se guarda ningún mensaje ni tu `client_reference`: no queda nada en el historial del contacto. Detalle en «Errores y límites».
          */
         post: operations["contactCard.store"];
         delete?: never;
@@ -886,7 +886,7 @@ export interface paths {
          * Mandar un mensaje a un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Enviar**
          *
-         *     Si el límite de contactos activos (MAC) frena el envío, responde `429` con `error` = `mac_lockout_24h` o `mac_limit_reached` y sin `Retry-After`: reintentar no sirve hasta que sumes capacidad o empiece un ciclo nuevo. El envío no sale, pero queda en el historial del contacto un mensaje con estado de error que lleva tu `client_reference`. Detalle en «Errores y límites».
+         *     Si el límite de contactos activos (MAC) frena el envío, responde `429` con `error` = `mac_lockout_24h` o `mac_limit_reached` y sin `Retry-After`: reintentar no sirve hasta que sumes capacidad o empiece un ciclo nuevo. El envío no sale y no se guarda ningún mensaje ni tu `client_reference`: no queda nada en el historial del contacto. Detalle en «Errores y límites».
          */
         post: operations["conversation.sendMessage"];
         delete?: never;
@@ -1650,7 +1650,7 @@ export interface paths {
          *
          *     Indica a quién envías con `phone`: el teléfono con código de país, por ejemplo `5491122334455`. No hace falta crear el contacto antes: si ese teléfono todavía no es un contacto de tu cuenta, se crea en el workspace de tu clave, igual que con `POST /contacts/update-or-create` y con el mismo permiso, que **Enviar** ya incluye. La respuesta trae su id en `message.contact_id`, el mismo que llevan los eventos `message.status_changed`. Si el teléfono no es válido, o ya es un contacto de otro workspace de tu cuenta, la respuesta es la misma que daría `POST /contacts/update-or-create`: 422, o 404 sin datos de ese contacto. Con un número oficial de WhatsApp (API Cloud) también puedes indicar `whatsapp_id`, el BSUID que envía Meta (por ejemplo `US.13491208655302741918`), en lugar de `phone`; usado así con un número conectado por QR, responde 422. En un número oficial, el primer mensaje a un contacto nuevo tiene que ser una plantilla: un mensaje libre solo sale dentro de las 24 horas desde que el contacto te escribió. Si ya tienes el `contact_id`, puedes seguir enviándolo: si junto con él mandas `phone` o `whatsapp_id`, tienen que ser de ese mismo contacto (si no, 422 `recipient_mismatch`). En `send-template`, `phone` o `whatsapp_id` va siempre, con o sin `contact_id`.
          *
-         *     Si el límite de contactos activos (MAC) frena el envío, responde `429` con `error` = `mac_lockout_24h` o `mac_limit_reached` y sin `Retry-After`: reintentar no sirve hasta que sumes capacidad o empiece un ciclo nuevo. El envío no sale, pero queda en el historial del contacto un mensaje con estado de error que lleva tu `client_reference`. Detalle en «Errores y límites».
+         *     Si el límite de contactos activos (MAC) frena el envío, responde `429` con `error` = `mac_lockout_24h` o `mac_limit_reached` y sin `Retry-After`: reintentar no sirve hasta que sumes capacidad o empiece un ciclo nuevo. El envío no sale y no se guarda ningún mensaje ni tu `client_reference`: no queda nada en el historial del contacto. Detalle en «Errores y límites».
          */
         post: operations["message.sendMessage"];
         delete?: never;
@@ -3261,7 +3261,7 @@ export interface paths {
          * Cambiar la descripción de un grupo
          * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
          *
-         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Hasta 2048 caracteres; una descripción vacía la borra. Se ejecuta al ritmo de las campañas del número.
+         *     **Nota:** Asíncrona: responde 202 con `action_id`; consulta el resultado en `GET /groups/actions/{action}`. Hasta 2048 caracteres. Con un número QR, una descripción vacía la borra; con un número oficial responde `422 validation_failed`, porque WhatsApp no permite borrar la descripción de un grupo oficial. Se ejecuta al ritmo de las campañas del número.
          */
         put: operations["apiGroupAction.updateDescription"];
         post?: never;
@@ -4777,7 +4777,8 @@ export interface paths {
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
          *     Lo consulta en Meta; si Meta no devuelve ninguno, responde el último que se reservó. Solo
-         *     para números oficiales.
+         *     para números oficiales. Si Meta rechaza la consulta, la respuesta lleva el mismo código HTTP
+         *     que dio Meta, `error` `meta_error` y el motivo de Meta en `message`.
          */
         get: operations["deviceUsername.show"];
         put?: never;
@@ -4787,7 +4788,8 @@ export interface paths {
          *
          *     `username` va de 3 a 35 caracteres: letras minúsculas, números, puntos y guiones bajos. Se
          *     reserva en Meta; si Meta lo rechaza (por ejemplo, porque ya está tomado), la respuesta
-         *     trae su motivo en `message`. Solo para números oficiales.
+         *     lleva el mismo código HTTP que dio Meta, `error` `meta_error` y su motivo en `message`. Solo
+         *     para números oficiales.
          */
         post: operations["deviceUsername.store"];
         delete?: never;
@@ -4807,7 +4809,9 @@ export interface paths {
          * Ver nombres de usuario sugeridos
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
-         *     Las sugerencias que da Meta para ese número. Solo para números oficiales.
+         *     Las sugerencias que da Meta para ese número. Solo para números oficiales. Si Meta rechaza la
+         *     consulta, la respuesta lleva el mismo código HTTP que dio Meta, `error` `meta_error` y el
+         *     motivo de Meta en `message`.
          */
         get: operations["deviceUsername.suggestions"];
         put?: never;
@@ -4864,6 +4868,13 @@ export interface paths {
          *     Con una clave de API, cada tipo de `events` exige además el permiso
          *     **Números de WhatsApp → Ver**, **Contactos y conversaciones → Ver** o
          *     **Grupos y campañas → Ver**, según su área; si falta, 422.
+         *
+         *     Hay un tope de 50 suscripciones por workspace (por cuenta, si no usas workspaces), sea
+         *     cual sea su estado: con 50, crear otra responde `422` con `error`
+         *     `webhooks_limit_reached`.
+         *
+         *     No acepta `Idempotency-Key`: reintentar una creación que sí llegó crea otra suscripción,
+         *     con otro secreto.
          */
         post: operations["webhookSubscription.store"];
         delete?: never;
@@ -6102,7 +6113,7 @@ export interface webhooks {
         put?: never;
         /**
          * group.blocked
-         * @description Un grupo quedó inoperable: sin administrador conectado, con el link de invitación inválido o suspendido por WhatsApp.
+         * @description Un grupo de una campaña quedó inoperable: sin administrador conectado, con el link de invitación inválido o suspendido por WhatsApp; un grupo que no es de una campaña no lo genera.
          */
         post: operations["webhook.group_blocked"];
         delete?: never;
@@ -6122,7 +6133,7 @@ export interface webhooks {
         put?: never;
         /**
          * group.recovered
-         * @description Un grupo que estaba bloqueado volvió a operar.
+         * @description Un grupo de una campaña que estaba bloqueado volvió a operar; un grupo que no es de una campaña no lo genera.
          */
         post: operations["webhook.group_recovered"];
         delete?: never;
@@ -6202,7 +6213,7 @@ export interface webhooks {
         put?: never;
         /**
          * pipeline.finished
-         * @description Terminó un pipeline de operaciones sobre grupos, con su resultado agregado y la clave de idempotencia del pedido que lo originó, cuando la hay.
+         * @description Terminó un pipeline de operaciones sobre los grupos de una campaña, con su resultado agregado y la clave de idempotencia del pedido que lo originó, cuando la hay; si después cambia el resultado de alguna de sus acciones (por ejemplo, por un reintento), sale otro, con otro `id` y los conteos nuevos.
          */
         post: operations["webhook.pipeline_finished"];
         delete?: never;
@@ -6947,7 +6958,10 @@ export interface webhooks {
                     "application/json": {
                         data?: {
                             device: components["schemas"]["PendingWebhookDevice"];
-                            /** Format: date-time */
+                            /**
+                             * Format: date-time
+                             * @description ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`.
+                             */
                             connected_at: string;
                             /** @description The connect link of this connection, or `null` when it did not come from a link. */
                             connect_link_id: number | null;
@@ -6988,7 +7002,10 @@ export interface webhooks {
                     "application/json": {
                         data?: {
                             device: components["schemas"]["PendingWebhookDevice"];
-                            /** Format: date-time */
+                            /**
+                             * Format: date-time
+                             * @description ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`.
+                             */
                             disconnected_at: string;
                             /** @enum {string} */
                             reason: "qr_logged_out" | "meta_account_not_registered" | "shadow_ban_protection" | "provider_error" | "unknown" | "disconnected_by_user";
@@ -7500,7 +7517,10 @@ export interface webhooks {
                     "application/json": {
                         data?: {
                             device: components["schemas"]["PendingWebhookDevice"];
-                            /** Format: date-time */
+                            /**
+                             * Format: date-time
+                             * @description ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`.
+                             */
                             deleted_at: string;
                             /** @description The connect link that last connected the number, or `null`. */
                             connect_link_id: number | null;
@@ -7545,7 +7565,10 @@ export interface webhooks {
                             previous_state: "available" | "limited" | "blocked" | "unknown";
                             /** @enum {string} */
                             state: "available" | "limited" | "blocked" | "unknown";
-                            /** Format: date-time */
+                            /**
+                             * Format: date-time
+                             * @description ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`.
+                             */
                             changed_at: string;
                             /** @description The connect link that last connected the number, or `null`. */
                             connect_link_id: number | null;
@@ -7588,7 +7611,10 @@ export interface webhooks {
                             device: components["schemas"]["PendingWebhookDevice"];
                             previous: string;
                             current: string;
-                            /** Format: date-time */
+                            /**
+                             * Format: date-time
+                             * @description ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`.
+                             */
                             changed_at: string;
                             /** @description The connect link that last connected the number, or `null`. */
                             connect_link_id: number | null;
@@ -7631,7 +7657,10 @@ export interface webhooks {
                             device: components["schemas"]["PendingWebhookDevice"];
                             previous: string;
                             current: string;
-                            /** Format: date-time */
+                            /**
+                             * Format: date-time
+                             * @description ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`.
+                             */
                             changed_at: string;
                             /** @description The connect link that last connected the number, or `null`. */
                             connect_link_id: number | null;
@@ -7681,7 +7710,10 @@ export interface webhooks {
                             verified_name: string | null;
                             /** @description Meta's reason in a rejection, or `null`. */
                             rejection_reason: string | null;
-                            /** Format: date-time */
+                            /**
+                             * Format: date-time
+                             * @description ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`.
+                             */
                             reviewed_at: string;
                             /** @description The connect link that last connected the number, or `null`. */
                             connect_link_id: number | null;
@@ -7784,7 +7816,7 @@ export interface webhooks {
         put?: never;
         /**
          * group_participant.joined
-         * @description A person joined one of the account's groups.
+         * @description A person joined one of the account's groups. At most one per person, group and UTC day: if the same person joins again that day, no other one is sent.
          */
         post: {
             parameters: {
@@ -7851,7 +7883,7 @@ export interface webhooks {
         put?: never;
         /**
          * group_participant.left
-         * @description A person left one of the account's groups.
+         * @description A person left one of the account's groups. At most one per person, group and UTC day: if the same person leaves again that day, no other one is sent.
          */
         post: {
             parameters: {
@@ -8264,6 +8296,56 @@ export interface components {
             action_id: string;
             /** @constant */
             status: "queued";
+        };
+        /** ApiGroupActionResource */
+        ApiGroupActionResource: {
+            /** @description Id de la acción: el `action_id` del `202`. */
+            action_id: string;
+            /**
+             * @description Tipo de acción.
+             * @enum {string}
+             */
+            type: "create_group" | "add_participants" | "remove_participants" | "promote_admins" | "demote_admins" | "update_name" | "update_description" | "update_photo" | "update_settings" | "renew_invite_link" | "send_message" | "approve_join_requests" | "reject_join_requests";
+            /**
+             * @description Estado de la acción.
+             * @enum {string}
+             */
+            status: "queued" | "running" | "completed" | "failed";
+            /** @description Número que ejecuta la acción; `null` si es de otro workspace que el de la key. */
+            device_id: number | null;
+            /** @description Grupo de la acción; `null` si todavía no existe (una creación sin terminar) o es de otro workspace que el de la key. */
+            group: {
+                uid: string;
+                name: string | null;
+            } | null;
+            /** @description Resultado de una acción `completed`; `null` mientras está `queued` o `running` y cuando termina `failed`. Su forma depende de `type`: `{"participants": [...]}` (una lista, en el orden del pedido) para las acciones con lista de teléfonos; `{"group": {"uid", "name"}, "invite_link"}` para `create_group`; `{"invite_link"}` para `renew_invite_link`; `{"message": {"uid"}}` para `send_message`; `{}` para las demás. Es el mismo `result` del evento `group_action.completed`. */
+            result: {
+                participants: {
+                    identity: string | null;
+                    identity_type: string | null;
+                    /** @enum {string} */
+                    status: "added" | "invited" | "removed" | "promoted" | "demoted" | "approved" | "rejected" | "failed";
+                    reason: string | null;
+                }[];
+            } | {
+                group: {
+                    uid: string;
+                    name: string | null;
+                };
+                invite_link: string | null;
+            } | {
+                invite_link: string | null;
+            } | {
+                message: {
+                    uid: string | null;
+                };
+            } | Record<string, unknown> | null;
+            /** @description Motivo de una acción `failed`; `null` en los demás estados. Vocabulario cerrado: la sección «Motivos» de «Acciones de grupo». */
+            reason: string | null;
+            created_at: string | null;
+            started_at: string | null;
+            completed_at: string | null;
+            failed_at: string | null;
         };
         /**
          * ApiGroupDescriptionRequest
@@ -9173,16 +9255,16 @@ export interface components {
             overloaded: boolean;
             /** Format: date-time */
             overloaded_computed_at: string | null;
-            /**
-             * @description additive last-computed snapshot, always present
-             *     (not nulled when overloaded=false). No state row => counts null, flags false.
-             */
+            /** @description En la última evaluación, cuántos grupos tenía el número; `null` si nunca se evaluó. */
             overloaded_groups_count: number | null;
             overloaded_one_to_one_count: number | null;
             overloaded_has_pending_broadcast: boolean;
             overloaded_has_active_flow: boolean;
             overloaded_has_active_ai_agent: boolean;
-            /** @description additive, always present. No row => none / null. */
+            /**
+             * @description El evento de número sobrecargado: `loud` (sin descartar), `latent` (descartado en este
+             *     episodio) o `none` (no está sobrecargado o nunca se evaluó).
+             */
             overloaded_alert_level: string;
             /** Format: date-time */
             overloaded_dismissed_at: string | null;
@@ -10517,41 +10599,6 @@ export interface components {
             /** @description Seconds after which to ask for it again: 5 with a QR, 3 while the session starts, 0 once connected. WhatsApp changes the code every few seconds and an old one no longer links: show the latest one and have it scanned right away; do not store or forward a QR. */
             expires_in: number;
         };
-        PendingGroupAction: {
-            /** Format: uuid */
-            action_id: string;
-            /** @description `send_message` for a message to the group. */
-            type: string;
-            /** @enum {string} */
-            status: "queued" | "running" | "completed" | "failed";
-            device_id: number | null;
-            group: {
-                uid: string;
-                name: string | null;
-            } | null;
-            /** @description `{}` while it is open. Sending: `{message: {uid}}`, the id of the message in WhatsApp. Other actions: `{participants: [...]}`, `{group, invite_link}` or `{invite_link}`. */
-            result: {
-                message?: {
-                    uid?: string;
-                };
-                participants?: components["schemas"]["PendingGroupParticipantResult"][];
-                invite_link?: string;
-                group?: {
-                    uid?: string;
-                    name?: string | null;
-                };
-            } | null;
-            /** @description Why it failed, when `status` is `failed`. */
-            reason: string | null;
-            /** Format: date-time */
-            created_at: string | null;
-            /** Format: date-time */
-            started_at: string | null;
-            /** Format: date-time */
-            completed_at: string | null;
-            /** Format: date-time */
-            failed_at: string | null;
-        };
     };
     responses: {
         /** @description Unauthenticated */
@@ -10958,7 +11005,14 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown[];
+                    "application/json": {
+                        contactsCount: number;
+                        unreachableCount: number;
+                        pausedCount: number;
+                        optedOutCount: number;
+                        hardBouncedCount: number;
+                        blockedCount?: number;
+                    };
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
@@ -11857,26 +11911,10 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": ({
-                        /** @constant */
-                        message: "No autorizado: el campo personalizado no pertenece al usuario autenticado.";
-                        /** @constant */
-                        status: 403;
-                    } | {
-                        /** @constant */
-                        message: "No autorizado: el contacto no pertenece al usuario autenticado.";
-                        /** @constant */
-                        status: 403;
-                    } | {
-                        message: string | null;
-                        /** @constant */
-                        status: 422;
-                    } | {
-                        /** @constant */
-                        message: "Custom field value attached successfully.";
-                        /** @constant */
-                        status: 201;
-                    })[];
+                    "application/json": {
+                        message: string;
+                        status: number;
+                    }[];
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
@@ -12000,9 +12038,7 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": Record<string, unknown>;
-                };
+                content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
             /** @description Payment Required */
@@ -12325,9 +12361,7 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": null;
-                };
+                content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
             /** @description Payment Required */
@@ -12554,7 +12588,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         /**
-                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `gate_misconfigured`.
                          * @example internal_error
                          */
                         error: string;
@@ -12818,8 +12852,9 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        /** @constant */
-                        error: "No se pudieron cargar las conversaciones";
+                        /** @enum {string} */
+                        error: "internal_error";
+                        message: string;
                     };
                 };
             };
@@ -12933,7 +12968,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        count: number | null;
+                        count: null | number;
                     };
                 };
             };
@@ -13139,6 +13174,20 @@ export interface operations {
             };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "bad_request";
+                        message: string;
+                        supported_file_types?: string[];
+                    };
+                };
+            };
             /** @description Unprocessable Content */
             422: {
                 headers: {
@@ -13188,7 +13237,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         /**
-                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `gate_misconfigured`.
                          * @example internal_error
                          */
                         error: string;
@@ -13402,9 +13451,7 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": Record<string, unknown>;
-                };
+                content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
             /** @description Payment Required */
@@ -14178,9 +14225,7 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": Record<string, unknown>;
-                };
+                content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
             /** @description Payment Required */
@@ -14217,9 +14262,7 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": Record<string, unknown>;
-                };
+                content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
             /** @description Payment Required */
@@ -14337,7 +14380,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         /**
-                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `gate_misconfigured`.
                          * @example internal_error
                          */
                         error: string;
@@ -15214,21 +15257,45 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string | {
+                    "application/json": {
                         enforcement_enabled: boolean;
-                        unlimited: string;
-                        /** @constant */
-                        current_count: 0;
-                        /** @enum {integer|null} */
-                        limit: 0 | null;
-                        /** @enum {integer|null} */
-                        remaining: 0 | null;
-                        /** @constant */
-                        usage_percentage: 0;
-                        /** @constant */
-                        state: "normal";
+                        unlimited: boolean;
+                        current_count: number;
+                        limit: number | null;
+                        remaining: number | null;
+                        usage_percentage: number;
+                        state: string;
                         grace: null;
                         period_start: null;
+                    } | {
+                        mac_count: number;
+                        mac_limit: number | null;
+                        cycle_capacity: number | null;
+                        accumulated_available: number | null;
+                        total_available: number | null;
+                        usage_percentage: number;
+                        enforcement_enabled: boolean;
+                        alert_level: string | null;
+                        expiring_buckets: {
+                            amount: number;
+                            expires_in_days: number;
+                        }[];
+                        buckets: {
+                            source: string;
+                            macs_remaining: number;
+                            expires_at: string;
+                        }[];
+                        state: string;
+                        grace: {
+                            grace_period_id: number | null;
+                            started_at: string | null;
+                            expires_at: string | null;
+                            seconds_remaining: number;
+                            end_reason: string | null;
+                        } | null;
+                        unlimited: boolean;
+                        workspace_id?: number;
+                        inactive_contacts_count?: number;
                     };
                 };
             };
@@ -15464,10 +15531,24 @@ export interface operations {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        status: "error";
-                        error: string;
-                    } | {
+                        error: "not_found";
                         message: string;
+                        /** @enum {string} */
+                        status?: "error";
+                    };
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "bad_request";
+                        message: string;
+                        supported_file_types?: string[];
                     };
                 };
             };
@@ -15520,7 +15601,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         /**
-                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `gate_misconfigured`.
                          * @example internal_error
                          */
                         error: string;
@@ -15685,6 +15766,8 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /** @example validation_failed */
+                        error: string;
                         message: string;
                         errors: Record<string, unknown>;
                     } | {
@@ -15893,11 +15976,9 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        /** @constant */
-                        error: "Approved templates can be edited up to 10 times in a 30-day period or once in a 24-hour period.";
-                    } | {
-                        /** @constant */
-                        error: "Templates with pending status cannot be updated.";
+                        /** @enum {string} */
+                        error: "bad_request";
+                        message: string;
                     };
                 };
             };
@@ -16074,12 +16155,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        error: "template_not_found";
-                        message: string;
-                    } | {
-                        /** @enum {string} */
-                        error: "Contact not found";
-                    } | {
+                        error: "template_not_found" | "not_found";
                         message: string;
                     };
                 };
@@ -16114,6 +16190,10 @@ export interface operations {
                         message: string;
                         placeholders: string[];
                         count: number;
+                    } | {
+                        /** @enum {string} */
+                        error: "template_waba_mismatch";
+                        message: string;
                     };
                 };
             };
@@ -16139,7 +16219,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         /**
-                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `gate_misconfigured`.
                          * @example internal_error
                          */
                         error: string;
@@ -16185,6 +16265,33 @@ export interface operations {
             };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "number_not_connected_to_meta" | "meta_rejected";
+                        message: string;
+                        meta_code?: number | null;
+                    };
+                };
+            };
+            /** @description Bad Gateway */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "meta_unavailable";
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "paymentProduct.index": {
@@ -16845,9 +16952,7 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": Record<string, unknown>;
-                };
+                content?: never;
             };
             /** @description Bad Request */
             400: {
@@ -16971,9 +17076,7 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": Record<string, unknown>;
-                };
+                content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
             /** @description Payment Required */
@@ -17015,7 +17118,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["TemplateMetricsResource"];
-                    } | Record<string, unknown>;
+                    };
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
@@ -17482,7 +17585,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserResource"] | Record<string, unknown>;
+                    "application/json": components["schemas"]["UserResource"];
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
@@ -18205,9 +18308,7 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": unknown[];
-                };
+                content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
             /** @description Payment Required */
@@ -18354,7 +18455,40 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/json": {
+                        data: components["schemas"]["WhatsappFormResource"];
+                        created: boolean;
+                        lint: unknown[];
+                        numbers: [
+                            {
+                                device_id: unknown;
+                                primary: boolean;
+                                status: string;
+                                error: string;
+                            }
+                        ];
+                    };
+                };
+            };
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["WhatsappFormResource"];
+                        created: boolean;
+                        lint: unknown[];
+                        numbers: [
+                            {
+                                device_id: unknown;
+                                primary: boolean;
+                                status: string;
+                                error: string;
+                            }
+                        ];
+                    };
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
@@ -18643,9 +18777,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        error: "form_not_found";
-                        message: string;
-                    } | {
+                        error: "form_not_found" | "not_found";
                         message: string;
                     };
                 };
@@ -18699,7 +18831,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         /**
-                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `gate_misconfigured`.
                          * @example internal_error
                          */
                         error: string;
@@ -19356,6 +19488,37 @@ export interface operations {
                 };
             };
             401: components["responses"]["CommunitiesAuthenticationException"];
+            /** @description La cuenta llegó al tope de grupos oficiales de su plan. No se registra ninguna acción. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @enum {string}
+                         */
+                        error: "plan_cap_reached";
+                        /** @example Alcanzaste el límite de tu plan. */
+                        message: string;
+                        /**
+                         * @description La función del plan que tiene el tope.
+                         * @example cloud_api_groups
+                         */
+                        feature: string;
+                        /**
+                         * @description El tope que se alcanzó: grupos oficiales creados.
+                         * @example cloud_api_groups_created
+                         */
+                        parameter: string;
+                        /** @description El tope del plan. */
+                        cap: number;
+                        /** @description Lo que la cuenta ya usó de ese tope. */
+                        used: number;
+                    };
+                };
+            };
             403: components["responses"]["CommunitiesAuthorizationException"];
             422: components["responses"]["CommunitiesValidationException"];
         };
@@ -19810,14 +19973,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The action. */
+            /** @description El estado de la acción y, si terminó `completed`, su resultado. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["PendingGroupAction"];
+                        data: components["schemas"]["ApiGroupActionResource"];
                     };
                 };
             };
@@ -23414,15 +23577,15 @@ export interface operations {
                     "application/json": components["schemas"]["DeviceResource"];
                 };
             };
-            /** @description El número no admite esta edición. */
+            /** @description El número no admite esta edición (`unsupported_provider`). */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        /** @constant */
-                        error: "Unsupported provider";
+                        error: string;
+                        message: string;
                     };
                 };
             };
@@ -24816,18 +24979,15 @@ export interface operations {
                 };
             };
             404: components["responses"]["AccountsModelNotFoundException"];
-            /** @description El número no es oficial o no está conectado. */
+            /** @description El número no es oficial (`device_not_meta`) o todavía no está conectado a Meta (`device_not_ready`). */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        /** @constant */
-                        error: "El dispositivo no tiene credenciales Meta configuradas.";
-                    } | {
-                        /** @constant */
-                        error: "Solo disponible para dispositivos WhatsApp Cloud API.";
+                        error: string;
+                        message: string;
                     };
                 };
             };
@@ -24860,13 +25020,16 @@ export interface operations {
                     };
                 };
             };
-            /** @description Meta no respondió. Vuelve a intentarlo. */
+            /** @description Meta no respondió (`provider_error`). Vuelve a intentarlo. */
             502: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/json": {
+                        error: string;
+                        message: string;
+                    };
                 };
             };
         };
@@ -24943,18 +25106,15 @@ export interface operations {
                 };
             };
             404: components["responses"]["AccountsModelNotFoundException"];
-            /** @description El nombre no es válido, o el número no es oficial o no está conectado. */
+            /** @description El nombre no es válido (`validation_failed`, con `errors`), el número no es oficial (`device_not_meta`) o todavía no está conectado a Meta (`device_not_ready`). */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        /** @constant */
-                        error: "El dispositivo no tiene credenciales Meta configuradas.";
-                    } | {
-                        /** @constant */
-                        error: "Solo disponible para dispositivos WhatsApp Cloud API.";
+                        error: string;
+                        message: string;
                     };
                 };
             };
@@ -24987,13 +25147,16 @@ export interface operations {
                     };
                 };
             };
-            /** @description Meta no respondió. Vuelve a intentarlo. */
+            /** @description Meta no respondió (`provider_error`). Vuelve a intentarlo. */
             502: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/json": {
+                        error: string;
+                        message: string;
+                    };
                 };
             };
         };
@@ -25062,18 +25225,15 @@ export interface operations {
                 };
             };
             404: components["responses"]["AccountsModelNotFoundException"];
-            /** @description El número no es oficial o no está conectado. */
+            /** @description El número no es oficial (`device_not_meta`) o todavía no está conectado a Meta (`device_not_ready`). */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        /** @constant */
-                        error: "El dispositivo no tiene credenciales Meta configuradas.";
-                    } | {
-                        /** @constant */
-                        error: "Solo disponible para dispositivos WhatsApp Cloud API.";
+                        error: string;
+                        message: string;
                     };
                 };
             };
@@ -25106,13 +25266,16 @@ export interface operations {
                     };
                 };
             };
-            /** @description Meta no respondió. Vuelve a intentarlo. */
+            /** @description Meta no respondió (`provider_error`). Vuelve a intentarlo. */
             502: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/json": {
+                        error: string;
+                        message: string;
+                    };
                 };
             };
         };
@@ -25972,7 +26135,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description `WhatsAppBusinessAccountResource` */
+            /** @description La WABA, con sus números y su límite de mensajes. */
             200: {
                 headers: {
                     [name: string]: unknown;

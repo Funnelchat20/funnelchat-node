@@ -59,6 +59,7 @@ export {
   NUMBER_ERROR_CODES,
   SEND_ERROR_CODES,
   TEMPLATE_ERROR_CODES,
+  WEBHOOK_ERROR_CODES,
   isNumberQuotaError,
   isSendRuleError,
 } from './core/error-codes.js';
@@ -68,9 +69,11 @@ export type {
   GroupActionErrorCode,
   IdempotencyErrorCode,
   KnownErrorCode,
+  MetaErrorCode,
   NumberErrorCode,
   SendErrorCode,
   TemplateErrorCode,
+  WebhookErrorCode,
 } from './core/error-codes.js';
 export type { SendMessageParams } from './resources/messages.js';
 

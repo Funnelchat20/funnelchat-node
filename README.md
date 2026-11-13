@@ -282,7 +282,7 @@ A send that breaks a rule is neither sent nor stored: you get an error with its 
 
 `groups.sendMessage(uid, body)` answers `202` with `{ action_id, status: 'queued' }`. The body is `device_id` and `type`: `text` (with `text`, up to 4096 characters) or `image`, `video`, `audio` or `document` (with `media_url`, a public `https` URL that ends in an extension of the type; `caption` for an image or a video, `file_name` for a document). Polls, events, stickers, contacts and locations are not accepted. A QR number goes out at the pace of the scheduled messages; an official number checks the 24-hour window of the group and its quality first.
 
-`groups.retrieveAction(action_id)` brings `status` (`queued`, `running`, `completed` or `failed`), `reason` when it failed and `result.message.uid`, the id of the message in WhatsApp. Its rejections are in `GROUP_ACTION_ERROR_CODES`: `404 device_not_found`, `404 group_not_found`, `422 device_not_connected`, `422 device_not_group_admin` (a QR number that is not admin), `422 device_not_group_number` (an official group of another number), `422 window_closed`, `422 number_restricted`, `422 unsupported_type`, `429 too_many_pending_actions` (50 open actions on the number) and `404 action_not_found` when reading.
+`groups.retrieveAction(action_id)` brings `status` (`queued`, `running`, `completed` or `failed`), `reason` when it failed and `result`, whose shape depends on the `type` of the action: for a message, `{ message: { uid } }`, with the id of the message in WhatsApp (see [Upgrading from 0.5](#upgrading-from-05)). Its rejections are in `GROUP_ACTION_ERROR_CODES`: `404 device_not_found`, `404 group_not_found`, `422 device_not_connected`, `422 device_not_group_admin` (a QR number that is not admin), `422 device_not_group_number` (an official group of another number), `422 window_closed`, `422 number_restricted`, `422 unsupported_type`, `429 too_many_pending_actions` (50 open actions on the number) and `404 action_not_found` when reading.
 
 ### Connect a number
 
@@ -357,6 +357,7 @@ for await (const number of funnelchat.devices.list({ external_reference: 'custom
 | `device.display_name_reviewed` | `device`, `decision` (`approved` or `rejected`), `previous_status`, `status`, `verified_name`, `rejection_reason`, `reviewed_at`, `connect_link_id`. |
 
 - `device` is `{ id, name, number, connection, external_reference }`, where `connection` is `qr`, `coexistence`, `dedicated` or `null`.
+- The dates (`connected_at`, `changed_at`…) are ISO 8601 in UTC, ending in `Z`.
 - `connect_link_id`: in `device.connected`, the connect link of that connection; in the others, the link that last connected the number. `null` when it did not come from a link.
 
 **When it is refused** (`NUMBER_ERROR_CODES` and `IDEMPOTENCY_ERROR_CODES`):
@@ -380,7 +381,7 @@ for await (const number of funnelchat.devices.list({ external_reference: 'custom
 | `422 provider_unsupported` | `devices.qr` on an official number. |
 | `409` on `devices.qr` | The number cannot connect now: `trial_number_blocked`, `number_suspended_by_plan`, `device_inactive`, `provisioning_quota_exceeded`. |
 
-`NUMBER_ERROR_CODES` lists the rest (`payment_required`, `provider_error`…), with their status. `isNumberQuotaError(error.code)` tells you whether it was the quota of the plan (`numbers_not_included`, `number_limit_reached`, `pending_number_exists`, `qr_requires_coexistence`, `method_already_present`). `too_many_open_links` and `meta_connect_disabled` are never retried automatically.
+`NUMBER_ERROR_CODES` lists the rest (`payment_required`, `provider_error`, `device_not_meta`…), with their status; `meta_error` comes with the status Meta gave and Meta's reason in `message`. `isNumberQuotaError(error.code)` tells you whether it was the quota of the plan (`numbers_not_included`, `number_limit_reached`, `pending_number_exists`, `qr_requires_coexistence`, `method_already_present`). `too_many_open_links` and `meta_connect_disabled` are never retried automatically.
 
 ### Webhooks
 
@@ -446,6 +447,7 @@ const subscription = await funnelchat.webhooks.create({
 - Name every event you want: `message.status_changed` too. `events` is typed with the names the API accepts.
 - Permissions: **Notifications (webhooks) → View** to read and **Notifications (webhooks) → Manage** for the rest. Also, a key can only subscribe to events of the areas it can read: **Contacts and conversations → View**, **Groups and campaigns → View** and **WhatsApp numbers → View**. Asking for others is a `422` on `events`.
 - A subscription belongs to the workspace of the key that created it and receives only that workspace's events; `list()` brings every subscription of the workspace, also the ones of other integrations. To change the URL use `update(id, …)` (the secret stays). `test(id)` sends a signed `webhook.test` right now and `listDeliveries(id)` is the history.
+- A workspace has up to 50 subscriptions, whatever their status: one more answers `422 webhooks_limit_reached` (`WEBHOOK_ERROR_CODES`).
 - To rotate the secret, use the panel: that route is not open to API keys.
 
 ### Pagination
@@ -519,6 +521,7 @@ The errors of the API entry and of access control apply to any route (`ACCESS_ER
 | `404 route_not_found` | The route does not exist in the public API. |
 | `429 daily_cap_exceeded` | The daily call cap of the key was reached. It carries `Retry-After`. |
 | `500 edge_misconfigured` | A problem on our side: report it with the `requestId`. |
+| `500 gate_misconfigured` | A problem on our side: report it with the `requestId`. |
 | `502 origin_unreachable` | The API could not reach the area of the route. Treat it as a timeout: if it was a write, check whether it was applied before repeating it. |
 | `503 gate_unavailable` | The call could not be evaluated and nothing ran. It carries `Retry-After`. |
 
@@ -574,11 +577,20 @@ const funnelchat = new Funnelchat({ apiKey: '1|fc_live_sandbox', baseUrl: 'http:
 
 The types come from the spec the developer portal publishes (`spec/funnelchat.json`; where it came from, its URL and its `sha256`, in `spec/procedencia.json`). Where production answers otherwise than that spec says, or the spec shows an event only by an example or without one, a separate layer corrects it, `spec/pending.json`, which generation applies **only while the spec still says exactly what the entry corrects**; each entry cites the production code it was read in:
 
-- what a send answers (`{ message }`, never `null`), the body of `devices.qr`, the items of `templates.list`, and the answer of `webhooks.update` and of `groups.retrieveAction`;
+- what a send answers (`{ message }`, never `null`), the body of `devices.qr`, the items of `templates.list`, and the answer of `webhooks.update`;
 - the `data` of the events the spec shows only by an example, or without one, such as the `device.*` events, `message.received` and `message.status_changed`;
 - the `type` of a `message.received` message, which takes the types the spec lists or any other string.
 
 The layer never adds an operation or an event the portal does not publish. `src/pending/` has what is not OpenAPI (the `workspace_id` of every event) and `src/core/error-codes.ts` the error codes.
+
+### Upgrading from 0.5
+
+0.6.0 takes the types of portal v0.6.16, which change what some calls resolve to:
+
+- `groups.retrieveAction`: `type` and `group` are typed, and `result` is typed by the `type` of the action: `{ participants }`, `{ group, invite_link }`, `{ invite_link }`, `{ message: { uid } }` or `{}`. `result.message` no longer compiles without telling TypeScript which one it is, such as `(result as { message: { uid: string | null } }).message.uid` for a `send_message`; `uid` can be `null`.
+- `contacts.update`, `contacts.delete`, `customFields.delete`, `tags.update`, `tags.delete` and `forms.delete` resolve to `unknown`: the API answers them without a body to read. Read the resource again if you need it.
+- `forms.createVersion` resolves to `{ data, created, lint, numbers }`, not a string, and `contacts.attachCustomField`, `conversations.countClosed` and the other answers the portal corrected take the shape the API sends.
+- The error codes the portal names since v0.6.16 are known codes: `gate_misconfigured`, `device_not_meta`, `device_not_ready`, `unsupported_provider`, `meta_error`, `plan_cap_reached` and `webhooks_limit_reached` (`WEBHOOK_ERROR_CODES`).
 
 ### Upgrading from 0.4
 
@@ -618,7 +630,7 @@ Everything generated comes from one script:
 
 ```bash
 curl -fsSo /tmp/funnelchat.json https://developers-portal.funnelchat.app/specs/funnelchat.json
-npm run generate -- --spec /tmp/funnelchat.json --source url=https://developers-portal.funnelchat.app/specs/funnelchat.json --source portal_version=v0.6.15
+npm run generate -- --spec /tmp/funnelchat.json --source url=https://developers-portal.funnelchat.app/specs/funnelchat.json --source portal_version=v0.6.16
 npm run generate   # with the spec in spec/, for example after editing spec/pending.json
 ```
 

@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 3e5bc8ef01a2c746…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 7db2ead826697c80…) + spec/pending.json.
  */
 
 /** One operation of the public API. `pending` = corrected by spec/pending.json. */
@@ -204,7 +204,7 @@ export const routes: readonly RouteInfo[] = [
   {"method":"GET","path":"/api/v1/groups/{group}/scheduled-messages","operationId":"group.scheduledMessages","domain":"communities","permission":"communities:read","category":"Funciones de WhatsApp","tag":"Grupos","summary":"Ver los envíos programados de un grupo","destructive":null,"pending":false},
   {"method":"PUT","path":"/api/v1/groups/{group}/settings","operationId":"apiGroupAction.updateSettings","domain":"communities","permission":"communities:operate","category":"Funciones de WhatsApp","tag":"Acciones de grupo","summary":"Elegir quién escribe en un grupo","destructive":null,"pending":false},
   {"method":"GET","path":"/api/v1/groups/{groupUid}/metadata","operationId":"groupMetadata.show","domain":"communities","permission":"communities:read","category":"Funciones de WhatsApp","tag":"Grupos","summary":"Ver los datos de un grupo en WhatsApp","destructive":null,"pending":false},
-  {"method":"GET","path":"/api/v1/groups/actions/{action}","operationId":"apiGroupAction.show","domain":"communities","permission":"communities:read","category":"Funciones de WhatsApp","tag":"Acciones de grupo","summary":"Ver cómo salió una acción de grupo","destructive":null,"pending":true},
+  {"method":"GET","path":"/api/v1/groups/actions/{action}","operationId":"apiGroupAction.show","domain":"communities","permission":"communities:read","category":"Funciones de WhatsApp","tag":"Acciones de grupo","summary":"Ver cómo salió una acción de grupo","destructive":null,"pending":false},
   {"method":"GET","path":"/api/v1/groups/participants","operationId":"group.participants","domain":"communities","permission":"communities:read","category":"Funciones de WhatsApp","tag":"Grupos","summary":"Ver los participantes de un grupo","destructive":null,"pending":false},
   {"method":"GET","path":"/api/v1/kanban-settings","operationId":"kanbanSetting.index","domain":"conversations","permission":"conversations:read","category":"Funciones de Funnelchat","tag":"Tableros","summary":"Ver tus tableros","destructive":null,"pending":false},
   {"method":"POST","path":"/api/v1/kanban-settings","operationId":"kanbanSetting.store","domain":"conversations","permission":"conversations:write","category":"Funciones de Funnelchat","tag":"Tableros","summary":"Crear un tablero","destructive":null,"pending":false},
