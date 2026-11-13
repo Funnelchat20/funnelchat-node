@@ -30,6 +30,9 @@
  *      language of its text: Spanish in the snapshot (`conversations:send` -> **Contactos y
  *      conversaciones → Enviar**), English in spec/pending.json (**Contacts and conversations → Send**).
  *   3. src/generated/openapi.ts  — openapi-typescript over the merged spec (paths, components, webhooks).
+ *                                  Here and in step 5, a string whose known values are listed in
+ *                                  `x-extensible-enum` (not `enum`) is typed as those values or any
+ *                                  other string, because the API can send a value the list lacks.
  *   4. src/generated/routes.ts   — every operation: method, path, domain, permission, its group and the
  *                                  category of the group as the portal shows them, whether it cannot
  *                                  be undone, pending flag; and the groups, in the portal's order.
@@ -48,7 +51,8 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import openapiTS, { astToString } from 'openapi-typescript';
+import openapiTS, { STRING, astToString, tsIntersection, tsLiteral, tsUnion } from 'openapi-typescript';
+import ts from 'typescript';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SPEC_FILE = resolve(ROOT, 'spec/funnelchat.json');
@@ -504,9 +508,22 @@ const HEADER = (specHash) =>
     '',
   ].join('\n');
 
+/**
+ * A string whose known values are listed in `x-extensible-enum` instead of `enum` (spec/pending.json
+ * marks so the ones the API can extend): those values, or any other string. `string & {}` keeps the
+ * known values suggested by the editor, which a plain `string` in the union would swallow.
+ */
+const extensibleEnum = (schema) => (Array.isArray(schema?.['x-extensible-enum']) ? schema['x-extensible-enum'] : null);
+
 /** Step 3: TypeScript types for the whole merged spec. */
 async function generateOpenapiTypes(merged, specHash) {
-  const ast = await openapiTS(merged, { emptyObjectsUnknown: true, silent: true });
+  const transform = (schema) => {
+    const known = extensibleEnum(schema);
+    if (!known) return undefined;
+    const anyString = tsIntersection([STRING, ts.factory.createTypeLiteralNode([])]);
+    return tsUnion([...known.map(tsLiteral), anyString]);
+  };
+  const ast = await openapiTS(merged, { emptyObjectsUnknown: true, silent: true, transform });
   return `${HEADER(specHash)}/* eslint-disable */\n${astToString(ast)}`;
 }
 
@@ -657,6 +674,7 @@ function schemaToTs(schema, depth) {
   if (schema.$ref) return `components["schemas"][${literal(schema.$ref.replace('#/components/schemas/', ''))}]`;
   if ('const' in schema) return literal(schema.const);
   if (Array.isArray(schema.enum)) return schema.enum.map(literal).join(' | ');
+  if (extensibleEnum(schema)) return [...extensibleEnum(schema).map(literal), '(string & {})'].join(' | ');
   const variants = schema.anyOf ?? schema.oneOf;
   if (Array.isArray(variants)) return variants.map((v) => wrap(schemaToTs(v, depth))).join(' | ');
   const types = Array.isArray(schema.type) ? schema.type : schema.type ? [schema.type] : schema.properties ? ['object'] : [];
@@ -701,7 +719,7 @@ function objectSchemaToTs(schema, depth) {
  * schema's type or `unknown`.
  */
 function exampleToTs(value, hint, depth) {
-  if (hint && (Array.isArray(hint.enum) || 'const' in hint)) return schemaToTs(hint, depth);
+  if (hint && (Array.isArray(hint.enum) || extensibleEnum(hint) || 'const' in hint)) return schemaToTs(hint, depth);
   if (value === null || value === undefined) return hint && (hint.type || hint.$ref) ? schemaToTs(hint, depth) : 'unknown';
   if (Array.isArray(value)) {
     if (value.length === 0) return hint?.items ? `${wrap(schemaToTs(hint.items, depth))}[]` : 'unknown[]';

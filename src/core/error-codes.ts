@@ -7,7 +7,7 @@
  * production on 25-10-2026; conversations v1.19.7 (the send rules, the same as in v1.18.10, and the
  * checks before sending a form); accounts v1.5.97 (creating and connecting numbers); communities
  * v2.35.5 and v2.35.7 (the rejections of a group action). The spec the portal publishes (portal
- * v0.6.13) documents some of these codes in the operations that answer them, but not those of the
+ * v0.6.14) documents some of these codes in the operations that answer them, but not those of the
  * API entry and the key gate. When it documents all of them, this list can be generated.
  */
 

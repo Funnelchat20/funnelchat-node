@@ -80,6 +80,13 @@ describe('constructEvent', () => {
     }
   });
 
+  it('returns a message.received whose message type the SDK does not know yet', () => {
+    vi.useFakeTimers({ now: FIXED_T * 1000 });
+    const body = Buffer.from(BODY.toString('utf8').replace('"type":"text"', '"type":"a_type_from_tomorrow"'), 'utf8');
+    const event = constructEvent(body, sign(body, SECRET, FIXED_T), SECRET);
+    expect(event.type === 'message.received' && event.data.message.type).toBe('a_type_from_tomorrow');
+  });
+
   it('is the same function on the class and on a client', () => {
     vi.useFakeTimers({ now: FIXED_T * 1000 });
     const client = new Funnelchat({ apiKey: TEST_API_KEY, fetch: vi.fn() as never });

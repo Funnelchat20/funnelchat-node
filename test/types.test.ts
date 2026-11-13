@@ -168,6 +168,15 @@ function typeChecks(client: Funnelchat) {
         expectTypeOf(event.data.message.text).toEqualTypeOf<string | null>();
         expectTypeOf(event.data.message.media).toEqualTypeOf<{ file: string } | null>();
         expectTypeOf(event.data.device_id).toEqualTypeOf<number | null>();
+        // The types the spec lists, and any other: new ones can arrive before the spec lists them.
+        expectTypeOf<'text'>().toMatchTypeOf<typeof event.data.message.type>();
+        expectTypeOf<'a_type_from_tomorrow'>().toMatchTypeOf<typeof event.data.message.type>();
+      }
+      if (event.type === 'group_join_request.created' || event.type === 'group_join_request.revoked') {
+        // Not sent without the participant's identity.
+        expectTypeOf(event.data.participant.identity).toEqualTypeOf<string>();
+        expectTypeOf(event.data.participant.identity_type).toEqualTypeOf<'phone' | 'whatsapp_user'>();
+        expectTypeOf(event.data.participant.name).toEqualTypeOf<string | null>();
       }
       if (event.type === 'group_participant.joined' || event.type === 'group_participant.left') {
         expectTypeOf(event.data.campaign).toEqualTypeOf<{ uuid: string } | null>();
@@ -181,6 +190,8 @@ function typeChecks(client: Funnelchat) {
       if (event.type === 'whatsapp_form.completed') {
         expectTypeOf(event.data.form.id).toEqualTypeOf<number>();
         expectTypeOf(event.data.answers[0]!.value).toEqualTypeOf<boolean | number | string | string[] | null>();
+        // A question without a label brings its name.
+        expectTypeOf(event.data.answers[0]!.label).toEqualTypeOf<string>();
       }
       if (event.type === 'group_action.failed') {
         expectTypeOf(event.data.action.uuid).toEqualTypeOf<string | null>();
@@ -190,7 +201,7 @@ function typeChecks(client: Funnelchat) {
       }
     };
     void handle;
-    // Production sends the message of a group as `uid` (communities v2.35.28), although the portal's example says `id`.
+    // Production sends the message of a group as `uid` (communities v2.35.28), as the portal's example says since v0.6.14.
     expectTypeOf<WebhookEventOf<'group.message_received'>['data']['message']['uid']>().toEqualTypeOf<string>();
     expectTypeOf<WebhookEventOf<'group.reaction_added'>['data']['message']['uid']>().toEqualTypeOf<string>();
     expectTypeOf<WebhookEventOf<'device.connected'>['data']['device']['id']>().toEqualTypeOf<number>();

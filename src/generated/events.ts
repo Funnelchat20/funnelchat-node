@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 a7b480743848dabc…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 37c54a5aad4cc467…) + spec/pending.json.
  */
 import type { components } from './openapi.js';
 
@@ -596,7 +596,8 @@ export interface WebhookEventDataMap {
     message: {
       /** The id of the message in the history of the contact. */
       id: number;
-      type: "text" | "image" | "video" | "document" | "sticker" | "contact" | "audio" | "note" | "action" | "invalid" | "interactive" | "location" | "voice_call" | "video_call" | "event" | "button" | "template" | "notification" | "option_list" | "template_button_reply" | "poll" | "whatsapp_form" | "call_permission_request" | "call_permission_reply" | "request_contact_info";
+      /** One of these types, or a new one the spec does not list yet: handle a type you do not know instead of failing. */
+      type: "text" | "image" | "video" | "document" | "sticker" | "contact" | "audio" | "note" | "action" | "invalid" | "interactive" | "location" | "voice_call" | "video_call" | "event" | "button" | "template" | "notification" | "option_list" | "template_button_reply" | "poll" | "whatsapp_form" | "call_permission_request" | "call_permission_reply" | "request_contact_info" | (string & {});
       /** `null` when the message has no text (a file without caption, say). */
       text: string | null;
       media: {
@@ -770,7 +771,8 @@ export interface WebhookEventDataMap {
     device_id: number | null;
     answers: ({
       key: string;
-      label: string | null;
+      /** The label of the question, or its name when it has no label. */
+      label: string;
       value: boolean | number | string | string[] | null;
     })[];
     occurred_at: string;

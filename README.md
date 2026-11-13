@@ -87,6 +87,8 @@ if (event.type === 'message.received') {
 }
 ```
 
+`message.type` is one of the types the portal lists (`text`, `image`, `audio`…) or a new one WhatsApp brings before the portal lists it: handle a type you do not know instead of failing.
+
 ## Groups
 
 Start from the groups your number is in, read live from WhatsApp, and write to one by its `uid`:
@@ -565,9 +567,14 @@ const funnelchat = new Funnelchat({ apiKey: '1|fc_live_sandbox', baseUrl: 'http:
 The types come from the spec the developer portal publishes (`spec/funnelchat.json`; where it came from, its URL and its `sha256`, in `spec/procedencia.json`). Where production answers otherwise than that spec says, or the spec shows an event only by an example or without one, a separate layer corrects it, `spec/pending.json`, which generation applies **only while the spec still says exactly what the entry corrects**; each entry cites the production code it was read in:
 
 - what a send answers (`{ message }`, never `null`), the body of `devices.qr`, the items of `templates.list`, and the answer of `webhooks.update` and of `groups.retrieveAction`;
-- the `data` of the events the spec shows only by an example, or without one, such as the `device.*` events, `message.received` and `message.status_changed`.
+- the `data` of the events the spec shows only by an example, or without one, such as the `device.*` events, `message.received` and `message.status_changed`;
+- the `type` of a `message.received` message, which takes the types the spec lists or any other string.
 
 The layer never adds an operation or an event the portal does not publish. `src/pending/` has what is not OpenAPI (the `workspace_id` of every event) and `src/core/error-codes.ts` the error codes.
+
+### Upgrading from 0.4
+
+0.5.0 types the `type` of a `message.received` message as the types the portal lists or any other string, because a new type can arrive before the portal lists it: a `switch` over it needs a `default`, and an exhaustive check with `never` no longer compiles. The `label` of each answer of `whatsapp_form.completed` is a `string`, never `null`: a question without a label brings its name.
 
 ### Upgrading from 0.3
 
@@ -601,12 +608,12 @@ Everything generated comes from one script:
 
 ```bash
 curl -fsSo /tmp/funnelchat.json https://developers-portal.funnelchat.app/specs/funnelchat.json
-npm run generate -- --spec /tmp/funnelchat.json --source url=https://developers-portal.funnelchat.app/specs/funnelchat.json --source portal_version=v0.6.13
+npm run generate -- --spec /tmp/funnelchat.json --source url=https://developers-portal.funnelchat.app/specs/funnelchat.json --source portal_version=v0.6.14
 npm run generate   # with the spec in spec/, for example after editing spec/pending.json
 ```
 
 1. With `--spec`, it copies the spec to `spec/funnelchat.json` and writes `spec/procedencia.json`: where it came from and the `sha256` of the file. Generate only from the spec the portal publishes (`/specs/funnelchat.json`): it carries every function an API key can use, and nothing closed to keys. For a downloaded file, say on the command line where it came from (`--source url=…`) and the version of the portal that published it (`--source portal_version=…`); `--expect-sha256 <hex>` refuses a file whose `sha256` is not the one announced; from a checkout of the portal, the repository, branch and commit are read from git (`--source key=value` and `--domain <area>=<sha>@<branch>@<snapshot_at>` declare what git cannot say; `spec/procedencia.json` marks those fields as declared).
-2. It applies `spec/pending.json`, but only while the spec still says what an entry corrects, and lists the entries a new spec made unnecessary so you can delete them from there. An `operationPatches` entry without `while` adds body properties or `parameters` (such as a query filter) one by one, only while the operation lacks them. A `responsePatches` entry, and an event with `x-fc-replace-while`, replace the spec's only while it still matches: a key starting with `/` is a JSON Pointer into the operation or the event (`/responses/200/content/application~1json/schema`), so the entry stops applying, and is listed, as soon as the spec changes that place. It never adds an operation or an event the spec does not publish.
+2. It applies `spec/pending.json`, but only while the spec still says what an entry corrects, and lists the entries a new spec made unnecessary so you can delete them from there. An `operationPatches` entry without `while` adds body properties or `parameters` (such as a query filter) one by one, only while the operation lacks them. A `responsePatches` entry, and an event with `x-fc-replace-while`, replace the spec's only while it still matches: a key starting with `/` is a JSON Pointer into the operation or the event (`/responses/200/content/application~1json/schema`), so the entry stops applying, and is listed, as soon as the spec changes that place. It never adds an operation or an event the spec does not publish. A string whose known values the layer lists in `x-extensible-enum` instead of `enum` is typed as those values or any other string.
 3. It writes `src/generated/openapi.ts` (with [openapi-typescript](https://openapi-ts.dev)), `src/generated/routes.ts` (every operation, with area, permission, group, category and whether it can be undone, and the groups of the portal), `src/generated/events.ts` (the event catalog and the shape of the `data` of each one) and the block of [Every function of the portal](#every-function-of-the-portal) in this README. The category of each group comes from the spec: `x-fc-categoria` on its `x-tagGroups` entry (or an entry that groups several tags), named and linked as `x-fc-categorias` lists it.
 
 ```
