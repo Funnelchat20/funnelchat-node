@@ -3,10 +3,12 @@ import {
   APIError,
   AuthenticationError,
   BadRequestError,
+  COMMON_ERROR_CODES,
   ConflictError,
   FunnelchatError,
   Funnelchat,
   InternalServerError,
+  NUMBER_ERROR_CODES,
   NotFoundError,
   PermissionDeniedError,
   RateLimitError,
@@ -63,14 +65,25 @@ describe('typed errors', () => {
     expect(error).toMatchObject({ status: 429, code: 'rate_limited', message: 'Espera.', retryAfter: 12 });
   });
 
-  it('keeps the field errors of a Laravel 422 (no code)', async () => {
+  it('keeps the field errors of a 422 validation_failed', async () => {
     const error = await errorFor({
       status: 422,
-      body: { message: 'The phone field is required when whatsapp id is not present.', errors: { phone: ['The phone field is required when whatsapp id is not present.'] } },
+      body: {
+        error: 'validation_failed',
+        message: 'The phone field is required when whatsapp id is not present.',
+        errors: { phone: ['The phone field is required when whatsapp id is not present.'] },
+      },
     });
-    expect(error.code).toBeUndefined();
+    expect(error.code).toBe('validation_failed');
     expect(error.errors).toEqual({ phone: ['The phone field is required when whatsapp id is not present.'] });
     expect(isSendRuleError(error.code)).toBe(false);
+  });
+
+  it('reads a 402 payment_required, on devices.qr too', async () => {
+    const error = await errorFor({ status: 402, body: { error: 'payment_required', message: 'El pago de la cuenta está vencido.' } });
+    expect(error).toMatchObject({ status: 402, code: 'payment_required', message: 'El pago de la cuenta está vencido.' });
+    expect(COMMON_ERROR_CODES.payment_required).toBe(402);
+    expect(NUMBER_ERROR_CODES.payment_required).toBe(402);
   });
 
   it('handles the gate rejection of a route closed to keys', async () => {

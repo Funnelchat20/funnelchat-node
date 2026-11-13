@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 37c54a5aad4cc467…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 3e5bc8ef01a2c746…) + spec/pending.json.
  */
 /* eslint-disable */
 export interface paths {
@@ -377,11 +377,13 @@ export interface paths {
          *     - **Sin flujos:** con dos o más ítems, o con `?bulk=true`, las etiquetas se agregan igual y no se arranca ningún flujo.
          *     - **Webhooks:** cada etiqueta que el contacto no tenía emite `contact.tag_added`, con uno o con varios ítems. Si el contacto ya tenía la etiqueta, ese ítem no hace nada.
          *     - **Tu cuenta y tu workspace:** un ítem cuyo contacto o etiqueta no existe, es de otra cuenta o está fuera del workspace de tu clave se ignora sin error. Para confirmar el resultado, `GET /contacts/{contact}/tags`.
+         *     - **Etiqueta del sistema «No contactar»:** marca a un contacto que pidió no recibir mensajes. Solo se pone o se quita desde el chat, con la acción «No contactar» del contacto, que deja una nota de constancia; por esta llamada no se pone ni se quita (ver el 422). La reconoces por `is_system: true` en `GET /tags` y en `GET /contacts/{contact}/tags`, y `GET /contacts/{contact}` trae `opted_out: true` cuando el contacto la tiene.
          *     - **Respuesta:** 200 sin cuerpo.
          *
          *     | HTTP | Cuándo |
          *     |---|---|
          *     | 422 | El cuerpo no es un arreglo de ítems con `contactId` y `tag.id` enteros, o tiene más de 200 ítems. |
+         *     | 422 | Algún ítem nombra la etiqueta del sistema «No contactar»: el error viene en `errors.tag` y no se aplica ningún ítem de la llamada. |
          *     | 429 | Demasiadas solicitudes por minuto (ver `Retry-After`). |
          */
         post: operations["contact.addTags"];
@@ -409,11 +411,13 @@ export interface paths {
          *     - **Webhooks:** cada etiqueta que el contacto tenía emite `contact.tag_removed`. Si el contacto no la tenía, ese ítem no hace nada.
          *     - **Flujos:** quitar una etiqueta no arranca ningún flujo.
          *     - **Tu cuenta y tu workspace:** un ítem cuyo contacto o etiqueta no existe, es de otra cuenta o está fuera del workspace de tu clave se ignora sin error. Para confirmar el resultado, `GET /contacts/{contact}/tags`.
+         *     - **Etiqueta del sistema «No contactar»:** marca a un contacto que pidió no recibir mensajes. Solo se pone o se quita desde el chat, con la acción «No contactar» del contacto, que deja una nota de constancia; por esta llamada no se pone ni se quita (ver el 422). La reconoces por `is_system: true` en `GET /tags` y en `GET /contacts/{contact}/tags`, y `GET /contacts/{contact}` trae `opted_out: true` cuando el contacto la tiene.
          *     - **Respuesta:** 200 sin cuerpo.
          *
          *     | HTTP | Cuándo |
          *     |---|---|
          *     | 422 | El cuerpo no es un arreglo de ítems con `contactId` y `tag.id` enteros, o tiene más de 200 ítems. |
+         *     | 422 | Algún ítem nombra la etiqueta del sistema «No contactar»: el error viene en `errors.tag` y no se aplica ningún ítem de la llamada. |
          *     | 429 | Demasiadas solicitudes por minuto (ver `Retry-After`). |
          */
         post: operations["contact.removeTags"];
@@ -655,6 +659,8 @@ export interface paths {
         /**
          * Mandar una tarjeta de contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Enviar**
+         *
+         *     Si el límite de contactos activos (MAC) frena el envío, responde `429` con `error` = `mac_lockout_24h` o `mac_limit_reached` y sin `Retry-After`: reintentar no sirve hasta que sumes capacidad o empiece un ciclo nuevo. El envío no sale, pero queda en el historial del contacto un mensaje con estado de error que lleva tu `client_reference`. Detalle en «Errores y límites».
          */
         post: operations["contactCard.store"];
         delete?: never;
@@ -879,6 +885,8 @@ export interface paths {
         /**
          * Mandar un mensaje a un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Enviar**
+         *
+         *     Si el límite de contactos activos (MAC) frena el envío, responde `429` con `error` = `mac_lockout_24h` o `mac_limit_reached` y sin `Retry-After`: reintentar no sirve hasta que sumes capacidad o empiece un ciclo nuevo. El envío no sale, pero queda en el historial del contacto un mensaje con estado de error que lleva tu `client_reference`. Detalle en «Errores y límites».
          */
         post: operations["conversation.sendMessage"];
         delete?: never;
@@ -1641,6 +1649,8 @@ export interface paths {
          * @description **Permiso requerido:** **Contactos y conversaciones → Enviar**
          *
          *     Indica a quién envías con `phone`: el teléfono con código de país, por ejemplo `5491122334455`. No hace falta crear el contacto antes: si ese teléfono todavía no es un contacto de tu cuenta, se crea en el workspace de tu clave, igual que con `POST /contacts/update-or-create` y con el mismo permiso, que **Enviar** ya incluye. La respuesta trae su id en `message.contact_id`, el mismo que llevan los eventos `message.status_changed`. Si el teléfono no es válido, o ya es un contacto de otro workspace de tu cuenta, la respuesta es la misma que daría `POST /contacts/update-or-create`: 422, o 404 sin datos de ese contacto. Con un número oficial de WhatsApp (API Cloud) también puedes indicar `whatsapp_id`, el BSUID que envía Meta (por ejemplo `US.13491208655302741918`), en lugar de `phone`; usado así con un número conectado por QR, responde 422. En un número oficial, el primer mensaje a un contacto nuevo tiene que ser una plantilla: un mensaje libre solo sale dentro de las 24 horas desde que el contacto te escribió. Si ya tienes el `contact_id`, puedes seguir enviándolo: si junto con él mandas `phone` o `whatsapp_id`, tienen que ser de ese mismo contacto (si no, 422 `recipient_mismatch`). En `send-template`, `phone` o `whatsapp_id` va siempre, con o sin `contact_id`.
+         *
+         *     Si el límite de contactos activos (MAC) frena el envío, responde `429` con `error` = `mac_lockout_24h` o `mac_limit_reached` y sin `Retry-After`: reintentar no sirve hasta que sumes capacidad o empiece un ciclo nuevo. El envío no sale, pero queda en el historial del contacto un mensaje con estado de error que lleva tu `client_reference`. Detalle en «Errores y límites».
          */
         post: operations["message.sendMessage"];
         delete?: never;
@@ -3857,7 +3867,51 @@ export interface paths {
                     };
                 };
                 401: components["responses"]["AccountsAuthenticationException"];
-                403: components["responses"]["AccountsAuthorizationException"];
+                /**
+                 * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+                 *
+                 *     - `workspace_deleted`: el workspace de la clave ya no existe.
+                 */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                             * @example forbidden
+                             */
+                            error: string;
+                            /** @description Texto para personas, en español. */
+                            message: string;
+                        };
+                    };
+                };
+                /**
+                 * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+                 *
+                 *     Esta ruta no tiene un límite por minuto propio.
+                 *
+                 *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+                 */
+                429: {
+                    headers: {
+                        /** @description Segundos que hay que esperar antes de volver a llamar. */
+                        "Retry-After"?: number;
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                             * @example rate_limited
+                             */
+                            error: string;
+                            message: string;
+                        };
+                    };
+                };
             };
         };
         put?: never;
@@ -4406,6 +4460,11 @@ export interface paths {
          *
          *     Cambia los datos del número, por ejemplo `alias`, `color`, `image`, tu
          *     `external_reference`. Los campos que no envíes no cambian.
+         *
+         *     Conectar un número oficial con esta ruta (mandar el `code` del alta de Meta, con `waba_id` y
+         *     `phone_number_id`) da el control de un WhatsApp: con una clave pide además **Números de
+         *     WhatsApp → Crear, conectar y borrar**, y sin ese permiso responde `403 permission_denied` sin
+         *     tocar nada. `waba_id` y `phone_number_id` sin `code` no conectan nada y no lo piden.
          */
         put: operations["device.update"];
         post?: never;
@@ -4581,9 +4640,10 @@ export interface paths {
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
          *     `accountStatus` es el estado de la sesión de WhatsApp del número. Con una clave de API esta
-         *     llamada nunca trae el QR: `qrCode` llega siempre vacío (`""`), también con el número
-         *     desconectado. Para conectar un número por QR, pide el código con `GET devices/{device}/qr`,
-         *     que pide **Números de WhatsApp → Crear, conectar y borrar**.
+         *     llamada nunca trae el QR. En un número por QR, `qrCode` llega siempre vacío (`""`), también
+         *     con el número desconectado; para conectarlo, pide el código con `GET devices/{device}/qr`,
+         *     que pide **Números de WhatsApp → Crear, conectar y borrar**. Un número oficial no tiene QR:
+         *     su respuesta no trae `qrCode`, solo `accountStatus` (`authenticated` o `pending_login`).
          */
         get: operations["device.status"];
         put?: never;
@@ -8865,6 +8925,7 @@ export interface components {
             mac_date: string | null;
             is_mac_inactive?: boolean;
             ai_assistant_name: string | null;
+            opted_out?: boolean;
             stage_since?: string;
             is_stagnant?: boolean;
             follow_up_date?: string | null;
@@ -8885,6 +8946,7 @@ export interface components {
             name: string;
             description: string | "";
             color: string;
+            is_system: boolean;
             created_at: string | null;
             updated_at: string | null;
             contact_count: string;
@@ -10043,6 +10105,7 @@ export interface components {
             name: string;
             description: string;
             color: string | null;
+            is_system: boolean;
             created_at: string | null;
             updated_at: string | null;
             contact_count: string | number;
@@ -10498,18 +10561,11 @@ export interface components {
             };
             content: {
                 "application/json": {
-                    /** @description Error overview. */
-                    message: string;
-                };
-            };
-        };
-        /** @description Authorization error */
-        AccountsAuthorizationException: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": {
+                    /**
+                     * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                     * @example unauthenticated
+                     */
+                    error: string;
                     /** @description Error overview. */
                     message: string;
                 };
@@ -10522,6 +10578,11 @@ export interface components {
             };
             content: {
                 "application/json": {
+                    /**
+                     * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                     * @example not_found
+                     */
+                    error: string;
                     /** @description Error overview. */
                     message: string;
                 };
@@ -10534,6 +10595,11 @@ export interface components {
             };
             content: {
                 "application/json": {
+                    /**
+                     * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                     * @example validation_failed
+                     */
+                    error: string;
                     /** @description Errors overview. */
                     message: string;
                     /** @description A detailed description of each field that failed validation. */
@@ -10550,6 +10616,11 @@ export interface components {
             };
             content: {
                 "application/json": {
+                    /**
+                     * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                     * @example unauthenticated
+                     */
+                    error: string;
                     /** @description Error overview. */
                     message: string;
                 };
@@ -10562,6 +10633,11 @@ export interface components {
             };
             content: {
                 "application/json": {
+                    /**
+                     * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                     * @example forbidden
+                     */
+                    error: string;
                     /** @description Error overview. */
                     message: string;
                 };
@@ -10574,6 +10650,11 @@ export interface components {
             };
             content: {
                 "application/json": {
+                    /**
+                     * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                     * @example not_found
+                     */
+                    error: string;
                     /** @description Error overview. */
                     message: string;
                 };
@@ -10586,6 +10667,11 @@ export interface components {
             };
             content: {
                 "application/json": {
+                    /**
+                     * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                     * @example validation_failed
+                     */
+                    error: string;
                     /** @description Errors overview. */
                     message: string;
                     /** @description A detailed description of each field that failed validation. */
@@ -10602,6 +10688,11 @@ export interface components {
             };
             content: {
                 "application/json": {
+                    /**
+                     * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                     * @example unauthenticated
+                     */
+                    error: string;
                     message: string;
                 };
             };
@@ -10613,6 +10704,11 @@ export interface components {
             };
             content: {
                 "application/json": {
+                    /**
+                     * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                     * @example forbidden
+                     */
+                    error: string;
                     message: string;
                 };
             };
@@ -10624,6 +10720,11 @@ export interface components {
             };
             content: {
                 "application/json": {
+                    /**
+                     * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                     * @example not_found
+                     */
+                    error: string;
                     message: string;
                 };
             };
@@ -10635,6 +10736,11 @@ export interface components {
             };
             content: {
                 "application/json": {
+                    /**
+                     * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                     * @example validation_failed
+                     */
+                    error: string;
                     message: string;
                     errors: {
                         [key: string]: string[];
@@ -10937,6 +11043,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
                         /** @constant */
                         message: "No tienes permiso para ver este broadcast.";
                     };
@@ -10971,6 +11082,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
                         /** @constant */
                         message: "No tienes permiso para eliminar este broadcast.";
                     };
@@ -10984,6 +11100,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example validation_failed
+                         */
+                        error: string;
                         /** @constant */
                         message: "Las campañas que ya fueron enviadas o están saliendo no pueden eliminarse.";
                         /** @constant */
@@ -11165,6 +11286,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example conflict
+                         */
+                        error: string;
                         /** @constant */
                         message: "Ese envío ya fue reanudado o cancelado.";
                         /** @constant */
@@ -11331,6 +11457,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
                         /** @constant */
                         message: "You do not have permission to edit this folder.";
                     };
@@ -11366,6 +11497,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
                         /** @constant */
                         message: "You do not have permission to delete this folder.";
                     };
@@ -11497,6 +11633,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -11524,6 +11673,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             /** @description Not Found */
             404: {
@@ -11532,6 +11694,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example not_found
+                         */
+                        error: string;
                         /** @constant */
                         message: "Contacto no encontrado.";
                     };
@@ -11569,6 +11736,19 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             /** @description Unprocessable Content */
             422: {
@@ -11577,6 +11757,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example validation_failed
+                         */
+                        error: string;
                         message: string;
                         errors: {
                             [key: string]: string[];
@@ -11613,6 +11798,19 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             /** @description Unprocessable Content */
             422: {
@@ -11621,6 +11819,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example validation_failed
+                         */
+                        error: string;
                         message: string;
                         errors: {
                             [key: string]: string[];
@@ -11677,6 +11880,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -11709,6 +11925,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -11734,6 +11963,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -11763,6 +12005,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -11813,6 +12068,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -11863,6 +12131,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -11903,6 +12184,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -11953,6 +12247,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
         };
     };
@@ -12023,6 +12330,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -12048,6 +12368,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -12098,6 +12431,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -12129,6 +12475,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             /** @description Not Found */
             404: {
@@ -12137,6 +12496,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example not_found
+                         */
+                        error: string;
                         message: string;
                     };
                 };
@@ -12148,6 +12512,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example validation_failed
+                         */
+                        error: string;
                         message: string;
                         errors: {
                             [key: string]: string[];
@@ -12184,6 +12553,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example internal_error
+                         */
+                        error: string;
                         /** @enum {string} */
                         message: "Server Error";
                     };
@@ -12260,6 +12634,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -12290,6 +12677,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -12315,6 +12715,19 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -12322,12 +12735,14 @@ export interface operations {
     "conversation.index": {
         parameters: {
             query?: {
+                perName?: string;
+                contactId?: number;
+                cursor?: string;
+                updated_since?: string;
                 favorites?: boolean;
                 ownContacts?: boolean;
                 ownAndUnassigned?: boolean;
-                perName?: string;
                 deviceId?: number;
-                contactId?: number;
                 advisorId?: number;
                 advisorIds?: string;
                 activeConversation?: boolean;
@@ -12337,8 +12752,6 @@ export interface operations {
                 unreadMessages?: boolean;
                 awaitingReply?: boolean;
                 onlyWithMac?: boolean;
-                cursor?: string;
-                updated_since?: string;
                 paused?: "true" | "false" | "1" | "0";
                 leadScoreCategories?: string | null;
                 leadScoreMin?: number;
@@ -12383,6 +12796,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
             /** @description Internal Server Error */
@@ -12428,6 +12854,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -12457,6 +12896,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -12486,6 +12938,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -12515,6 +12980,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -12550,6 +13028,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -12589,6 +13080,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -12620,6 +13124,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             /** @description Unprocessable Content */
@@ -12629,6 +13146,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example validation_failed
+                         */
+                        error: string;
                         message: string;
                         errors: {
                             [key: string]: string[];
@@ -12665,6 +13187,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example internal_error
+                         */
+                        error: string;
                         /** @enum {string} */
                         message: "Server Error";
                     };
@@ -12711,6 +13238,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -12765,6 +13305,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -12812,6 +13365,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -12841,6 +13407,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -12866,6 +13445,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -12898,6 +13490,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -12952,6 +13557,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -12983,6 +13601,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             /** @description Unprocessable Content */
             422: {
@@ -12991,6 +13622,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example validation_failed
+                         */
+                        error: string;
                         /** @constant */
                         message: "No se puede cancelar esta automatización. Puede que ya haya finalizado o no exista.";
                     };
@@ -13053,6 +13689,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -13078,6 +13727,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -13127,6 +13789,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -13156,6 +13831,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -13184,6 +13872,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -13234,6 +13935,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -13287,6 +14001,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -13336,6 +14063,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -13363,6 +14103,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -13388,6 +14141,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -13417,6 +14183,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -13443,6 +14222,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -13481,6 +14273,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             /** @description Unprocessable Content */
@@ -13490,6 +14295,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example validation_failed
+                         */
+                        error: string;
                         message: string;
                         errors: {
                             [key: string]: string[];
@@ -13526,6 +14336,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example internal_error
+                         */
+                        error: string;
                         /** @enum {string} */
                         message: "Server Error";
                     };
@@ -13576,6 +14391,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
         };
     };
@@ -13602,6 +14430,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -13627,6 +14468,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -13656,6 +14510,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -13680,6 +14547,19 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -13709,6 +14589,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -13759,6 +14652,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -13786,6 +14692,19 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -13818,6 +14737,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -13846,6 +14778,19 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -13874,6 +14819,19 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -13904,6 +14862,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -13934,6 +14905,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -13965,6 +14949,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -13992,6 +14989,19 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -14064,6 +15074,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -14322,6 +15345,19 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             /** @description Not Found */
             404: {
@@ -14330,6 +15366,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example not_found
+                         */
+                        error: string;
                         message: string;
                     };
                 };
@@ -14401,6 +15442,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             /** @description Not Found */
             404: {
@@ -14424,6 +15478,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example validation_failed
+                         */
+                        error: string;
                         message: string;
                         errors: {
                             [key: string]: string[];
@@ -14460,6 +15519,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example internal_error
+                         */
+                        error: string;
                         /** @enum {string} */
                         message: "Server Error";
                     };
@@ -14491,6 +15555,19 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             /** @description Not Found */
             404: {
@@ -14499,6 +15576,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example not_found
+                         */
+                        error: string;
                         message: string;
                     };
                 };
@@ -14510,6 +15592,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example validation_failed
+                         */
+                        error: string;
                         message: string;
                         errors: {
                             [key: string]: string[];
@@ -14561,6 +15648,19 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             /** @description Not Found */
             404: {
@@ -14569,6 +15669,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example not_found
+                         */
+                        error: string;
                         message: string;
                     };
                 };
@@ -14664,6 +15769,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -14691,6 +15809,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -14716,6 +15847,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -14758,6 +15902,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -14787,6 +15944,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             /** @description Not Found */
             404: {
@@ -14795,6 +15965,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example not_found
+                         */
+                        error: string;
                         message: string;
                     };
                 };
@@ -14877,6 +16052,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             /** @description Not Found */
             404: {
@@ -14903,6 +16091,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example validation_failed
+                         */
+                        error: string;
                         message: string;
                         errors: {
                             [key: string]: string[];
@@ -14945,6 +16138,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example internal_error
+                         */
+                        error: string;
                         /** @enum {string} */
                         message: "Server Error";
                     };
@@ -14972,6 +16170,19 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -15021,6 +16232,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -15071,6 +16295,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -15105,6 +16342,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -15130,6 +16380,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -15166,6 +16429,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -15190,6 +16466,19 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -15366,6 +16655,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -15417,6 +16719,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -15448,6 +16763,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -15475,6 +16803,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -15515,12 +16856,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example bad_request
+                         */
+                        error: string;
                         /** @example Ya existe un tag con este nombre. */
                         message: string;
                     };
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -15574,6 +16933,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -15604,6 +16976,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -15634,6 +17019,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
             422: components["responses"]["ConversationsValidationException"];
@@ -15684,6 +17082,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -15716,6 +17127,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             /** @description Not Found */
             404: {
@@ -15724,6 +17148,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example not_found
+                         */
+                        error: string;
                         /** @constant */
                         message: "Contacto no encontrado.";
                     };
@@ -15753,6 +17182,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
         };
     };
@@ -15784,6 +17226,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -15814,6 +17269,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -15839,6 +17307,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
         };
     };
@@ -15863,6 +17344,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
         };
     };
@@ -15889,6 +17383,19 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             /** @description Not Found */
             404: {
@@ -15897,6 +17404,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example not_found
+                         */
+                        error: string;
                         message: string;
                     };
                 };
@@ -15908,6 +17420,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example validation_failed
+                         */
+                        error: string;
                         message: string;
                         errors: {
                             [key: string]: string[];
@@ -15969,6 +17486,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             404: components["responses"]["ConversationsModelNotFoundException"];
         };
@@ -16019,6 +17549,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -16044,6 +17587,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
         };
     };
@@ -16094,6 +17650,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -16132,6 +17701,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -16194,6 +17776,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -16252,6 +17847,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -16348,6 +17956,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
         };
     };
@@ -16408,6 +18029,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
         };
     };
@@ -16445,6 +18079,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
         };
     };
@@ -16481,6 +18128,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
         };
     };
@@ -16512,6 +18172,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -16537,6 +18210,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             /** @description Conflict */
             409: {
@@ -16584,6 +18270,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
         };
     };
@@ -16621,6 +18320,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             422: components["responses"]["ConversationsValidationException"];
         };
@@ -16646,6 +18358,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
         };
     };
@@ -16681,6 +18406,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
         };
     };
@@ -16716,6 +18454,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
         };
     };
@@ -16750,6 +18501,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             /** @description Not Found */
             404: {
@@ -16758,6 +18522,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example not_found
+                         */
+                        error: string;
                         /** @example  */
                         message: string;
                     };
@@ -16809,6 +18578,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
         };
     };
@@ -16839,6 +18621,19 @@ export interface operations {
                 };
             };
             401: components["responses"]["ConversationsAuthenticationException"];
+            /** @description Payment Required */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        error: "payment_required";
+                        message: string;
+                    };
+                };
+            };
             403: components["responses"]["ConversationsAuthorizationException"];
             /** @description Not Found */
             404: {
@@ -16862,6 +18657,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example validation_failed
+                         */
+                        error: string;
                         message: string;
                         errors: {
                             [key: string]: string[];
@@ -16898,6 +18698,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example internal_error
+                         */
+                        error: string;
                         /** @enum {string} */
                         message: "Server Error";
                     };
@@ -17518,6 +19323,7 @@ export interface operations {
                             /** @description Total number of items being paginated. */
                             total: number;
                             cloud_api_groups_enabled: string | boolean;
+                            device_groups_sync_enabled: boolean;
                         };
                     };
                 };
@@ -17794,6 +19600,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example internal_error
+                         */
+                        error: string;
                         /** @constant */
                         message: "Gateway error. Please try again later.";
                     };
@@ -19344,8 +21155,53 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_account_level`: es de la cuenta entera y solo la usa una clave del workspace por defecto.
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             422: components["responses"]["AccountsValidationException"];
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Esta ruta no tiene un límite por minuto propio.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
             /** @description Las campañas no se pueden leer en este momento (`groups_unavailable`). Vuelve a intentarlo. */
             503: {
                 headers: {
@@ -19381,7 +21237,51 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Esta ruta no tiene un límite por minuto propio.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "alertDailyReport.show": {
@@ -19409,7 +21309,52 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_account_level`: es de la cuenta entera y solo la usa una clave del workspace por defecto.
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Esta ruta no tiene un límite por minuto propio.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "alertDailyReport.update": {
@@ -19435,8 +21380,53 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_account_level`: es de la cuenta entera y solo la usa una clave del workspace por defecto.
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             422: components["responses"]["AccountsValidationException"];
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Esta ruta no tiene un límite por minuto propio.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "alertDestination.index": {
@@ -19485,7 +21475,51 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Esta ruta no tiene un límite por minuto propio.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "alertQuietHour.show": {
@@ -19511,7 +21545,52 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_account_level`: es de la cuenta entera y solo la usa una clave del workspace por defecto.
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Esta ruta no tiene un límite por minuto propio.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "alertQuietHour.update": {
@@ -19537,8 +21616,53 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_account_level`: es de la cuenta entera y solo la usa una clave del workspace por defecto.
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             422: components["responses"]["AccountsValidationException"];
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Esta ruta no tiene un límite por minuto propio.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "alertSetting.upsert": {
@@ -19566,7 +21690,27 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             /** @description El destino no existe o no es del workspace. */
             404: {
                 headers: {
@@ -19574,6 +21718,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example not_found
+                         */
+                        error: string;
                         /** @constant */
                         message: "Destino no encontrado.";
                     };
@@ -19586,8 +21735,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example validation_failed
+                         */
+                        error: string;
                         /** @constant */
                         message: "El destino debe estar verificado para configurar alertas.";
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Esta ruta no tiene un límite por minuto propio.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
                     };
                 };
             };
@@ -19615,14 +21793,43 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description La Conversions API no está habilitada para la cuenta (`capi_feature_disabled`), o quien llama no es el titular. */
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description La Conversions API no está habilitada para la cuenta (`capi_feature_disabled`), o quien llama no es el titular.
+             *
+             *     También, por el workspace de la clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        /** @description Error overview. */
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
                         message: string;
                     };
                 };
@@ -19635,6 +21842,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
                 };
             };
             /** @description Meta no respondió bien (`meta_http_error`, `unparseable_response`). Vuelve a intentarlo. */
@@ -19670,14 +21905,43 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description La Conversions API no está habilitada para la cuenta (`capi_feature_disabled`), o quien llama no es el titular. */
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description La Conversions API no está habilitada para la cuenta (`capi_feature_disabled`), o quien llama no es el titular.
+             *
+             *     También, por el workspace de la clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        /** @description Error overview. */
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
                         message: string;
                     };
                 };
@@ -19690,6 +21954,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
                 };
             };
             /** @description Meta no respondió bien (`meta_http_error`, `unparseable_response`). Vuelve a intentarlo. */
@@ -19722,14 +22014,71 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description La Conversions API no está habilitada para la cuenta (`capi_feature_disabled`). */
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description La Conversions API no está habilitada para la cuenta (`capi_feature_disabled`).
+             *
+             *     También, por el workspace de la clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        /** @description Error overview. */
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
                         message: string;
                     };
                 };
@@ -19785,7 +22134,57 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             422: components["responses"]["AccountsValidationException"];
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "connectLink.store": {
@@ -19813,7 +22212,31 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El plan no incluye números (`numbers_not_included`), no queda lugar (`number_limit_reached`) o quien llama no es el titular (`connect_not_allowed`). */
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description El plan no incluye números (`numbers_not_included`), no queda lugar (`number_limit_reached`) o quien llama no es el titular (`connect_not_allowed`).
+             *
+             *     También, por el workspace de la clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -19837,13 +22260,31 @@ export interface operations {
                     };
                 };
             };
-            /** @description La cuenta ya tiene el máximo de links pendientes (`too_many_open_links`), o se superó el límite de creaciones por minuto. */
+            /**
+             * @description La cuenta ya tiene el máximo de links pendientes (`too_many_open_links`), o se superó el límite de creaciones por minuto.
+             *
+             *     Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **10 llamadas por minuto** por clave: cada clave tiene su propio cupo, aparte del panel y de las otras claves de la cuenta.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
             429: {
                 headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
                         error: string;
                         message: string;
                     };
@@ -19885,6 +22326,28 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             /** @description El link no existe o no es de la cuenta. */
             404: {
                 headers: {
@@ -19892,6 +22355,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example not_found
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
                         message: string;
                     };
                 };
@@ -19919,6 +22415,28 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             /** @description El link no existe o no es de la cuenta. */
             404: {
                 headers: {
@@ -19926,6 +22444,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example not_found
+                         */
+                        error: string;
                         message: string;
                     };
                 };
@@ -19937,6 +22460,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **10 llamadas por minuto** por clave: cada clave tiene su propio cupo, aparte del panel y de las otras claves de la cuenta.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
                         error: string;
                         message: string;
                     };
@@ -19990,7 +22541,72 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "customDomain.store": {
@@ -20016,7 +22632,44 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             /** @description El dominio no es válido o ya está registrado. */
             422: {
                 headers: {
@@ -20024,12 +22677,45 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example validation_failed
+                         */
+                        error: string;
                         /** @description Errors overview. */
                         message: string;
                         /** @description A detailed description of each field that failed validation. */
                         errors: {
                             [key: string]: string[];
                         };
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
                     };
                 };
             };
@@ -20040,6 +22726,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example internal_error
+                         */
+                        error: string;
                         message: string;
                     };
                 };
@@ -20067,7 +22758,44 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             /** @description El dominio no existe o no es de la cuenta. */
             404: {
                 headers: {
@@ -20075,6 +22803,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **30 llamadas por minuto** por usuario de Funnelchat, en un contador que suman todas las rutas con este tipo de límite (también las del panel).
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
                 };
             };
             /** @description No se pudo verificar el dominio en este momento; su estado no cambió. Vuelve a intentarlo. */
@@ -20113,7 +22870,44 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             /** @description El dominio no existe o no es de la cuenta. */
             404: {
                 headers: {
@@ -20124,6 +22918,35 @@ export interface operations {
                 };
             };
             422: components["responses"]["AccountsValidationException"];
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **30 llamadas por minuto** por usuario de Funnelchat, en un contador que suman todas las rutas con este tipo de límite (también las del panel).
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
             /** @description No se pudo cambiar el método en este momento; no cambió nada. Vuelve a intentarlo. */
             502: {
                 headers: {
@@ -20156,7 +22979,44 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             /** @description El dominio no existe o no es de la cuenta. */
             404: {
                 headers: {
@@ -20164,6 +23024,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
                 };
             };
         };
@@ -20216,7 +23104,57 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             422: components["responses"]["AccountsValidationException"];
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "deviceProvisioning.store": {
@@ -20243,7 +23181,31 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El plan no incluye números (`numbers_not_included`), no queda lugar (`number_limit_reached`, con `limit` y `used`) o quien llama no es el titular (`connect_not_allowed`). */
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description El plan no incluye números (`numbers_not_included`), no queda lugar (`number_limit_reached`, con `limit` y `used`) o quien llama no es el titular (`connect_not_allowed`).
+             *
+             *     También, por el workspace de la clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -20281,6 +23243,34 @@ export interface operations {
                     };
                 };
             };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **10 llamadas por minuto** por clave: cada clave tiene su propio cupo, aparte del panel y de las otras claves de la cuenta.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "device.show": {
@@ -20305,8 +23295,74 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             404: components["responses"]["AccountsModelNotFoundException"];
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "device.update": {
@@ -20371,7 +23427,47 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Con una clave, el cuerpo trae `code` (el alta oficial de Meta) y la clave no tiene **Números de WhatsApp → Crear, conectar y borrar** (`permission_denied`).
+             *
+             *     También, por el workspace de la clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             404: components["responses"]["AccountsModelNotFoundException"];
             /** @description El número fue dado de baja (`device_retired`), está suspendido por el plan (`number_suspended_by_plan`) o hay otra operación en curso sobre los números de la cuenta (`operation_in_progress`). */
             409: {
@@ -20383,6 +23479,34 @@ export interface operations {
                 };
             };
             422: components["responses"]["AccountsValidationException"];
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "device.destroy": {
@@ -20407,13 +23531,43 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido, o quien llama no puede borrar ese número. */
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description El pago de la cuenta está vencido, o quien llama no puede borrar ese número.
+             *
+             *     También, por el workspace de la clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
                         message: string;
                     };
                 };
@@ -20426,6 +23580,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
                         error: string;
                         message: string;
                     };
@@ -20458,7 +23640,45 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             404: components["responses"]["AccountsModelNotFoundException"];
             /** @description El número fue dado de baja (`device_retired`) o hay otra operación en curso sobre los números de la cuenta (`operation_in_progress`). No se borró nada. */
             409: {
@@ -20467,6 +23687,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown[];
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **10 llamadas por minuto** por clave: cada clave tiene su propio cupo, aparte del panel y de las otras claves de la cuenta.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
                 };
             };
         };
@@ -20496,7 +23745,45 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             404: components["responses"]["AccountsModelNotFoundException"];
             /** @description El número fue dado de baja (`device_retired`) o hay otra operación en curso sobre los números de la cuenta (`operation_in_progress`). No cambió nada. */
             409: {
@@ -20505,6 +23792,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown[];
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
                 };
             };
         };
@@ -20533,9 +23848,75 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             404: components["responses"]["AccountsModelNotFoundException"];
             422: components["responses"]["AccountsValidationException"];
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "device.deleteMessageQueue": {
@@ -20561,9 +23942,75 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             404: components["responses"]["AccountsModelNotFoundException"];
             422: components["responses"]["AccountsValidationException"];
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "device.getQueueCount": {
@@ -20587,14 +24034,85 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             404: components["responses"]["AccountsModelNotFoundException"];
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
             502: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example internal_error
+                         */
+                        error: string;
                         /** @constant */
                         message: "Upstream gateway error";
                     };
@@ -20630,8 +24148,74 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             404: components["responses"]["AccountsModelNotFoundException"];
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "device.status": {
@@ -20655,8 +24239,81 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             404: components["responses"]["AccountsModelNotFoundException"];
+            /** @description El número por QR no tiene sesión de WhatsApp (`device_not_connected`): conéctalo antes de consultar su estado. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
+            /** @description El proveedor de WhatsApp no respondió (`provider_error`). Vuelve a intentarlo. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "deviceConnectionEvent.index": {
@@ -20712,9 +24369,58 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             404: components["responses"]["AccountsModelNotFoundException"];
             422: components["responses"]["AccountsValidationException"];
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "deviceHealth.show": {
@@ -20739,7 +24445,28 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             404: components["responses"]["AccountsModelNotFoundException"];
             /** @description El número no es oficial (`device_not_meta`). */
             422: {
@@ -20752,6 +24479,34 @@ export interface operations {
                         error: "device_not_meta";
                         /** @constant */
                         message: "Este dispositivo no usa la API de WhatsApp Cloud de Meta.";
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
                     };
                 };
             };
@@ -20802,7 +24557,28 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             404: components["responses"]["AccountsModelNotFoundException"];
             /** @description El número no es oficial (`device_not_meta`). */
             422: {
@@ -20815,6 +24591,35 @@ export interface operations {
                         error: "device_not_meta";
                         /** @constant */
                         message: "Este dispositivo no usa la API de WhatsApp Cloud de Meta.";
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **6 llamadas por minuto** por número: las claves y el panel de la cuenta comparten el cupo de cada número.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
                     };
                 };
             };
@@ -20844,7 +24649,31 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description No queda lugar en el plan (`number_limit_reached`), quien llama no es el titular (`connect_not_allowed`) o el pago está vencido (`payment_required`). */
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description No queda lugar en el plan (`number_limit_reached`) o quien llama no es el titular (`connect_not_allowed`).
+             *
+             *     También, por el workspace de la clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -20876,6 +24705,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
                         error: string;
                         message: string;
                     };
@@ -20919,7 +24776,45 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             404: components["responses"]["AccountsModelNotFoundException"];
             /** @description El número no es oficial o no está conectado. */
             422: {
@@ -20933,6 +24828,35 @@ export interface operations {
                     } | {
                         /** @constant */
                         error: "Solo disponible para dispositivos WhatsApp Cloud API.";
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **10 llamadas por minuto** por usuario de Funnelchat, en un contador que suman todas las rutas con este tipo de límite (también las del panel).
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
                     };
                 };
             };
@@ -20979,7 +24903,45 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             404: components["responses"]["AccountsModelNotFoundException"];
             /** @description El nombre no es válido, o el número no es oficial o no está conectado. */
             422: {
@@ -20993,6 +24955,35 @@ export interface operations {
                     } | {
                         /** @constant */
                         error: "Solo disponible para dispositivos WhatsApp Cloud API.";
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **10 llamadas por minuto** por usuario de Funnelchat, en un contador que suman todas las rutas con este tipo de límite (también las del panel).
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
                     };
                 };
             };
@@ -21031,7 +25022,45 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             404: components["responses"]["AccountsModelNotFoundException"];
             /** @description El número no es oficial o no está conectado. */
             422: {
@@ -21045,6 +25074,35 @@ export interface operations {
                     } | {
                         /** @constant */
                         error: "Solo disponible para dispositivos WhatsApp Cloud API.";
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **10 llamadas por minuto** por usuario de Funnelchat, en un contador que suman todas las rutas con este tipo de límite (también las del panel).
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
                     };
                 };
             };
@@ -21092,7 +25150,56 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_foreign_account`: solo la usa una clave de un workspace de la propia cuenta.
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **60 llamadas por minuto** por clave: cada clave tiene su propio cupo, aparte del panel y de las otras claves de la cuenta.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "webhookSubscription.index": {
@@ -21141,7 +25248,56 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_foreign_account`: solo la usa una clave de un workspace de la propia cuenta.
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **60 llamadas por minuto** por clave: cada clave tiene su propio cupo, aparte del panel y de las otras claves de la cuenta.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "webhookSubscription.store": {
@@ -21167,8 +25323,57 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_foreign_account`: solo la usa una clave de un workspace de la propia cuenta.
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             422: components["responses"]["AccountsValidationException"];
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **10 llamadas por minuto** por clave: cada clave tiene su propio cupo, aparte del panel y de las otras claves de la cuenta.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "webhookSubscription.show": {
@@ -21192,7 +25397,14 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description La clave de API no tiene el permiso de lectura de un área de los eventos de la suscripción. */
+            /**
+             * @description La clave de API no tiene el permiso de lectura de un área de los eventos de la suscripción.
+             *
+             *     También, por el workspace de la clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_foreign_account`: solo la usa una clave de un workspace de la propia cuenta.
+             */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -21211,8 +25423,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example not_found
+                         */
+                        error: string;
                         /** @constant */
                         message: "Suscripción de webhook no encontrada.";
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **60 llamadas por minuto** por clave: cada clave tiene su propio cupo, aparte del panel y de las otras claves de la cuenta.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
                     };
                 };
             };
@@ -21243,7 +25488,14 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description La clave de API no tiene el permiso de lectura de un área de los eventos de la suscripción. */
+            /**
+             * @description La clave de API no tiene el permiso de lectura de un área de los eventos de la suscripción.
+             *
+             *     También, por el workspace de la clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_foreign_account`: solo la usa una clave de un workspace de la propia cuenta.
+             */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -21256,6 +25508,34 @@ export interface operations {
                 };
             };
             422: components["responses"]["AccountsValidationException"];
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **60 llamadas por minuto** por clave: cada clave tiene su propio cupo, aparte del panel y de las otras claves de la cuenta.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "webhookSubscription.destroy": {
@@ -21279,7 +25559,14 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description La clave de API no tiene el permiso de lectura de un área de los eventos de la suscripción. */
+            /**
+             * @description La clave de API no tiene el permiso de lectura de un área de los eventos de la suscripción.
+             *
+             *     También, por el workspace de la clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_foreign_account`: solo la usa una clave de un workspace de la propia cuenta.
+             */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -21297,6 +25584,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example not_found
+                         */
+                        error: string;
                         /** @constant */
                         message: "Suscripción de webhook no encontrada.";
                     };
@@ -21308,8 +25600,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example conflict
+                         */
+                        error: string;
                         /** @constant */
                         message: "Esta suscripción se está activando; espera a que termine.";
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **60 llamadas por minuto** por clave: cada clave tiene su propio cupo, aparte del panel y de las otras claves de la cuenta.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
                     };
                 };
             };
@@ -21363,7 +25688,14 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description La clave de API no tiene el permiso de lectura de un área de los eventos de la suscripción. */
+            /**
+             * @description La clave de API no tiene el permiso de lectura de un área de los eventos de la suscripción.
+             *
+             *     También, por el workspace de la clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_foreign_account`: solo la usa una clave de un workspace de la propia cuenta.
+             */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -21382,8 +25714,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example not_found
+                         */
+                        error: string;
                         /** @constant */
                         message: "Suscripción de webhook no encontrada.";
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **60 llamadas por minuto** por clave: cada clave tiene su propio cupo, aparte del panel y de las otras claves de la cuenta.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
                     };
                 };
             };
@@ -21416,7 +25781,14 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description La clave de API no tiene el permiso de lectura de un área de los eventos de la suscripción. */
+            /**
+             * @description La clave de API no tiene el permiso de lectura de un área de los eventos de la suscripción.
+             *
+             *     También, por el workspace de la clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_foreign_account`: solo la usa una clave de un workspace de la propia cuenta.
+             */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -21434,6 +25806,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example not_found
+                         */
+                        error: string;
                         /** @constant */
                         message: "Suscripción de webhook no encontrada.";
                     };
@@ -21446,6 +25823,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example validation_failed
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **10 llamadas por minuto** por clave: cada clave tiene su propio cupo, aparte del panel y de las otras claves de la cuenta.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
                         message: string;
                     };
                 };
@@ -21498,6 +25908,56 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "whatsAppBusinessAccount.show": {
@@ -21522,6 +25982,28 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
             /** @description La cuenta no tiene números de WhatsApp Cloud en esa WABA. */
             404: {
                 headers: {
@@ -21529,6 +26011,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar.
+                         * @example not_found
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
                         message: string;
                     };
                 };
@@ -21556,7 +26071,72 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            403: components["responses"]["AccountsAuthorizationException"];
+            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error.
+                         * @constant
+                         */
+                        error: "payment_required";
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
+             *
+             *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `permission_denied`, `route_not_available`, `use_public_endpoint`.
+                         * @example forbidden
+                         */
+                        error: string;
+                        /** @description Texto para personas, en español. */
+                        message: string;
+                    };
+                };
+            };
+            /**
+             * @description Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
+             *
+             *     Límite por minuto:
+             *
+             *     - Hasta **60 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *
+             *     Al pasarlo responde `429 rate_limited`.
+             *
+             *     Límite por día: 10.000 llamadas por clave en accounts, con reinicio a las 00:00 UTC. Es un contador propio de esta API: lo que la misma clave llame en otras APIs de Funnelchat no suma acá. Al pasarlo responde `429 daily_cap_exceeded`.
+             */
+            429: {
+                headers: {
+                    /** @description Segundos que hay que esperar antes de volver a llamar. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Código estable del error: es lo que se compara. `message` es para personas y puede cambiar. Con este status, el portero también puede devolver `daily_cap_exceeded`.
+                         * @example rate_limited
+                         */
+                        error: string;
+                        message: string;
+                    };
+                };
+            };
         };
     };
     "webhook.group_created": {

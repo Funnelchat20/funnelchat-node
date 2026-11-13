@@ -1,8 +1,7 @@
 /**
  * Verification of the `X-Funnelchat-Signature` header of a webhook delivery.
  *
- * It replicates exactly the algorithm of the developer portal (`snippets/verificar-firma.js` of
- * developers-portal, contract C3 v4):
+ * It replicates exactly the algorithm the developer portal documents:
  *
  *   X-Funnelchat-Signature: t=<unix>,v1=<hex(hmac_sha256(secret, "<t>." + raw body))>
  *

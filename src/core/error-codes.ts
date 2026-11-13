@@ -6,10 +6,27 @@
  * workspace cannot be read is `503 gate_unavailable`, no new code); the API entry as deployed to
  * production on 25-10-2026; conversations v1.19.7 (the send rules, the same as in v1.18.10, and the
  * checks before sending a form); accounts v1.5.97 (creating and connecting numbers); communities
- * v2.35.5 and v2.35.7 (the rejections of a group action). The spec the portal publishes (portal
- * v0.6.14) documents some of these codes in the operations that answer them, but not those of the
- * API entry and the key gate. When it documents all of them, this list can be generated.
+ * v2.35.5 and v2.35.7 (the rejections of a group action). The common format of every area
+ * (`COMMON_ERROR_CODES`) is the one the spec the portal publishes describes since portal v0.6.15,
+ * which documents most of these codes in the operations that answer them, but not all of them
+ * (`route_not_found`, `edge_misconfigured`, `origin_unreachable` and `gate_unavailable`, of the API
+ * entry and the key gate). When it documents all of them, this list can be generated.
  */
+
+/**
+ * The common format of every area, on any route open to API keys: every error carries `error` and
+ * `message`, and these codes mean the same on all of them.
+ */
+export const COMMON_ERROR_CODES = {
+  /** 422: the body or the query is not valid; `errors` says which fields (`APIError.errors`). */
+  validation_failed: 422,
+  /** 404: it does not exist, or it is of another account or workspace than the key's. */
+  not_found: 404,
+  /** 402: the payment of the account is due. Settle it in the Funnelchat panel; not worth retrying. */
+  payment_required: 402,
+  /** 429, with `Retry-After`: too many calls; wait that many seconds (`APIError.retryAfter`). */
+  rate_limited: 429,
+} as const;
 
 /** Errors of the API entry and of the key gate, on any route. */
 export const ACCESS_ERROR_CODES = {
@@ -88,8 +105,8 @@ export const NUMBER_ERROR_CODES = {
   number_limit_reached: 403,
   /** 403: the account cannot connect numbers now. */
   connect_not_allowed: 403,
-  /** 403: `devices.qr` of a number whose payment is due. */
-  payment_required: 403,
+  /** 402: the payment of the account is due, also on `devices.qr` (the common `payment_required`). */
+  payment_required: 402,
   /**
    * 409: the account already has a QR number waiting to be scanned (at most one): its `device_id`
    * comes in the body. Show that one's QR, or delete it, instead of creating another.
@@ -185,6 +202,8 @@ export const IDEMPOTENCY_ERROR_CODES = {
   operation_in_progress: 409,
 } as const;
 
+/** An error code of the common format of every area (`APIError.code`). */
+export type CommonErrorCode = keyof typeof COMMON_ERROR_CODES;
 export type AccessErrorCode = keyof typeof ACCESS_ERROR_CODES;
 /** An error code of a send rejected by the WhatsApp rules (`APIError.code`). */
 export type SendErrorCode = keyof typeof SEND_ERROR_CODES;
@@ -196,7 +215,7 @@ export type TemplateErrorCode = keyof typeof TEMPLATE_ERROR_CODES;
 /** An error code of a message to a group or of reading a group action (`APIError.code`). */
 export type GroupActionErrorCode = keyof typeof GROUP_ACTION_ERROR_CODES;
 /** Every `error` code the SDK knows. The API can send others: treat `code` as a `string`. */
-export type KnownErrorCode = AccessErrorCode | SendErrorCode | NumberErrorCode | IdempotencyErrorCode | GroupActionErrorCode | TemplateErrorCode;
+export type KnownErrorCode = CommonErrorCode | AccessErrorCode | SendErrorCode | NumberErrorCode | IdempotencyErrorCode | GroupActionErrorCode | TemplateErrorCode;
 
 const has = (table: object, code: string | undefined): boolean => code !== undefined && Object.prototype.hasOwnProperty.call(table, code);
 

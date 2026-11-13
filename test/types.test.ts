@@ -232,6 +232,8 @@ function typeChecks(client: Funnelchat) {
     expectTypeOf<'pending_number_exists'>().toMatchTypeOf<KnownErrorCode>();
     expectTypeOf<'credentials_not_allowed'>().toMatchTypeOf<KnownErrorCode>();
     expectTypeOf<'device_not_group_admin'>().toMatchTypeOf<KnownErrorCode>();
+    // The common format of every area.
+    expectTypeOf<'validation_failed' | 'not_found' | 'payment_required' | 'rate_limited'>().toMatchTypeOf<KnownErrorCode>();
     expectTypeOf<'something_new'>().toMatchTypeOf<NonNullable<APIError['code']>>();
   }
 }

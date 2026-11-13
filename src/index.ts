@@ -53,6 +53,7 @@ export type { components, operations, paths, webhooks as WebhookSchemas } from '
 
 export {
   ACCESS_ERROR_CODES,
+  COMMON_ERROR_CODES,
   GROUP_ACTION_ERROR_CODES,
   IDEMPOTENCY_ERROR_CODES,
   NUMBER_ERROR_CODES,
@@ -63,6 +64,7 @@ export {
 } from './core/error-codes.js';
 export type {
   AccessErrorCode,
+  CommonErrorCode,
   GroupActionErrorCode,
   IdempotencyErrorCode,
   KnownErrorCode,
