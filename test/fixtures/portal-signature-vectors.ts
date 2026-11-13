@@ -15,7 +15,7 @@ export const BODY = Buffer.from(
   'utf8',
 );
 
-/** `firmar()` of test_firmas.py. */
+/** Signs a body as the portal's test vectors do. */
 export function sign(body: Buffer, secret: string, t: number): string {
   const v1 = createHmac('sha256', secret).update(Buffer.concat([Buffer.from(`${t}.`, 'ascii'), body])).digest('hex');
   return `t=${t},v1=${v1}`;
@@ -29,7 +29,7 @@ export interface SignatureCase {
   expected: boolean;
 }
 
-/** `casos()` of test_firmas.py, for a given current time `t`. */
+/** The portal's test cases, for a given current time `t`. */
 export function portalCases(t: number): SignatureCase[] {
   const ok = sign(BODY, SECRET, t);
   const v1 = ok.split('v1=')[1] as string;

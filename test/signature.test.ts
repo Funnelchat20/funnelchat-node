@@ -7,7 +7,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('webhook signature: the portal vectors (tests/test_firmas.py)', () => {
+describe('webhook signature: the portal vectors', () => {
   const now = Math.floor(Date.now() / 1000);
   for (const c of portalCases(now)) {
     it(`${c.name} -> ${c.expected ? 'accepts' : 'rejects'}`, () => {

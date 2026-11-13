@@ -2,7 +2,7 @@
  * Errors thrown by the SDK.
  *
  *   FunnelchatError                 base class of everything the SDK throws
- *   ├── APIError                    the API answered with a non-2xx status
+ *   ├── APIError                    the API answered with a non-2xx status (402 too)
  *   │   ├── BadRequestError         400
  *   │   ├── AuthenticationError     401
  *   │   ├── PermissionDeniedError   403
@@ -44,9 +44,10 @@ export interface APIErrorInit {
  * The API answered with a non-2xx status.
  *
  * - `status`: the HTTP status.
- * - `code`: the stable `error` code of the body (`window_closed`, `rate_limited`,
- *   `route_not_available`…; see `SEND_ERROR_CODES` and `ACCESS_ERROR_CODES`), or `undefined` when
- *   the body has none (for example a Laravel validation `422`, which carries `errors` instead).
+ * - `code`: the stable `error` code of the body (`validation_failed`, `window_closed`,
+ *   `rate_limited`, `route_not_available`…; see `COMMON_ERROR_CODES`, `SEND_ERROR_CODES` and
+ *   `ACCESS_ERROR_CODES`). Every error of a route open to keys carries one; `undefined` only when
+ *   the body has none.
  * - `message`: the `message` of the body, meant for people. Decide by `status` and `code`.
  * - `retryAfter`: seconds from the `Retry-After` header, when present.
  * - `requestId`: the `X-Request-Id` of the response. Quote it when you report a problem.
@@ -105,6 +106,7 @@ export class BadRequestError extends APIError {}
 export class AuthenticationError extends APIError {}
 /** `403`: the key lacks the permission, or the route is not open to keys (`route_not_available`). */
 export class PermissionDeniedError extends APIError {}
+/** `404`: `not_found` (also something of another account or workspace), or a more precise code. */
 export class NotFoundError extends APIError {}
 export class ConflictError extends APIError {}
 /**
@@ -114,7 +116,7 @@ export class ConflictError extends APIError {}
  */
 export class UnsupportedMediaTypeError extends APIError {}
 /**
- * `422`: validation (`errors`, for example `errors.file_type`) or a rule of the send
+ * `422`: validation (`validation_failed`, with `errors`, for example `errors.file_type`) or a rule of the send
  * (`window_closed`, `antiblock_*`, `recipient_*`, `provider_unsupported`…).
  */
 export class UnprocessableEntityError extends APIError {}

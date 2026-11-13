@@ -475,14 +475,14 @@ Everything the SDK throws extends `FunnelchatError`. When the API answers with a
 | Property | What it is |
 |---|---|
 | `status` | The HTTP status. |
-| `code` | The stable `error` of the body (`window_closed`, `rate_limited`, `route_not_available`…), or `undefined` when there is none (for example a validation `422`). |
+| `code` | The stable `error` of the body (`validation_failed`, `window_closed`, `rate_limited`, `route_not_available`…). Every error of a route open to keys carries one. |
 | `message` | The `message` of the body, meant for people. Decide by `status` and `code`, not by `message`. |
 | `requestId` | The `X-Request-Id` of the response. **Quote it when you report a problem.** |
 | `retryAfter` | The seconds of `Retry-After`, when present. |
-| `errors` | In a validation `422`, the messages per field. |
+| `errors` | In a `422 validation_failed`, the messages per field. |
 | `body` | The full body, with the fields of each error. |
 
-Each HTTP status has its class: `BadRequestError` (400), `AuthenticationError` (401), `PermissionDeniedError` (403), `NotFoundError` (404), `ConflictError` (409), `UnsupportedMediaTypeError` (415), `UnprocessableEntityError` (422), `RateLimitError` (429) and `InternalServerError` (5xx). No response: `APIConnectionError`, and `APIConnectionTimeoutError` when it went over `timeoutMs`. Aborted with your own `AbortSignal`: `APIUserAbortError`.
+Each HTTP status has its class: `BadRequestError` (400), `AuthenticationError` (401), `PermissionDeniedError` (403), `NotFoundError` (404), `ConflictError` (409), `UnsupportedMediaTypeError` (415), `UnprocessableEntityError` (422), `RateLimitError` (429) and `InternalServerError` (5xx); a `402` is an `APIError`. No response: `APIConnectionError`, and `APIConnectionTimeoutError` when it went over `timeoutMs`. Aborted with your own `AbortSignal`: `APIUserAbortError`.
 
 ```ts
 import { APIError, RateLimitError } from '@funnelchat-hq/sdk';
@@ -500,6 +500,15 @@ try {
 }
 ```
 
+Every area answers errors in the same format, `error` and `message`, and these codes mean the same on any route (`COMMON_ERROR_CODES`):
+
+| Error | What happened |
+|---|---|
+| `402 payment_required` | The payment of the account is due: settle it in the Funnelchat panel. Retrying does not help. |
+| `404 not_found` | It does not exist, or it is of another account or workspace than the key's. |
+| `422 validation_failed` | The body or the query is not valid: `errors` has the messages per field. |
+| `429 rate_limited` | Too many calls. It carries `Retry-After`: wait that many seconds (`retryAfter`). |
+
 The errors of the API entry and of access control apply to any route (`ACCESS_ERROR_CODES`):
 
 | Error | What happened |
@@ -507,7 +516,6 @@ The errors of the API entry and of access control apply to any route (`ACCESS_ER
 | `401 unauthenticated` | The key is missing or not valid. |
 | `403 permission_denied` | The key lacks the permission of the route, such as **WhatsApp numbers → Create, connect and delete**: give the key that permission in the panel. |
 | `403 route_not_available` | The route is not open to API keys (or it is turned off). |
-| `404` | The resource does not exist or is of another workspace than the key's. |
 | `404 route_not_found` | The route does not exist in the public API. |
 | `429 daily_cap_exceeded` | The daily call cap of the key was reached. It carries `Retry-After`. |
 | `500 edge_misconfigured` | A problem on our side: report it with the `requestId`. |
@@ -610,7 +618,7 @@ Everything generated comes from one script:
 
 ```bash
 curl -fsSo /tmp/funnelchat.json https://developers-portal.funnelchat.app/specs/funnelchat.json
-npm run generate -- --spec /tmp/funnelchat.json --source url=https://developers-portal.funnelchat.app/specs/funnelchat.json --source portal_version=v0.6.14
+npm run generate -- --spec /tmp/funnelchat.json --source url=https://developers-portal.funnelchat.app/specs/funnelchat.json --source portal_version=v0.6.15
 npm run generate   # with the spec in spec/, for example after editing spec/pending.json
 ```
 
