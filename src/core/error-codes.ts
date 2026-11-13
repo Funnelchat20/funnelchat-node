@@ -7,8 +7,11 @@
  * production on 25-10-2026; conversations v1.19.7 (the send rules, the same as in v1.18.10, and the
  * checks before sending a form); accounts v1.5.97 (creating and connecting numbers); communities
  * v2.35.5 and v2.35.7 (the rejections of a group action). The common format of every area
- * (`COMMON_ERROR_CODES`) is the one the spec the portal publishes describes since portal v0.6.15,
- * which documents most of these codes in the operations that answer them, but not all of them
+ * (`COMMON_ERROR_CODES`) is the one the spec the portal publishes describes since portal v0.6.15.
+ * Portal v0.6.16 names, as deployed on 13-11-2026, `gate_misconfigured`, `device_not_meta`,
+ * `device_not_ready`, `unsupported_provider`, `meta_error`, `plan_cap_reached` and
+ * `webhooks_limit_reached`, and `provider_error` on more routes. That spec documents most of these
+ * codes in the operations that answer them, but not all of them
  * (`route_not_found`, `edge_misconfigured`, `origin_unreachable` and `gate_unavailable`, of the API
  * entry and the key gate). When it documents all of them, this list can be generated.
  */
@@ -42,6 +45,8 @@ export const ACCESS_ERROR_CODES = {
   daily_cap_exceeded: 429,
   /** 500: the entry is not configured to reach the area. Our problem: report it with the `X-Request-Id`. */
   edge_misconfigured: 500,
+  /** 500: the key gate is not configured for the area of the route. Our problem: report it with the `X-Request-Id`. */
+  gate_misconfigured: 500,
   /**
    * 502: the entry could not reach the area. There is no guarantee the area did not get the call:
    * after a write, read the state before repeating it.
@@ -94,8 +99,10 @@ export const SEND_ERROR_CODES = {
 } as const;
 
 /**
- * Rejections of creating a number (`devices.create`), asking for its QR (`devices.qr`) or creating,
- * reading or revoking a connect link: nothing was created. The quota of the plan is the same as in
+ * Rejections of creating a number (`devices.create`), asking for its QR (`devices.qr`), creating,
+ * reading or revoking a connect link, editing a number (`devices.update`) and the functions of an
+ * official number, such as its health (`devices.health`) or its username: nothing was created or
+ * changed. The quota of the plan is the same as in
  * the panel. A code that comes with two statuses has the one of the create here; the other is noted.
  */
 export const NUMBER_ERROR_CODES = {
@@ -134,8 +141,17 @@ export const NUMBER_ERROR_CODES = {
   link_not_pending: 409,
   /** 429: the account has 20 connect links open. Revoke some, or wait for them to end. Not worth retrying. */
   too_many_open_links: 429,
-  /** 500 (502 on `devices.qr`): the WhatsApp provider failed. */
+  /**
+   * 500 (502 on `devices.qr`, `devices.status`, the username of a number, and marking a message as
+   * read or showing «typing…»): the WhatsApp provider, or Meta, did not answer.
+   */
   provider_error: 500,
+  /** 400: the number does not take that edit (`devices.update`). */
+  unsupported_provider: 400,
+  /** 422: the number is not an official one (WhatsApp Cloud API), as its health or its username need. */
+  device_not_meta: 422,
+  /** 422: the official number is not connected to Meta yet, or not ready for that. */
+  device_not_ready: 422,
   /** 503: official numbers (`type: 'meta'`) cannot be connected by link yet. QR links work. Not worth retrying. */
   meta_connect_disabled: 503,
   /** 403: the connect page was opened with an API key or a session. The page is for your customer, without credentials. */
@@ -143,8 +159,9 @@ export const NUMBER_ERROR_CODES = {
 } as const;
 
 /**
- * Rejections of a message to a group (`groups.sendMessage`), of following a group (`groups.follow`)
- * and of reading a group action (`groups.retrieveAction`): nothing was queued or imported. A number
+ * Rejections of creating a group (`POST /api/v1/groups`), of a message to a group
+ * (`groups.sendMessage`), of following a group (`groups.follow`) and of reading a group action
+ * (`groups.retrieveAction`): nothing was queued or imported. A number
  * or group of another workspace is answered as one that does not exist.
  */
 export const GROUP_ACTION_ERROR_CODES = {
@@ -178,9 +195,14 @@ export const GROUP_ACTION_ERROR_CODES = {
   import_rate_limited: 429,
   /** 409: another call is following the same group right now. */
   import_in_progress: 409,
+  /** 402: creating an official group when the account has every official group of its plan. Not worth retrying. */
+  plan_cap_reached: 402,
 } as const;
 
-/** Rejections of bringing a number's templates from Meta (`templates.sync`): nothing was brought. */
+/**
+ * Rejections of bringing a number's templates from Meta (`templates.sync`) or deleting one there
+ * (`templates.delete`): nothing was brought or deleted.
+ */
 export const TEMPLATE_ERROR_CODES = {
   /** 409: a sync of that number is already running. Do not start another: list again in a few seconds. */
   template_sync_in_progress: 409,
@@ -190,6 +212,15 @@ export const TEMPLATE_ERROR_CODES = {
   meta_rejected: 422,
   /** 502: Meta did not answer. */
   meta_unavailable: 502,
+} as const;
+
+/** Rejections of creating a webhook subscription (`webhooks.create`): nothing was created. */
+export const WEBHOOK_ERROR_CODES = {
+  /**
+   * 422: the workspace (the account, without workspaces) already has 50 subscriptions, whatever
+   * their status. Delete one before creating another.
+   */
+  webhooks_limit_reached: 422,
 } as const;
 
 /** Rejections of a create sent with `idempotencyKey`. */
@@ -210,12 +241,20 @@ export type SendErrorCode = keyof typeof SEND_ERROR_CODES;
 /** An error code of creating a number or a connect link (`APIError.code`). */
 export type NumberErrorCode = keyof typeof NUMBER_ERROR_CODES;
 export type IdempotencyErrorCode = keyof typeof IDEMPOTENCY_ERROR_CODES;
+/** An error code of creating a webhook subscription (`APIError.code`). */
+export type WebhookErrorCode = keyof typeof WEBHOOK_ERROR_CODES;
+/**
+ * `meta_error`: Meta rejected a call about an official number, such as reading or reserving its
+ * username. It has no status of its own: it comes with the HTTP status Meta gave, and `message`
+ * brings Meta's reason.
+ */
+export type MetaErrorCode = 'meta_error';
 /** An error code of bringing a number's templates from Meta (`APIError.code`). */
 export type TemplateErrorCode = keyof typeof TEMPLATE_ERROR_CODES;
 /** An error code of a message to a group or of reading a group action (`APIError.code`). */
 export type GroupActionErrorCode = keyof typeof GROUP_ACTION_ERROR_CODES;
 /** Every `error` code the SDK knows. The API can send others: treat `code` as a `string`. */
-export type KnownErrorCode = CommonErrorCode | AccessErrorCode | SendErrorCode | NumberErrorCode | IdempotencyErrorCode | GroupActionErrorCode | TemplateErrorCode;
+export type KnownErrorCode = CommonErrorCode | AccessErrorCode | SendErrorCode | NumberErrorCode | IdempotencyErrorCode | GroupActionErrorCode | TemplateErrorCode | WebhookErrorCode | MetaErrorCode;
 
 const has = (table: object, code: string | undefined): boolean => code !== undefined && Object.prototype.hasOwnProperty.call(table, code);
 

@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 3e5bc8ef01a2c746…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 7db2ead826697c80…) + spec/pending.json.
  */
 import type { components } from './openapi.js';
 
@@ -44,23 +44,23 @@ export const webhookEvents = [
   {"type":"group_action.failed","domains":["communities"],"status":"live","pending":true,"description":"An action on a group of a campaign failed."},
   {"type":"group_join_request.created","domains":["communities"],"status":"live","pending":true,"description":"Someone asked to join a group that requires approval."},
   {"type":"group_join_request.revoked","domains":["communities"],"status":"live","pending":true,"description":"Someone withdrew their request to join a group."},
-  {"type":"group_participant.joined","domains":["communities"],"status":"live","pending":true,"description":"A person joined one of the account's groups."},
-  {"type":"group_participant.left","domains":["communities"],"status":"live","pending":true,"description":"A person left one of the account's groups."},
-  {"type":"group.blocked","domains":["communities"],"status":"live","pending":false,"description":"Un grupo quedó inoperable: sin administrador conectado, con el link de invitación inválido o suspendido por WhatsApp."},
+  {"type":"group_participant.joined","domains":["communities"],"status":"live","pending":true,"description":"A person joined one of the account's groups. At most one per person, group and UTC day: if the same person joins again that day, no other one is sent."},
+  {"type":"group_participant.left","domains":["communities"],"status":"live","pending":true,"description":"A person left one of the account's groups. At most one per person, group and UTC day: if the same person leaves again that day, no other one is sent."},
+  {"type":"group.blocked","domains":["communities"],"status":"live","pending":false,"description":"Un grupo de una campaña quedó inoperable: sin administrador conectado, con el link de invitación inválido o suspendido por WhatsApp; un grupo que no es de una campaña no lo genera."},
   {"type":"group.created","domains":["communities"],"status":"live","pending":false,"description":"Se creó o se importó un grupo dentro de una campaña de la cuenta."},
   {"type":"group.full","domains":["communities"],"status":"live","pending":false,"description":"Un grupo pasó de no estar lleno a estarlo."},
   {"type":"group.invite_link_down","domains":["communities"],"status":"live","pending":false,"description":"El enlace de invitación de un grupo quedó confirmado caído (WhatsApp respondió que no existe y la renovación no consiguió otro); no se publica por errores transitorios ni por grupos prohibidos o suspendidos, y se publica una sola vez por episodio de bloqueo."},
   {"type":"group.invite_link_renewed","domains":["communities"],"status":"live","pending":false,"description":"El enlace de invitación de un grupo cambió por una renovación, automática al detectarse inválido o pedida por el usuario; no se publican los cambios que detecta la sincronización ni el enlace inicial al crear el grupo."},
   {"type":"group.message_received","domains":["communities"],"status":"live","pending":true,"description":"Someone wrote in a group of one of your numbers. Not emitted for the messages of your own numbers."},
   {"type":"group.reaction_added","domains":["communities"],"status":"live","pending":true,"description":"Someone reacted to a message of a group."},
-  {"type":"group.recovered","domains":["communities"],"status":"live","pending":false,"description":"Un grupo que estaba bloqueado volvió a operar."},
+  {"type":"group.recovered","domains":["communities"],"status":"live","pending":false,"description":"Un grupo de una campaña que estaba bloqueado volvió a operar; un grupo que no es de una campaña no lo genera."},
   {"type":"mac.expiring","domains":["accounts"],"status":"live","pending":false,"description":"Hay contactos activos mensuales que vencen en los próximos 7 días."},
   {"type":"mac.usage_100","domains":["accounts"],"status":"live","pending":false,"description":"La cuenta agotó sus contactos activos mensuales del ciclo; se abre una gracia de 24 horas cuyo vencimiento viaja en `grace_expires_at`."},
   {"type":"mac.usage_80","domains":["accounts"],"status":"live","pending":false,"description":"La cuenta alcanzó el 80% de sus contactos activos mensuales del ciclo."},
   {"type":"message.reaction_failed","domains":["conversations"],"status":"live","pending":false,"description":"Una reacción a un mensaje que se aceptó no se pudo aplicar.\n\nSe emite cuando una reacción a un mensaje (ponerla, reemplazarla o quitarla) que se aceptó con `202` termina sin aplicarse, la haya pedido una clave o una persona del equipo desde el chat. Sale una sola vez por pedido: los reintentos internos del mismo pedido no generan otro evento. No se emite cuando la reacción se aplicó, cuando una reacción más nueva al mismo mensaje ya la reemplazó, ni cuando el mensaje ya no existe. `message_id` es el mensaje al que se reaccionaba (el mismo id de la ruta), `contact_id` el del contacto y `device_id` el número de tu cuenta por el que iba a salir (`null` si el mensaje ya no tiene número). `emoji` es el emoji pedido y `null` si el pedido era quitar la reacción. `reason` es uno de `no_provider_uid`, `message_not_reactable`, `message_deleted`, `device_disconnected`, `provider_unsupported`, `window_expired`, `provider_rejected`, `insufficient_balance`, `payment_expired`. `requested_at` es el momento en que se aceptó el pedido, en UTC y con microsegundos: sirve para relacionar el evento con la llamada que respondió `202`. `occurred_at` es el momento en que Funnelchat decidió el fallo, en UTC. Mientras tanto, `reactions` de `GET /contacts/{contact_id}/messages` queda como estaba."},
   {"type":"message.received","domains":["conversations"],"status":"live","pending":true,"description":"A contact wrote to one of the WhatsApp numbers of the account."},
   {"type":"message.status_changed","domains":["conversations"],"status":"live","pending":true,"description":"The delivery status of a message you sent with the API changed. One notice per transition, never one that goes back; `queued` is not reported. It must be asked for explicitly in `events`."},
-  {"type":"pipeline.finished","domains":["communities"],"status":"live","pending":false,"description":"Terminó un pipeline de operaciones sobre grupos, con su resultado agregado y la clave de idempotencia del pedido que lo originó, cuando la hay."},
+  {"type":"pipeline.finished","domains":["communities"],"status":"live","pending":false,"description":"Terminó un pipeline de operaciones sobre los grupos de una campaña, con su resultado agregado y la clave de idempotencia del pedido que lo originó, cuando la hay; si después cambia el resultado de alguna de sus acciones (por ejemplo, por un reintento), sale otro, con otro `id` y los conteos nuevos."},
   {"type":"poll.voted","domains":["communities"],"status":"live","pending":false,"description":"Un participante votó en una encuesta enviada a un grupo, o cambió su voto."},
   {"type":"scheduled_message.finished","domains":["communities"],"status":"live","pending":false,"description":"Un envío programado terminó, con su resultado agregado."},
   {"type":"scheduled_message.group_delivery_failed","domains":["communities"],"status":"live","pending":false,"description":"Un envío programado falló en un grupo concreto, con el motivo desagregado."},
@@ -251,6 +251,7 @@ export interface WebhookEventDataMap {
   /** `device.connected` (live, pending of the spec; typed from: schema). One of the numbers of the account got connected: by scanning the QR code, by finishing the sign-up of a WhatsApp Cloud number, or through a connect link. */
   "device.connected": {
     device: components["schemas"]["PendingWebhookDevice"];
+    /** ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`. */
     connected_at: string;
     /** The connect link of this connection, or `null` when it did not come from a link. */
     connect_link_id: number | null;
@@ -258,6 +259,7 @@ export interface WebhookEventDataMap {
   /** `device.deleted` (live, pending of the spec; typed from: schema). A number of the account was deleted (from the panel, the API, or because a connect link expired without connecting it): its slot of the plan is free again. */
   "device.deleted": {
     device: components["schemas"]["PendingWebhookDevice"];
+    /** ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`. */
     deleted_at: string;
     /** The connect link that last connected the number, or `null`. */
     connect_link_id: number | null;
@@ -265,6 +267,7 @@ export interface WebhookEventDataMap {
   /** `device.disconnected` (live, pending of the spec; typed from: schema). One of the numbers of the account disconnected and can no longer send or receive: a QR session that closed or was protected from a shadow ban, an official number that failed its re-registration, or one disconnected from the panel. */
   "device.disconnected": {
     device: components["schemas"]["PendingWebhookDevice"];
+    /** ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`. */
     disconnected_at: string;
     reason: "qr_logged_out" | "meta_account_not_registered" | "shadow_ban_protection" | "provider_error" | "unknown" | "disconnected_by_user";
     /** The connect link that last connected the number, or `null`. */
@@ -281,6 +284,7 @@ export interface WebhookEventDataMap {
     verified_name: string | null;
     /** Meta's reason in a rejection, or `null`. */
     rejection_reason: string | null;
+    /** ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`. */
     reviewed_at: string;
     /** The connect link that last connected the number, or `null`. */
     connect_link_id: number | null;
@@ -290,6 +294,7 @@ export interface WebhookEventDataMap {
     device: components["schemas"]["PendingWebhookDevice"];
     previous_state: "available" | "limited" | "blocked" | "unknown";
     state: "available" | "limited" | "blocked" | "unknown";
+    /** ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`. */
     changed_at: string;
     /** The connect link that last connected the number, or `null`. */
     connect_link_id: number | null;
@@ -299,6 +304,7 @@ export interface WebhookEventDataMap {
     device: components["schemas"]["PendingWebhookDevice"];
     previous: string;
     current: string;
+    /** ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`. */
     changed_at: string;
     /** The connect link that last connected the number, or `null`. */
     connect_link_id: number | null;
@@ -308,6 +314,7 @@ export interface WebhookEventDataMap {
     device: components["schemas"]["PendingWebhookDevice"];
     previous: string;
     current: string;
+    /** ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`. */
     changed_at: string;
     /** The connect link that last connected the number, or `null`. */
     connect_link_id: number | null;
@@ -405,7 +412,7 @@ export interface WebhookEventDataMap {
       name: string | null;
     };
   };
-  /** `group_participant.joined` (live, pending of the spec; typed from: schema). A person joined one of the account's groups. */
+  /** `group_participant.joined` (live, pending of the spec; typed from: schema). A person joined one of the account's groups. At most one per person, group and UTC day: if the same person joins again that day, no other one is sent. */
   "group_participant.joined": {
     group: {
       uid: string;
@@ -422,7 +429,7 @@ export interface WebhookEventDataMap {
       name: string | null;
     };
   };
-  /** `group_participant.left` (live, pending of the spec; typed from: schema). A person left one of the account's groups. */
+  /** `group_participant.left` (live, pending of the spec; typed from: schema). A person left one of the account's groups. At most one per person, group and UTC day: if the same person leaves again that day, no other one is sent. */
   "group_participant.left": {
     group: {
       uid: string;
@@ -439,7 +446,7 @@ export interface WebhookEventDataMap {
       name: string | null;
     };
   };
-  /** `group.blocked` (live; typed from: example). Un grupo quedó inoperable: sin administrador conectado, con el link de invitación inválido o suspendido por WhatsApp. */
+  /** `group.blocked` (live; typed from: example). Un grupo de una campaña quedó inoperable: sin administrador conectado, con el link de invitación inválido o suspendido por WhatsApp; un grupo que no es de una campaña no lo genera. */
   "group.blocked": {
     group: {
       uid: string;
@@ -547,7 +554,7 @@ export interface WebhookEventDataMap {
     };
     reaction: string;
   };
-  /** `group.recovered` (live; typed from: example). Un grupo que estaba bloqueado volvió a operar. */
+  /** `group.recovered` (live; typed from: example). Un grupo de una campaña que estaba bloqueado volvió a operar; un grupo que no es de una campaña no lo genera. */
   "group.recovered": {
     group: {
       uid: string;
@@ -637,7 +644,7 @@ export interface WebhookEventDataMap {
     /** The `client_reference` you sent with the message, or `null`. */
     client_reference: string | null;
   };
-  /** `pipeline.finished` (live; typed from: example). Terminó un pipeline de operaciones sobre grupos, con su resultado agregado y la clave de idempotencia del pedido que lo originó, cuando la hay. */
+  /** `pipeline.finished` (live; typed from: example). Terminó un pipeline de operaciones sobre los grupos de una campaña, con su resultado agregado y la clave de idempotencia del pedido que lo originó, cuando la hay; si después cambia el resultado de alguna de sus acciones (por ejemplo, por un reintento), sale otro, con otro `id` y los conteos nuevos. */
   "pipeline.finished": {
     campaign: {
       uuid: string;

@@ -12,16 +12,15 @@
       "while": "In `while` and `x-fc-replace-while`, a key is a property of the operation (or of the event's `post`), or, when it starts with `/`, a JSON Pointer into it (RFC 6901): the entry applies only while that exact place still holds that value."
     },
     "sources": {
-      "accounts-webhooks": "accounts v1.4.24 (in production on 22-10-2026): the webhook subscription routes open to API keys, their bodies and answers, the Notifications (webhooks) permissions and the events of each area. Read again in accounts v1.5.97 (in production on 04-11-2026): the same routes, bodies and answers; since then a subscription belongs to the workspace of the key that creates it, and the cap of 50 counts per workspace. `PUT webhooks/{id}` answers the subscription, which the spec the portal publishes (portal v0.6.15) types as `{type: object}`.",
-      "conversations-send": "conversations v1.19.21 (in production on 05-11-2026; first read in v1.19.7): every single send of a key (text, send-message, template, form) answers `200 {message}` with the message it registered, never `null`. The spec the portal publishes (portal v0.6.15) documents that `message` as nullable.",
-      "conversations-status": "conversations v1.19.21 (in production on 05-11-2026; first read in v1.19.7): the `data` of message.status_changed. The spec the portal publishes (portal v0.6.15) shows it only by an example (`schema: {type: object}`): `status` as any string and `client_reference` never null.",
-      "conversations-forms": "conversations v1.18.10 (in production on 22-10-2026): WhatsApp forms, their routes and answers, and the `data` of whatsapp_form.completed. Read again in conversations v1.19.7 (in production on 04-11-2026): the same `data`; the send route also checks that the contact is of the key's workspace. Read again on 13-11-2026: `answers[].label` is always a string (the name of the question when it has no label); `answers[].value` can be null. The spec the portal publishes (portal v0.6.15) shows whatsapp_form.completed only by an example: every answer a string and no field null.",
+      "accounts-webhooks": "accounts v1.4.24 (in production on 22-10-2026): the webhook subscription routes open to API keys, their bodies and answers, the Notifications (webhooks) permissions and the events of each area. Read again in accounts v1.5.97 (in production on 04-11-2026): the same routes, bodies and answers; since then a subscription belongs to the workspace of the key that creates it, and the cap of 50 counts per workspace. `PUT webhooks/{id}` answers the subscription, which the spec the portal publishes (portal v0.6.16) types as `{type: object}`.",
+      "conversations-send": "conversations v1.19.21 (in production on 05-11-2026; first read in v1.19.7): every single send of a key (text, send-message, template, form) answers `200 {message}` with the message it registered, never `null`. The spec the portal publishes (portal v0.6.16) documents that `message` as nullable.",
+      "conversations-status": "conversations v1.19.21 (in production on 05-11-2026; first read in v1.19.7): the `data` of message.status_changed. The spec the portal publishes (portal v0.6.16) shows it only by an example (`schema: {type: object}`): `status` as any string and `client_reference` never null.",
+      "conversations-forms": "conversations v1.18.10 (in production on 22-10-2026): WhatsApp forms, their routes and answers, and the `data` of whatsapp_form.completed. Read again in conversations v1.19.7 (in production on 04-11-2026): the same `data`; the send route also checks that the contact is of the key's workspace. Read again on 13-11-2026: `answers[].label` is always a string (the name of the question when it has no label); `answers[].value` can be null. The spec the portal publishes (portal v0.6.16) shows whatsapp_form.completed only by an example: every answer a string and no field null.",
       "communities-events": "communities v2.34.52 (in production on 22-10-2026): the `data` of the group events, relayed by the event catalog of accounts v1.4.24. Read again in the releases in production on 04-11-2026 (accounts v1.5.97, conversations v1.19.7, communities v2.35.5): group_participant.joined and .left as communities v2.35.5 sends them (`campaign` null for a group without a campaign), and group_action.completed as accounts v1.5.97 relays it. communities v2.35.28 (in production on 11-11-2026): group.message_received and group.reaction_added carry `message.uid`, as the example of the spec the portal publishes says since portal v0.6.14, which still shows these events only by an example. Read again on 13-11-2026: group_join_request.created and .revoked are not sent without the participant's identity, so `participant.identity` is never null and `identity_type` is `phone` or `whatsapp_user`; `participant.name` can be null.",
-      "accounts-number-signup": "accounts v1.5.97 (in production on 04-11-2026; first in v1.4.38): creating numbers and connect links, the `connection` and `external_reference` of a number, and the connect page (the QR every 5 seconds, 10 minutes to scan it from the page; the official sign-up by link answers `503 meta_connect_disabled` in production). The seven device.* events, all active: the same `device` block in all of them, `connect_link_id` and `reason`. The spec the portal publishes (portal v0.6.15) shows them only by an example.",
-      "conversations-received": "conversations v1.19.21 (in production on 05-11-2026; first read in v1.19.7): the `data` of message.received: `text` and `media` null when absent, phones as `+` and digits or null, `device_id` last. Read again on 13-11-2026: `message.type` is one of the types the spec lists, but new ones can come before the spec lists them. The spec the portal publishes (portal v0.6.15) types it as its example shows: `text` and the phones never null, `media` unknown.",
-      "conversations-templates": "conversations v1.19.21 (in production on 05-11-2026; first read in v1.19.7): `GET templates` answers a page of templates, with the quality counts. The spec the portal publishes (portal v0.6.15) types its items as `{type: object}`.",
-      "accounts-qr": "accounts v1.5.97 (in production on 04-11-2026): `GET devices/{device}/qr` answers `{data: {connected, qr_code, expires_in}}`. The spec the portal publishes (portal v0.6.15) infers a union of that body, the inner object in three forms and a bare string.",
-      "communities-group-action": "communities v2.35.5 (in production on 04-11-2026): `GET groups/actions/{action}` answers `{data: <one action>}`. The spec the portal publishes (portal v0.6.15) types `data` as an array."
+      "accounts-number-signup": "accounts v1.5.97 (in production on 04-11-2026; first in v1.4.38): creating numbers and connect links, the `connection` and `external_reference` of a number, and the connect page (the QR every 5 seconds, 10 minutes to scan it from the page; the official sign-up by link answers `503 meta_connect_disabled` in production). The seven device.* events, all active: the same `device` block in all of them, `connect_link_id` and `reason`. The spec the portal publishes (portal v0.6.16) shows them only by an example. Since portal v0.6.16 the examples of the device.* events show their dates as production sends them, in UTC with `Z`.",
+      "conversations-received": "conversations v1.19.21 (in production on 05-11-2026; first read in v1.19.7): the `data` of message.received: `text` and `media` null when absent, phones as `+` and digits or null, `device_id` last. Read again on 13-11-2026: `message.type` is one of the types the spec lists, but new ones can come before the spec lists them. The spec the portal publishes (portal v0.6.16) types it as its example shows: `text` and the phones never null, `media` unknown.",
+      "conversations-templates": "conversations v1.19.21 (in production on 05-11-2026; first read in v1.19.7): `GET templates` answers a page of templates, with the quality counts. The spec the portal publishes (portal v0.6.16) types its items as `{type: object}`.",
+      "accounts-qr": "accounts v1.5.97 (in production on 04-11-2026): `GET devices/{device}/qr` answers `{data: {connected, qr_code, expires_in}}`. The spec the portal publishes (portal v0.6.16) infers a union of that body, the inner object in three forms and a bare string."
     }
   },
   "components": {
@@ -64,63 +63,6 @@
           }
         },
         "required": ["connected", "qr_code", "expires_in"]
-      },
-      "PendingGroupAction": {
-        "type": "object",
-        "properties": {
-          "action_id": { "type": "string", "format": "uuid" },
-          "type": { "type": "string", "description": "`send_message` for a message to the group." },
-          "status": { "type": "string", "enum": ["queued", "running", "completed", "failed"] },
-          "device_id": { "type": ["integer", "null"] },
-          "group": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "uid": { "type": "string" },
-                  "name": { "type": ["string", "null"] }
-                },
-                "required": ["uid", "name"]
-              },
-              { "type": "null" }
-            ]
-          },
-          "result": {
-            "description": "`{}` while it is open. Sending: `{message: {uid}}`, the id of the message in WhatsApp. Other actions: `{participants: [...]}`, `{group, invite_link}` or `{invite_link}`.",
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "message": {
-                    "type": "object",
-                    "properties": {
-                      "uid": { "type": "string" }
-                    }
-                  },
-                  "participants": {
-                    "type": "array",
-                    "items": { "$ref": "#/components/schemas/PendingGroupParticipantResult" }
-                  },
-                  "invite_link": { "type": "string" },
-                  "group": {
-                    "type": "object",
-                    "properties": {
-                      "uid": { "type": "string" },
-                      "name": { "type": ["string", "null"] }
-                    }
-                  }
-                }
-              },
-              { "type": "null" }
-            ]
-          },
-          "reason": { "type": ["string", "null"], "description": "Why it failed, when `status` is `failed`." },
-          "created_at": { "type": ["string", "null"], "format": "date-time" },
-          "started_at": { "type": ["string", "null"], "format": "date-time" },
-          "completed_at": { "type": ["string", "null"], "format": "date-time" },
-          "failed_at": { "type": ["string", "null"], "format": "date-time" }
-        },
-        "required": ["action_id", "type", "status", "device_id", "group", "result", "reason", "created_at", "started_at", "completed_at", "failed_at"]
       }
     }
   },
@@ -346,33 +288,6 @@
           }
         }
       }
-    },
-    {
-      "method": "get",
-      "path": "/api/v1/groups/actions/{action}",
-      "while": {
-        "/responses/200/content/application~1json/schema/properties/data": {
-          "type": "array",
-          "items": {}
-        }
-      },
-      "x-fc-pending": "communities-group-action",
-      "responses": {
-        "200": {
-          "description": "The action.",
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": { "$ref": "#/components/schemas/PendingGroupAction" }
-                },
-                "required": ["data"]
-              }
-            }
-          }
-        }
-      }
     }
   ],
   "webhooks": {
@@ -396,7 +311,7 @@
                     "type": "object",
                     "properties": {
                       "device": { "$ref": "#/components/schemas/PendingWebhookDevice" },
-                      "connected_at": { "type": "string", "format": "date-time" },
+                      "connected_at": { "type": "string", "format": "date-time", "description": "ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`." },
                       "connect_link_id": { "type": ["integer", "null"], "description": "The connect link of this connection, or `null` when it did not come from a link." }
                     },
                     "required": ["device", "connected_at", "connect_link_id"]
@@ -428,7 +343,7 @@
                     "type": "object",
                     "properties": {
                       "device": { "$ref": "#/components/schemas/PendingWebhookDevice" },
-                      "disconnected_at": { "type": "string", "format": "date-time" },
+                      "disconnected_at": { "type": "string", "format": "date-time", "description": "ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`." },
                       "reason": { "type": "string", "enum": ["qr_logged_out", "meta_account_not_registered", "shadow_ban_protection", "provider_error", "unknown", "disconnected_by_user"] },
                       "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
                     },
@@ -852,7 +767,7 @@
                     "type": "object",
                     "properties": {
                       "device": { "$ref": "#/components/schemas/PendingWebhookDevice" },
-                      "deleted_at": { "type": "string", "format": "date-time" },
+                      "deleted_at": { "type": "string", "format": "date-time", "description": "ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`." },
                       "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
                     },
                     "required": ["device", "deleted_at", "connect_link_id"]
@@ -886,7 +801,7 @@
                       "device": { "$ref": "#/components/schemas/PendingWebhookDevice" },
                       "previous_state": { "type": "string", "enum": ["available", "limited", "blocked", "unknown"] },
                       "state": { "type": "string", "enum": ["available", "limited", "blocked", "unknown"] },
-                      "changed_at": { "type": "string", "format": "date-time" },
+                      "changed_at": { "type": "string", "format": "date-time", "description": "ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`." },
                       "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
                     },
                     "required": ["device", "previous_state", "state", "changed_at", "connect_link_id"]
@@ -920,7 +835,7 @@
                       "device": { "$ref": "#/components/schemas/PendingWebhookDevice" },
                       "previous": { "type": "string" },
                       "current": { "type": "string" },
-                      "changed_at": { "type": "string", "format": "date-time" },
+                      "changed_at": { "type": "string", "format": "date-time", "description": "ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`." },
                       "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
                     },
                     "required": ["device", "previous", "current", "changed_at", "connect_link_id"]
@@ -954,7 +869,7 @@
                       "device": { "$ref": "#/components/schemas/PendingWebhookDevice" },
                       "previous": { "type": "string" },
                       "current": { "type": "string" },
-                      "changed_at": { "type": "string", "format": "date-time" },
+                      "changed_at": { "type": "string", "format": "date-time", "description": "ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`." },
                       "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
                     },
                     "required": ["device", "previous", "current", "changed_at", "connect_link_id"]
@@ -991,7 +906,7 @@
                       "status": { "type": "string", "description": "`APPROVED` or `DECLINED`, as Meta sends it." },
                       "verified_name": { "type": ["string", "null"] },
                       "rejection_reason": { "type": ["string", "null"], "description": "Meta's reason in a rejection, or `null`." },
-                      "reviewed_at": { "type": "string", "format": "date-time" },
+                      "reviewed_at": { "type": "string", "format": "date-time", "description": "ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`." },
                       "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
                     },
                     "required": ["device", "decision", "previous_status", "status", "verified_name", "rejection_reason", "reviewed_at", "connect_link_id"]
@@ -1096,7 +1011,7 @@
     "group_participant.joined": {
       "post": {
         "summary": "group_participant.joined",
-        "description": "A person joined one of the account's groups.",
+        "description": "A person joined one of the account's groups. At most one per person, group and UTC day: if the same person joins again that day, no other one is sent.",
         "x-fc-status": "live",
         "x-fc-domain": "communities",
         "x-fc-pending": "communities-events",
@@ -1180,7 +1095,7 @@
     "group_participant.left": {
       "post": {
         "summary": "group_participant.left",
-        "description": "A person left one of the account's groups.",
+        "description": "A person left one of the account's groups. At most one per person, group and UTC day: if the same person leaves again that day, no other one is sent.",
         "x-fc-status": "live",
         "x-fc-domain": "communities",
         "x-fc-pending": "communities-events",

@@ -234,6 +234,10 @@ function typeChecks(client: Funnelchat) {
     expectTypeOf<'device_not_group_admin'>().toMatchTypeOf<KnownErrorCode>();
     // The common format of every area.
     expectTypeOf<'validation_failed' | 'not_found' | 'payment_required' | 'rate_limited'>().toMatchTypeOf<KnownErrorCode>();
+    // Named by the spec the portal publishes since v0.6.16.
+    expectTypeOf<
+      'gate_misconfigured' | 'device_not_meta' | 'device_not_ready' | 'unsupported_provider' | 'meta_error' | 'plan_cap_reached' | 'webhooks_limit_reached'
+    >().toMatchTypeOf<KnownErrorCode>();
     expectTypeOf<'something_new'>().toMatchTypeOf<NonNullable<APIError['code']>>();
   }
 }

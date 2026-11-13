@@ -65,7 +65,8 @@ describe('a message to a group', () => {
     const { fetch, calls } = mockFetch({ status: 200, body: { data: action } });
     const { data } = await client(fetch).groups.retrieveAction(ACTION);
     expect(calls[0]?.url).toBe(`${BASE}/groups/actions/${ACTION}`);
-    expect(data.result?.message?.uid).toBe('3EB0C767D26A1D4E5F6A');
+    // `result` is typed by the type of the action, so the test compares the value.
+    expect(data.result).toEqual({ message: { uid: '3EB0C767D26A1D4E5F6A' } });
   });
 
   it('is a send: the route table carries Send and it is never retried on its own', async () => {
