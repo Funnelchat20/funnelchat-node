@@ -25,7 +25,7 @@ export const COMMON_ERROR_CODES = {
   validation_failed: 422,
   /** 404: it does not exist, or it is of another account or workspace than the key's. */
   not_found: 404,
-  /** 402: the payment of the account is due. Settle it in the Funnelchat panel; not worth retrying. */
+  /** 402: the payment of the account or of the workspace is due. Settle it in the Funnelchat panel; not worth retrying. */
   payment_required: 402,
   /** 429, with `Retry-After`: too many calls; wait that many seconds (`APIError.retryAfter`). */
   rate_limited: 429,
@@ -112,7 +112,7 @@ export const NUMBER_ERROR_CODES = {
   number_limit_reached: 403,
   /** 403: the account cannot connect numbers now. */
   connect_not_allowed: 403,
-  /** 402: the payment of the account is due, also on `devices.qr` (the common `payment_required`). */
+  /** 402: the payment of the account or of the workspace is due, also on `devices.qr` (the common `payment_required`). */
   payment_required: 402,
   /**
    * 409: the account already has a QR number waiting to be scanned (at most one): its `device_id`

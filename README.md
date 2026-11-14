@@ -630,7 +630,7 @@ Everything generated comes from one script:
 
 ```bash
 curl -fsSo /tmp/funnelchat.json https://developers-portal.funnelchat.app/specs/funnelchat.json
-npm run generate -- --spec /tmp/funnelchat.json --source url=https://developers-portal.funnelchat.app/specs/funnelchat.json --source portal_version=v0.6.18
+npm run generate -- --spec /tmp/funnelchat.json --source url=https://developers-portal.funnelchat.app/specs/funnelchat.json --source portal_version=v0.6.19
 npm run generate   # with the spec in spec/, for example after editing spec/pending.json
 ```
 

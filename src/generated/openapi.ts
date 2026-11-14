@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 19e91748ddfe19ee…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 3a5f39f1bd8d62c5…) + spec/pending.json.
  */
 /* eslint-disable */
 export interface paths {
@@ -293,7 +293,7 @@ export interface paths {
          * Crear un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          *
-         *     Crea un contacto con su teléfono (`phone`) o su `whatsapp_id`. Responde **201** cuando lo crea. Si en tu cuenta ya hay un contacto con ese teléfono o `whatsapp_id`, responde **200** con ese contacto, sin actualizar sus datos ni aplicarle `custom_fields`: para crear o actualizar en una sola llamada, usa `POST /contacts/update-or-create`.
+         *     Crea un contacto con su teléfono (`phone`) o su `whatsapp_id`. Responde **201** cuando lo crea. Si ya hay un contacto con ese teléfono o `whatsapp_id`, responde **200** con ese contacto, sin actualizar sus datos ni aplicarle `custom_fields`: para crear o actualizar en una sola llamada, usa `POST /contacts/update-or-create`. Si en tu cuenta cada workspace tiene sus propios contactos, el contacto se busca y se crea en el workspace de tu clave: que otro workspace tenga un contacto con el mismo teléfono no cambia la respuesta. Si tus workspaces comparten los contactos, se busca en toda tu cuenta.
          *
          *     **Campos personalizados (`custom_fields`, opcional).** Una lista de hasta 100 ítems `{id, value}`: `id` es el de un campo de tu cuenta (`GET /custom-fields`) y `value`, su valor para este contacto. Se guardan igual que con `POST /contacts/attach-custom-field`:
          *
@@ -309,7 +309,7 @@ export interface paths {
          *     | HTTP | Cuándo |
          *     |---|---|
          *     | 422 | Un dato del contacto no es válido, o `custom_fields` no es una lista de hasta 100 ítems con `id` entero y `value` de texto, o un `id` se repite o no es un campo de tu cuenta y de tu workspace (el error viene en `errors["custom_fields.N.id"]`), o un `value` no cumple el formato del tipo de su campo (en `errors["custom_fields.N.value"]`, con el formato que espera). No se crea ni se cambia nada. |
-         *     | 404 | Ya hay un contacto con ese teléfono (o `whatsapp_id`) en tu cuenta, pero fuera del workspace de tu clave. No se cambia nada. |
+         *     | 404 | Tus workspaces comparten los contactos y ya hay un contacto con ese teléfono (o `whatsapp_id`) en otro workspace de tu cuenta, fuera del de tu clave. No se cambia nada. Si cada workspace tiene sus propios contactos, esta respuesta no ocurre: el contacto se crea en el workspace de tu clave. |
          *     | 429 | Demasiadas solicitudes por minuto (ver `Retry-After`). |
          */
         post: operations["contact.store"];
@@ -332,7 +332,7 @@ export interface paths {
          * Crear o actualizar un contacto
          * @description **Permiso requerido:** **Contactos y conversaciones → Editar**
          *
-         *     Crea el contacto con ese teléfono (`phone`) o, si ya existe en tu cuenta, le actualiza `name` y `email` (los que mandes). Responde **201** cuando lo crea y **200** cuando lo actualiza. `custom_fields` se aplica en los dos casos.
+         *     Crea el contacto con ese teléfono (`phone`) o, si ya existe, le actualiza `name` y `email` (los que mandes). Responde **201** cuando lo crea y **200** cuando lo actualiza. `custom_fields` se aplica en los dos casos. Si en tu cuenta cada workspace tiene sus propios contactos, el contacto se busca y se crea en el workspace de tu clave: que otro workspace tenga un contacto con el mismo teléfono no cambia la respuesta. Si tus workspaces comparten los contactos, se busca en toda tu cuenta.
          *
          *     **Campos personalizados (`custom_fields`, opcional).** Una lista de hasta 100 ítems `{id, value}`: `id` es el de un campo de tu cuenta (`GET /custom-fields`) y `value`, su valor para este contacto. Se guardan igual que con `POST /contacts/attach-custom-field`:
          *
@@ -348,7 +348,7 @@ export interface paths {
          *     | HTTP | Cuándo |
          *     |---|---|
          *     | 422 | Un dato del contacto no es válido, o `custom_fields` no es una lista de hasta 100 ítems con `id` entero y `value` de texto, o un `id` se repite o no es un campo de tu cuenta y de tu workspace (el error viene en `errors["custom_fields.N.id"]`), o un `value` no cumple el formato del tipo de su campo (en `errors["custom_fields.N.value"]`, con el formato que espera). No se crea ni se cambia nada. |
-         *     | 404 | Ya hay un contacto con ese teléfono (o `whatsapp_id`) en tu cuenta, pero fuera del workspace de tu clave. No se cambia nada. |
+         *     | 404 | Tus workspaces comparten los contactos y ya hay un contacto con ese teléfono (o `whatsapp_id`) en otro workspace de tu cuenta, fuera del de tu clave. No se cambia nada. Si cada workspace tiene sus propios contactos, esta respuesta no ocurre: el contacto se crea en el workspace de tu clave. |
          *     | 429 | Demasiadas solicitudes por minuto (ver `Retry-After`). |
          */
         post: operations["contact.updateOrCreate"];
@@ -451,7 +451,7 @@ export interface paths {
          *     | `status` | Cuándo |
          *     |---|---|
          *     | 201 | El valor quedó guardado. |
-         *     | 403 | El campo o el contacto no es de tu cuenta o está fuera del workspace de tu clave. No se guarda. |
+         *     | 404 | El campo o el contacto no existe, no es de tu cuenta o está fuera del workspace de tu clave. No se guarda. |
          *     | 422 | `value` no cumple el formato del tipo del campo (numérico, fecha `AAAA-MM-DD` o URL); `message` dice qué formato espera. No se guarda. |
          *
          *     Cómo escribir `value` según el tipo: ver `type` en `GET /custom-fields`. Si el cuerpo no es una lista de ítems con `customFieldId` y `contactId` enteros y `value` de texto, la llamada entera responde **422** y no guarda nada.
@@ -1648,7 +1648,7 @@ export interface paths {
          * Mandar un mensaje
          * @description **Permiso requerido:** **Contactos y conversaciones → Enviar**
          *
-         *     Indica a quién envías con `phone`: el teléfono con código de país, por ejemplo `5491122334455`. No hace falta crear el contacto antes: si ese teléfono todavía no es un contacto de tu cuenta, se crea en el workspace de tu clave, igual que con `POST /contacts/update-or-create` y con el mismo permiso, que **Enviar** ya incluye. La respuesta trae su id en `message.contact_id`, el mismo que llevan los eventos `message.status_changed`. Si el teléfono no es válido, o ya es un contacto de otro workspace de tu cuenta, la respuesta es la misma que daría `POST /contacts/update-or-create`: 422, o 404 sin datos de ese contacto. Con un número oficial de WhatsApp (API Cloud) también puedes indicar `whatsapp_id`, el BSUID que envía Meta (por ejemplo `US.13491208655302741918`), en lugar de `phone`; usado así con un número conectado por QR, responde 422. En un número oficial, el primer mensaje a un contacto nuevo tiene que ser una plantilla: un mensaje libre solo sale dentro de las 24 horas desde que el contacto te escribió. Si ya tienes el `contact_id`, puedes seguir enviándolo: si junto con él mandas `phone` o `whatsapp_id`, tienen que ser de ese mismo contacto (si no, 422 `recipient_mismatch`). En `send-template`, `phone` o `whatsapp_id` va siempre, con o sin `contact_id`.
+         *     Indica a quién envías con `phone`: el teléfono con código de país, por ejemplo `5491122334455`. No hace falta crear el contacto antes: el teléfono se busca y, si todavía no es un contacto, se crea en el workspace de tu clave, igual que con `POST /contacts/update-or-create` y con el mismo permiso, que **Enviar** ya incluye. Si en tu cuenta cada workspace tiene sus propios contactos, se busca solo en el workspace de tu clave; si tus workspaces comparten los contactos, en toda tu cuenta. La respuesta trae su id en `message.contact_id`, el mismo que llevan los eventos `message.status_changed`. Si el teléfono no es válido, la respuesta es la misma que daría `POST /contacts/update-or-create`: 422. Si tus workspaces comparten los contactos y el teléfono ya es un contacto de otro workspace de tu cuenta, también: 404, sin datos de ese contacto. Con un número oficial de WhatsApp (API Cloud) también puedes indicar `whatsapp_id`, el BSUID que envía Meta (por ejemplo `US.13491208655302741918`), en lugar de `phone`; usado así con un número conectado por QR, responde 422. En un número oficial, el primer mensaje a un contacto nuevo tiene que ser una plantilla: un mensaje libre solo sale dentro de las 24 horas desde que el contacto te escribió. Si ya tienes el `contact_id`, puedes seguir enviándolo: si junto con él mandas `phone` o `whatsapp_id`, tienen que ser de ese mismo contacto (si no, 422 `recipient_mismatch`). En `send-template`, `phone` o `whatsapp_id` va siempre, con o sin `contact_id`.
          *
          *     Si el límite de contactos activos (MAC) frena el envío, responde `429` con `error` = `mac_lockout_24h` o `mac_limit_reached` y sin `Retry-After`: reintentar no sirve hasta que sumes capacidad o empiece un ciclo nuevo. El envío no sale y no se guarda ningún mensaje ni tu `client_reference`: no queda nada en el historial del contacto. Detalle en «Errores y límites».
          */
@@ -1803,7 +1803,7 @@ export interface paths {
          * Mandar una plantilla
          * @description **Permiso requerido:** **Contactos y conversaciones → Enviar**
          *
-         *     Indica a quién envías con `phone`: el teléfono con código de país, por ejemplo `5491122334455`. No hace falta crear el contacto antes: si ese teléfono todavía no es un contacto de tu cuenta, se crea en el workspace de tu clave, igual que con `POST /contacts/update-or-create` y con el mismo permiso, que **Enviar** ya incluye. La respuesta trae su id en `message.contact_id`, el mismo que llevan los eventos `message.status_changed`. Si el teléfono no es válido, o ya es un contacto de otro workspace de tu cuenta, la respuesta es la misma que daría `POST /contacts/update-or-create`: 422, o 404 sin datos de ese contacto. Con un número oficial de WhatsApp (API Cloud) también puedes indicar `whatsapp_id`, el BSUID que envía Meta (por ejemplo `US.13491208655302741918`), en lugar de `phone`; usado así con un número conectado por QR, responde 422. En un número oficial, el primer mensaje a un contacto nuevo tiene que ser una plantilla: un mensaje libre solo sale dentro de las 24 horas desde que el contacto te escribió. Si ya tienes el `contact_id`, puedes seguir enviándolo: si junto con él mandas `phone` o `whatsapp_id`, tienen que ser de ese mismo contacto (si no, 422 `recipient_mismatch`). En `send-template`, `phone` o `whatsapp_id` va siempre, con o sin `contact_id`.
+         *     Indica a quién envías con `phone`: el teléfono con código de país, por ejemplo `5491122334455`. No hace falta crear el contacto antes: el teléfono se busca y, si todavía no es un contacto, se crea en el workspace de tu clave, igual que con `POST /contacts/update-or-create` y con el mismo permiso, que **Enviar** ya incluye. Si en tu cuenta cada workspace tiene sus propios contactos, se busca solo en el workspace de tu clave; si tus workspaces comparten los contactos, en toda tu cuenta. La respuesta trae su id en `message.contact_id`, el mismo que llevan los eventos `message.status_changed`. Si el teléfono no es válido, la respuesta es la misma que daría `POST /contacts/update-or-create`: 422. Si tus workspaces comparten los contactos y el teléfono ya es un contacto de otro workspace de tu cuenta, también: 404, sin datos de ese contacto. Con un número oficial de WhatsApp (API Cloud) también puedes indicar `whatsapp_id`, el BSUID que envía Meta (por ejemplo `US.13491208655302741918`), en lugar de `phone`; usado así con un número conectado por QR, responde 422. En un número oficial, el primer mensaje a un contacto nuevo tiene que ser una plantilla: un mensaje libre solo sale dentro de las 24 horas desde que el contacto te escribió. Si ya tienes el `contact_id`, puedes seguir enviándolo: si junto con él mandas `phone` o `whatsapp_id`, tienen que ser de ese mismo contacto (si no, 422 `recipient_mismatch`). En `send-template`, `phone` o `whatsapp_id` va siempre, con o sin `contact_id`.
          */
         post: operations["messageTemplate.send"];
         delete?: never;
@@ -2654,7 +2654,7 @@ export interface paths {
          *
          *     Envía a un contacto un formulario de WhatsApp publicado. `form_id` es el identificador estable del formulario (el mismo en todas sus versiones) y `device_id` el número de WhatsApp Cloud de tu cuenta por el que sale. `text` (hasta 1024 caracteres) acompaña al formulario y por defecto es su nombre; `button_text` (hasta 30 caracteres, sin emojis) es el botón y por defecto es «Abrir» u «Open» según el idioma del usuario de la clave (en inglés «Open»; en español y portugués «Abrir»). Sólo funciona dentro de las 24 horas siguientes al último mensaje del contacto a ese número. Responde `200` con el mensaje en cola (`status` `queued`, `type` `whatsapp_form`); aceptado no es entregado: el estado final llega por `message.status_changed` o por `GET /contacts/{contact}/messages/{message}`, y la respuesta del contacto por `whatsapp_form.completed`. Responde `404` si el contacto no existe o no es de tu cuenta, o `404` con `form_not_found` si el formulario no existe en tu cuenta. Responde `422` con `device_unavailable` si el número no es de tu cuenta o no está conectado, `number_not_eligible` si no es un número de WhatsApp Cloud que pueda enviar formularios, `form_not_published` si el formulario no tiene versión publicada, `form_not_on_number` si no está publicado en ese número, `recipient_unreachable` si el contacto no tiene teléfono ni identificador de WhatsApp, `contact_blocked` si bloqueaste al contacto en ese número y `window_closed` si pasaron más de 24 horas. También responde `422` por las guardas de envío y `429` con `rate_limited` si superas el ritmo del número o del contacto.
          *
-         *     Si tu cuenta está bloqueada por el límite de contactos activos, responde `429` con `mac_lockout_24h` (además del `429` `rate_limited` del ritmo) y no guarda ningún mensaje ni `client_reference`. Si Funnelchat no pudo poner el mensaje en cola, la respuesta no es un error: es `200` con el mensaje en estado `failed` y `error.reason` `not_queued`; no salió, así que reintentar no lo duplica.
+         *     Si tu cuenta (o, si tu cuenta usa workspaces separados, el workspace del número) está bloqueada por el límite de contactos activos, responde `429` con `mac_lockout_24h` (además del `429` `rate_limited` del ritmo) y no guarda ningún mensaje ni `client_reference`. Si Funnelchat no pudo poner el mensaje en cola, la respuesta no es un error: es `200` con el mensaje en estado `failed` y `error.reason` `not_queued`; no salió, así que reintentar no lo duplica.
          */
         post: operations["whatsappFormSend.store"];
         delete?: never;
@@ -2956,7 +2956,7 @@ export interface paths {
          * Ver tus grupos
          * @description **Permiso requerido:** **Grupos y campañas → Ver**
          *
-         *     **Nota:** La lista se lee de WhatsApp y, para una API key, se reutiliza durante un minuto por número: un grupo recién creado en WhatsApp puede tardar hasta un minuto en aparecer. Si un grupo ya está en la cuenta, trae `device_id`. Para importar uno: `POST /groups/{group}/import`.
+         *     **Nota:** La lista se lee de WhatsApp y, para una API key, se reutiliza durante un minuto por número: un grupo recién creado en WhatsApp puede tardar hasta un minuto en aparecer. Si un grupo ya está en el workspace de la llamada, trae `device_id`. Para importar uno: `POST /groups/{group}/import`.
          *
          *     **Con API key:** la respuesta siempre viene paginada. Tamaño de página: `pageSize` (por defecto 25, máximo 100; un valor mayor, menor que 1 o no entero responde `422`).
          */
@@ -3046,7 +3046,7 @@ export interface paths {
          * Seguir un grupo
          * @description **Permiso requerido:** **Grupos y campañas → Administrar grupos**
          *
-         *     **Nota:** Importa a la cuenta un grupo del número indicado en `device_id`, igual que importarlo desde el panel: queda visible en el panel, se sincronizan sus participantes y desde entonces genera los eventos `group_participant.joined` y `group_participant.left`. Los datos del grupo y si el número es administrador se leen de WhatsApp en la misma llamada. Responde `201` si lo importó y `200` si ya estaba en la cuenta, con `is_admin`. Solo números QR: con un número oficial responde `422 provider_unsupported`. Si el grupo no es del número responde `404 group_not_found`. Cada número importa hasta 5 grupos por minuto (`429 import_rate_limited`, con `retry_after` en segundos). Dos pedidos a la vez por el mismo grupo lo importan una sola vez. Un grupo que ya está en otro workspace de la cuenta no se puede importar en este.
+         *     **Nota:** Importa al workspace de la API key un grupo del número indicado en `device_id`, igual que importarlo desde el panel: queda visible en el panel, se sincronizan sus participantes y desde entonces genera los eventos `group_participant.joined` y `group_participant.left`. Los datos del grupo y si el número es administrador se leen de WhatsApp en la misma llamada. Responde `201` si lo importó y `200` si ya estaba en el workspace, con `is_admin`. Solo números QR: con un número oficial responde `422 provider_unsupported`. Si el grupo no es del número responde `404 group_not_found`. Cada número importa hasta 5 grupos por minuto (`429 import_rate_limited`, con `retry_after` en segundos). Dos pedidos a la vez por el mismo grupo en el mismo workspace lo importan una sola vez. Si el grupo ya está en otro workspace de la cuenta: cuando cada workspace de la cuenta tiene sus propios grupos, se importa la copia de este workspace sin tocar la del otro; si no, el grupo es uno solo para toda la cuenta y responde `404 group_not_found`.
          */
         post: operations["v2.apiGroupImport"];
         delete?: never;
@@ -3845,8 +3845,11 @@ export interface paths {
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
          *     La cuenta dueña de la clave: su nombre, su plan y sus límites. Los conteos (números,
-         *     agentes) son los del workspace de la clave. No trae el email, el teléfono ni las fechas de
-         *     login del dueño, ni datos de cobro.
+         *     agentes) son los del workspace de la clave, y `numbers_capacity` es el cupo que se aplica
+         *     cuando esa clave crea un número. Si el workspace paga su propio plan, el plan, sus límites y
+         *     el saldo de contactos activos son los de ese workspace; si no, los de la cuenta. No trae el
+         *     email, el teléfono ni las fechas de login del dueño, ni datos de cobro, ni datos de otros
+         *     workspaces.
          */
         get: {
             parameters: {
@@ -3935,8 +3938,9 @@ export interface paths {
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25); también `per_page` · orden fijo: id ascendente · no acepta parámetros de orden.
          *
-         *     Las campañas de la cuenta y de sus agentes, para elegir cuáles entran en el reporte
-         *     diario. `search` filtra por nombre.
+         *     Las campañas del workspace por defecto, para elegir cuáles entran en el reporte diario. El
+         *     reporte es de toda la cuenta: con una clave, esta ruta solo la puede usar una clave del
+         *     workspace por defecto. `search` filtra por nombre.
          */
         get: operations["alertCampaign.index"];
         put?: never;
@@ -3991,8 +3995,8 @@ export interface paths {
          * @description **Escritura** · requiere **Números de WhatsApp → Editar**.
          *
          *     Reemplaza la configuración de la cuenta (hay una sola). Con `all_campaigns: false`, de
-         *     `campaign_ids` se guardan solo las campañas que existen y son de la cuenta: los ids que
-         *     no lo son se descartan sin error.
+         *     `campaign_ids` se guardan solo las campañas que existen y son del workspace por defecto
+         *     (las que lista `GET alerts/campaigns`): los ids que no lo son se descartan sin error.
          */
         put: operations["alertDailyReport.update"];
         post?: never;
@@ -4143,7 +4147,7 @@ export interface paths {
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25) · orden fijo: id ascendente · no acepta parámetros de orden.
          *
-         *     Uno por cada WABA de la cuenta que ya tiene dataset, con el último estado guardado. No
+         *     Uno por cada WABA de los números del workspace que ya tiene dataset, con el último estado guardado. No
          *     consulta a Meta: para actualizar el estado de un número, usa
          *     `GET devices/{device}/capi/test`.
          */
@@ -4169,7 +4173,7 @@ export interface paths {
          *
          *     **Listado** · `perPage` de 1 a 100 (por defecto 25) · orden fijo: id descendente · no acepta parámetros de orden.
          *
-         *     Los links de la cuenta, del más nuevo al más viejo, sin la URL (el token no se guarda).
+         *     Los links del workspace, del más nuevo al más viejo, sin la URL (el token no se guarda).
          *     Filtra por `status` (`pending`, `completed`, `failed`, `expired`, `revoked`) y por
          *     `external_reference` (igualdad exacta).
          */
@@ -4217,7 +4221,7 @@ export interface paths {
          *     el link no reserva lugar. Con el pago vencido, crear el link responde `403`, y usarlo deja
          *     el link `failed` con `quota_exceeded`. Con `device_id` el link **reconecta** ese número (no ocupa un lugar nuevo;
          *     el `type` tiene que coincidir con el del número) y revoca los links de reconexión anteriores
-         *     de ese número. Cada cuenta puede tener como máximo 20 links pendientes.
+         *     de ese número. Cada workspace puede tener como máximo 20 links pendientes.
          *
          *     Para enterarte del resultado: el webhook `device.connected` (trae `connect_link_id` y
          *     `external_reference`), la `return_url` o `GET connect-links/{link}`. Al terminar, la página
@@ -4229,7 +4233,9 @@ export interface paths {
          *     API que lo creó.
          *
          *     Acepta el header `Idempotency-Key` (de 1 a 255 caracteres) para reintentar sin crear otro
-         *     link: la misma clave con el mismo cuerpo, dentro de las 24 horas, devuelve el mismo link.
+         *     link: la misma clave con el mismo cuerpo, desde el mismo workspace y dentro de las 24 horas,
+         *     devuelve el mismo link. Otro workspace de la cuenta puede usar la misma clave sin cruzarse
+         *     con este.
          */
         post: operations["connectLink.store"];
         delete?: never;
@@ -4426,11 +4432,14 @@ export interface paths {
          *     API y su ubicación no es la de tu cliente, así que no sirve para elegirlo. Si Funnelchat no
          *     tiene salida en ese país, usa la más cercana.
          *
-         *     La cuenta tiene como máximo un número por QR que nunca se conectó: mientras exista, responde
-         *     `409 pending_number_exists` con su `device_id` (conéctalo o bórralo).
+         *     El workspace tiene como máximo un número por QR que nunca se conectó (si la cuenta no usa
+         *     workspaces, la cuenta entera): mientras exista, responde `409 pending_number_exists` con su
+         *     `device_id` (conéctalo o bórralo).
          *
          *     Con el header `Idempotency-Key` puedes reintentar sin duplicar: la misma clave con el mismo
-         *     cuerpo, dentro de las 24 horas, devuelve el mismo número (`Idempotent-Replayed: true`). La
+         *     cuerpo, desde el mismo workspace y dentro de las 24 horas, devuelve el mismo número
+         *     (`Idempotent-Replayed: true`). Otro workspace de la cuenta puede usar la misma clave sin
+         *     cruzarse con este. La
          *     misma clave con otro cuerpo responde `422 idempotency_key_mismatch`; mientras la primera
          *     sigue en curso, `409 operation_in_progress`. Una clave vacía o de más de 255 caracteres
          *     responde `422 invalid_idempotency_key` y no crea nada.
@@ -6073,7 +6082,7 @@ export interface webhooks {
         put?: never;
         /**
          * group.created
-         * @description Se creó o se importó un grupo dentro de una campaña de la cuenta; `source` vale `imported` si el grupo ya existía en WhatsApp y entró por una importación o una sincronización, y `created` en cualquier otro caso.
+         * @description Se creó o se importó un grupo dentro de una campaña del workspace; `source` vale `imported` si el grupo ya existía en WhatsApp y entró por una importación o una sincronización, y `created` en cualquier otro caso.
          */
         post: operations["webhook.group_created"];
         delete?: never;
@@ -6514,7 +6523,7 @@ export interface webhooks {
         put?: never;
         /**
          * account.blocked
-         * @description La cuenta quedó bloqueada por consumo: terminó la gracia de 24 horas tras agotar los contactos activos mensuales sin que se regularizara.
+         * @description La cuenta, o un workspace con facturación propia, quedó bloqueada por consumo: terminó la gracia de 24 horas tras agotar los contactos activos mensuales sin que se regularizara. El bloqueo de la cuenta llega al workspace por defecto; el de un workspace con facturación propia, a ese workspace.
          */
         post: {
             parameters: {
@@ -6576,7 +6585,7 @@ export interface webhooks {
         put?: never;
         /**
          * mac.expiring
-         * @description Hay contactos activos mensuales que vencen en los próximos 7 días.
+         * @description Hay contactos activos mensuales que vencen en los próximos 7 días. Llega un evento por pool: el de la cuenta al workspace por defecto, y el de cada workspace con facturación propia a ese workspace, con sus contactos.
          */
         post: {
             parameters: {
@@ -6764,7 +6773,7 @@ export interface webhooks {
         put?: never;
         /**
          * subscription.cancellation_confirmed
-         * @description Quedó confirmada la cancelación de la suscripción (solo suscripciones de Stripe): se conserva el acceso hasta la fecha indicada.
+         * @description Quedó confirmada la cancelación de la suscripción (solo suscripciones de Stripe): se conserva el acceso hasta la fecha indicada. Llega al workspace de esa suscripción: el workspace con facturación propia, o el workspace por defecto si es la de la cuenta.
          */
         post: {
             parameters: {
@@ -6824,7 +6833,7 @@ export interface webhooks {
         put?: never;
         /**
          * subscription.reactivated
-         * @description Se revirtió la cancelación programada de la suscripción (solo suscripciones de Stripe): sigue vigente y se renueva en la fecha indicada.
+         * @description Se revirtió la cancelación programada de la suscripción (solo suscripciones de Stripe): sigue vigente y se renueva en la fecha indicada. Llega al workspace de esa suscripción: el workspace con facturación propia, o el workspace por defecto si es la de la cuenta.
          */
         post: {
             parameters: {
@@ -6884,7 +6893,7 @@ export interface webhooks {
         put?: never;
         /**
          * subscription.trial_ending
-         * @description El período de prueba está por terminar; el evento llega entre 1 y 3 días antes del final, según cómo se contrató (en las suscripciones de Stripe, el evento de Stripe).
+         * @description El período de prueba está por terminar; el evento llega entre 1 y 3 días antes del final, según cómo se contrató (en las suscripciones de Stripe, el evento de Stripe). Llega al workspace de esa suscripción: el workspace con facturación propia, o el workspace por defecto si es la de la cuenta.
          */
         post: {
             parameters: {
@@ -8370,7 +8379,7 @@ export interface components {
             uid: string;
             /** @description Nombre del grupo. */
             name: string | null;
-            /** @description `true` si esta llamada lo importó; `false` si ya estaba en la cuenta. */
+            /** @description `true` si esta llamada lo importó; `false` si ya estaba en el workspace. */
             imported: boolean;
             /** @description Si el número indicado es administrador del grupo, según WhatsApp. Sin serlo no puede enviarle mensajes ni hacer acciones de grupo. */
             is_admin: boolean;
@@ -19528,7 +19537,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["CommunitiesAuthenticationException"];
-            /** @description La cuenta llegó al tope de grupos oficiales de su plan. No se registra ninguna acción. */
+            /** @description Se alcanzó el tope de grupos oficiales del plan: el del workspace si tiene plan propio, o el de la cuenta si no. No se registra ninguna acción. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -19554,7 +19563,7 @@ export interface operations {
                         parameter: string;
                         /** @description El tope del plan. */
                         cap: number;
-                        /** @description Lo que la cuenta ya usó de ese tope. */
+                        /** @description Lo que ya se usó de ese tope: el uso del workspace si tiene plan propio, o el de toda la cuenta si no. */
                         used: number;
                     };
                 };
@@ -19831,7 +19840,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description El grupo ya estaba en la cuenta: no se importó de nuevo. */
+            /** @description El grupo ya estaba en el workspace: no se importó de nuevo. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -21996,7 +22005,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -22052,7 +22061,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -22108,7 +22117,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -22164,7 +22173,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -22207,7 +22216,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Los datasets de la cuenta. */
+            /** @description Los datasets del workspace. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -22217,7 +22226,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -22263,7 +22272,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -22365,7 +22374,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -22415,7 +22424,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -22464,7 +22473,7 @@ export interface operations {
                 };
             };
             /**
-             * @description La cuenta ya tiene el máximo de links pendientes (`too_many_open_links`), o se superó el límite de creaciones por minuto.
+             * @description El workspace ya tiene el máximo de links pendientes (`too_many_open_links`), o se superó el límite de creaciones por minuto.
              *
              *     Superaste un límite de llamadas. Espera los segundos que indica `Retry-After` antes de volver a llamar.
              *
@@ -22572,7 +22581,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -22707,7 +22716,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Los dominios de la cuenta. */
+            /** @description Los dominios del workspace. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -22744,7 +22753,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -22787,7 +22796,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -22835,7 +22844,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -22899,7 +22908,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -22961,7 +22970,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -23013,8 +23022,8 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
-             *     - Hasta **30 llamadas por minuto** por usuario de Funnelchat, en un contador que suman todas las rutas con este tipo de límite (también las del panel).
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
+             *     - Hasta **30 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -23073,7 +23082,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -23126,8 +23135,8 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
-             *     - Hasta **30 llamadas por minuto** por usuario de Funnelchat, en un contador que suman todas las rutas con este tipo de límite (también las del panel).
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
+             *     - Hasta **30 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -23182,7 +23191,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -23234,7 +23243,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -23270,7 +23279,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Los números de la cuenta. */
+            /** @description Los números del workspace. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -23335,7 +23344,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -23384,7 +23393,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -23420,7 +23429,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Hay otra operación en curso (`operation_in_progress`) o la cuenta ya tiene un número por QR sin conectar (`pending_number_exists`, con `device_id`). */
+            /** @description Hay otra operación en curso (`operation_in_progress`) o el workspace ya tiene un número por QR sin conectar (`pending_number_exists`, con `device_id`). */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -23498,7 +23507,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -23543,7 +23552,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -23630,7 +23639,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -23687,7 +23696,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -23734,7 +23743,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -23752,7 +23761,7 @@ export interface operations {
                 };
             };
             /**
-             * @description El pago de la cuenta está vencido, o quien llama no puede borrar ese número.
+             * @description El pago de la cuenta o del workspace está vencido, o quien llama no puede borrar ese número.
              *
              *     También, por el workspace de la clave:
              *
@@ -23793,7 +23802,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -23843,7 +23852,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -23897,7 +23906,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *     - Hasta **10 llamadas por minuto** por clave: cada clave tiene su propio cupo, aparte del panel y de las otras claves de la cuenta.
              *
              *     Al pasarlo responde `429 rate_limited`.
@@ -23948,7 +23957,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -24002,7 +24011,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -24051,7 +24060,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -24097,7 +24106,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -24145,7 +24154,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -24191,7 +24200,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -24237,7 +24246,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -24282,7 +24291,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -24351,7 +24360,7 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -24396,7 +24405,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -24482,7 +24491,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -24601,7 +24610,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -24690,7 +24699,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -24802,7 +24811,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *     - Hasta **6 llamadas por minuto** por número: las claves y el panel de la cuenta comparten el cupo de cada número.
              *
              *     Al pasarlo responde `429 rate_limited`.
@@ -24852,7 +24861,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -24918,7 +24927,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -24979,7 +24988,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -25036,8 +25045,8 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
-             *     - Hasta **10 llamadas por minuto** por usuario de Funnelchat, en un contador que suman todas las rutas con este tipo de límite (también las del panel).
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
+             *     - Hasta **10 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -25106,7 +25115,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -25163,8 +25172,8 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
-             *     - Hasta **10 llamadas por minuto** por usuario de Funnelchat, en un contador que suman todas las rutas con este tipo de límite (también las del panel).
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
+             *     - Hasta **10 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -25225,7 +25234,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -25282,8 +25291,8 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
-             *     - Hasta **10 llamadas por minuto** por usuario de Funnelchat, en un contador que suman todas las rutas con este tipo de límite (también las del panel).
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
+             *     - Hasta **10 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -25414,7 +25423,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Las suscripciones de la cuenta. */
+            /** @description Las suscripciones del workspace. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -26138,7 +26147,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -26228,7 +26237,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **200 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **200 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
@@ -26274,7 +26283,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
-            /** @description El pago de la cuenta está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
+            /** @description El pago de la cuenta o del workspace está vencido (`payment_required`). Regularízalo en el panel de Funnelchat para seguir usando esta ruta. */
             402: {
                 headers: {
                     [name: string]: unknown;
@@ -26317,7 +26326,7 @@ export interface operations {
              *
              *     Límite por minuto:
              *
-             *     - Hasta **60 llamadas por minuto** por usuario de Funnelchat: todas sus claves y su uso del panel comparten ese cupo.
+             *     - Hasta **60 llamadas por minuto** por workspace: las claves del workspace y el uso del panel en ese workspace comparten ese cupo; cada workspace de la cuenta tiene el suyo.
              *
              *     Al pasarlo responde `429 rate_limited`.
              *
