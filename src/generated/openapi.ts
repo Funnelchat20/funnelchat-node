@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 7db2ead826697c80…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 19e91748ddfe19ee…) + spec/pending.json.
  */
 /* eslint-disable */
 export interface paths {
@@ -6073,7 +6073,7 @@ export interface webhooks {
         put?: never;
         /**
          * group.created
-         * @description Se creó o se importó un grupo dentro de una campaña de la cuenta.
+         * @description Se creó o se importó un grupo dentro de una campaña de la cuenta; `source` vale `imported` si el grupo ya existía en WhatsApp y entró por una importación o una sincronización, y `created` en cualquier otro caso.
          */
         post: operations["webhook.group_created"];
         delete?: never;
@@ -6637,7 +6637,7 @@ export interface webhooks {
         put?: never;
         /**
          * mac.usage_100
-         * @description La cuenta agotó sus contactos activos mensuales del ciclo; se abre una gracia de 24 horas cuyo vencimiento viaja en `grace_expires_at`.
+         * @description La cuenta agotó sus contactos activos mensuales del ciclo; se abre una gracia de 24 horas cuyo vencimiento viaja en `grace_expires_at`. `workspace_id` es el workspace al que se rutea el evento, como en todos los eventos: el workspace con facturación propia cuyo pool se agotó, o el workspace por defecto cuando el pool es el de la cuenta.
          */
         post: {
             parameters: {
@@ -6701,7 +6701,7 @@ export interface webhooks {
         put?: never;
         /**
          * mac.usage_80
-         * @description La cuenta alcanzó el 80% de sus contactos activos mensuales del ciclo.
+         * @description La cuenta alcanzó el 80% de sus contactos activos mensuales del ciclo. `workspace_id` es el workspace al que se rutea el evento, como en todos los eventos: el workspace con facturación propia cuyo pool alcanzó el umbral, o el workspace por defecto cuando el pool es el de la cuenta.
          */
         post: {
             parameters: {
@@ -10313,6 +10313,42 @@ export interface components {
         /** UpdateKanbanStageRequest */
         UpdateKanbanStageRequest: {
             name: string;
+        };
+        /** UpdateLeadScoreSettingsRequest */
+        UpdateLeadScoreSettingsRequest: {
+            hot_threshold: number;
+            warm_threshold: number;
+            min_signals: number;
+            hysteresis: number;
+            decay_enabled: boolean;
+            rules: {
+                id: string;
+                /** @enum {string} */
+                signal: "tag_added" | "tag_removed" | "stage_advanced" | "broadcast_reply" | "message_reply" | "intent_keyword" | "group_join" | "group_leave" | "group_reaction" | "group_poll_vote" | "link_click" | "automation_completed";
+                /** @enum {string} */
+                mode: "event" | "state";
+                points: number;
+                daily_cap?: number | null;
+                /** @enum {string} */
+                unique_scope: "none" | "contact" | "contact_scope";
+                enabled: boolean;
+                disqualifies: boolean;
+                /** @enum {string} */
+                on_release: "restore" | "keep";
+                config?: {
+                    keywords?: string[];
+                    broadcast_ids?: number[] | null;
+                    group_ids?: string[] | null;
+                    flow_ids?: number[] | null;
+                    whalink_ids?: string[] | null;
+                    tag_ids?: number[] | null;
+                    stage_ids?: number[] | null;
+                };
+            }[];
+            decay_steps: {
+                days: number;
+                points: number;
+            }[];
         };
         /** UpdateMessageTemplateRequest */
         UpdateMessageTemplateRequest: {
@@ -15188,7 +15224,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLeadScoreSettingsRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -26340,7 +26380,7 @@ export interface operations {
                  *           "type": "group"
                  *         },
                  *         "campaign": {
-                 *           "uuid": "00000000-0000-4000-8000-000000000001",
+                 *           "uuid": "xK9mQz",
                  *           "name": "Campaña de ejemplo"
                  *         },
                  *         "source": "created"
@@ -26456,7 +26496,7 @@ export interface operations {
                  *           "name": "Grupo de ejemplo"
                  *         },
                  *         "campaign": {
-                 *           "uuid": "00000000-0000-4000-8000-000000000001"
+                 *           "uuid": "xK9mQz"
                  *         },
                  *         "reason": "admin_access_lost"
                  *       }
@@ -26512,7 +26552,7 @@ export interface operations {
                  *           "name": "Grupo de ejemplo"
                  *         },
                  *         "campaign": {
-                 *           "uuid": "00000000-0000-4000-8000-000000000001"
+                 *           "uuid": "xK9mQz"
                  *         },
                  *         "reason": "access_restored"
                  *       }
@@ -26628,7 +26668,7 @@ export interface operations {
                  *           "uid": "120363000000000001@g.us"
                  *         },
                  *         "participant": {
-                 *           "identity": "+5491100000000",
+                 *           "identity": "5491100000000",
                  *           "identity_type": "phone",
                  *           "name": "Ana Pérez"
                  *         },
@@ -26688,7 +26728,7 @@ export interface operations {
                  *       "occurred_at": "2026-10-01T12:00:00Z",
                  *       "data": {
                  *         "campaign": {
-                 *           "uuid": "00000000-0000-4000-8000-000000000009",
+                 *           "uuid": "xK9mQz",
                  *           "name": "Campaña de ejemplo"
                  *         },
                  *         "from": "active",
@@ -26742,7 +26782,7 @@ export interface operations {
                  *       "occurred_at": "2026-10-01T12:00:00Z",
                  *       "data": {
                  *         "campaign": {
-                 *           "uuid": "00000000-0000-4000-8000-00000000000a"
+                 *           "uuid": "xK9mQz"
                  *         },
                  *         "pipeline": {
                  *           "uuid": "00000000-0000-4000-8000-00000000000b",
@@ -26815,7 +26855,7 @@ export interface operations {
                  *           "uuid": "00000000-0000-4000-8000-000000000004"
                  *         },
                  *         "participant": {
-                 *           "identity": "+5491100000000",
+                 *           "identity": "5491100000000",
                  *           "identity_type": "phone",
                  *           "name": null
                  *         },
@@ -26876,7 +26916,7 @@ export interface operations {
                  *           "type": "group"
                  *         },
                  *         "campaign": {
-                 *           "uuid": "00000000-0000-4000-8000-000000000001",
+                 *           "uuid": "xK9mQz",
                  *           "name": "Campaña de ejemplo"
                  *         },
                  *         "invite_link": "https://chat.whatsapp.com/EjemploNuevo0000000000001",
@@ -26937,7 +26977,7 @@ export interface operations {
                  *           "type": "group"
                  *         },
                  *         "campaign": {
-                 *           "uuid": "00000000-0000-4000-8000-000000000001",
+                 *           "uuid": "xK9mQz",
                  *           "name": "Campaña de ejemplo"
                  *         },
                  *         "reason": "http_404",

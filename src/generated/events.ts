@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 7db2ead826697c80…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 19e91748ddfe19ee…) + spec/pending.json.
  */
 import type { components } from './openapi.js';
 
@@ -47,7 +47,7 @@ export const webhookEvents = [
   {"type":"group_participant.joined","domains":["communities"],"status":"live","pending":true,"description":"A person joined one of the account's groups. At most one per person, group and UTC day: if the same person joins again that day, no other one is sent."},
   {"type":"group_participant.left","domains":["communities"],"status":"live","pending":true,"description":"A person left one of the account's groups. At most one per person, group and UTC day: if the same person leaves again that day, no other one is sent."},
   {"type":"group.blocked","domains":["communities"],"status":"live","pending":false,"description":"Un grupo de una campaña quedó inoperable: sin administrador conectado, con el link de invitación inválido o suspendido por WhatsApp; un grupo que no es de una campaña no lo genera."},
-  {"type":"group.created","domains":["communities"],"status":"live","pending":false,"description":"Se creó o se importó un grupo dentro de una campaña de la cuenta."},
+  {"type":"group.created","domains":["communities"],"status":"live","pending":false,"description":"Se creó o se importó un grupo dentro de una campaña de la cuenta; `source` vale `imported` si el grupo ya existía en WhatsApp y entró por una importación o una sincronización, y `created` en cualquier otro caso."},
   {"type":"group.full","domains":["communities"],"status":"live","pending":false,"description":"Un grupo pasó de no estar lleno a estarlo."},
   {"type":"group.invite_link_down","domains":["communities"],"status":"live","pending":false,"description":"El enlace de invitación de un grupo quedó confirmado caído (WhatsApp respondió que no existe y la renovación no consiguió otro); no se publica por errores transitorios ni por grupos prohibidos o suspendidos, y se publica una sola vez por episodio de bloqueo."},
   {"type":"group.invite_link_renewed","domains":["communities"],"status":"live","pending":false,"description":"El enlace de invitación de un grupo cambió por una renovación, automática al detectarse inválido o pedida por el usuario; no se publican los cambios que detecta la sincronización ni el enlace inicial al crear el grupo."},
@@ -55,8 +55,8 @@ export const webhookEvents = [
   {"type":"group.reaction_added","domains":["communities"],"status":"live","pending":true,"description":"Someone reacted to a message of a group."},
   {"type":"group.recovered","domains":["communities"],"status":"live","pending":false,"description":"Un grupo de una campaña que estaba bloqueado volvió a operar; un grupo que no es de una campaña no lo genera."},
   {"type":"mac.expiring","domains":["accounts"],"status":"live","pending":false,"description":"Hay contactos activos mensuales que vencen en los próximos 7 días."},
-  {"type":"mac.usage_100","domains":["accounts"],"status":"live","pending":false,"description":"La cuenta agotó sus contactos activos mensuales del ciclo; se abre una gracia de 24 horas cuyo vencimiento viaja en `grace_expires_at`."},
-  {"type":"mac.usage_80","domains":["accounts"],"status":"live","pending":false,"description":"La cuenta alcanzó el 80% de sus contactos activos mensuales del ciclo."},
+  {"type":"mac.usage_100","domains":["accounts"],"status":"live","pending":false,"description":"La cuenta agotó sus contactos activos mensuales del ciclo; se abre una gracia de 24 horas cuyo vencimiento viaja en `grace_expires_at`. `workspace_id` es el workspace al que se rutea el evento, como en todos los eventos: el workspace con facturación propia cuyo pool se agotó, o el workspace por defecto cuando el pool es el de la cuenta."},
+  {"type":"mac.usage_80","domains":["accounts"],"status":"live","pending":false,"description":"La cuenta alcanzó el 80% de sus contactos activos mensuales del ciclo. `workspace_id` es el workspace al que se rutea el evento, como en todos los eventos: el workspace con facturación propia cuyo pool alcanzó el umbral, o el workspace por defecto cuando el pool es el de la cuenta."},
   {"type":"message.reaction_failed","domains":["conversations"],"status":"live","pending":false,"description":"Una reacción a un mensaje que se aceptó no se pudo aplicar.\n\nSe emite cuando una reacción a un mensaje (ponerla, reemplazarla o quitarla) que se aceptó con `202` termina sin aplicarse, la haya pedido una clave o una persona del equipo desde el chat. Sale una sola vez por pedido: los reintentos internos del mismo pedido no generan otro evento. No se emite cuando la reacción se aplicó, cuando una reacción más nueva al mismo mensaje ya la reemplazó, ni cuando el mensaje ya no existe. `message_id` es el mensaje al que se reaccionaba (el mismo id de la ruta), `contact_id` el del contacto y `device_id` el número de tu cuenta por el que iba a salir (`null` si el mensaje ya no tiene número). `emoji` es el emoji pedido y `null` si el pedido era quitar la reacción. `reason` es uno de `no_provider_uid`, `message_not_reactable`, `message_deleted`, `device_disconnected`, `provider_unsupported`, `window_expired`, `provider_rejected`, `insufficient_balance`, `payment_expired`. `requested_at` es el momento en que se aceptó el pedido, en UTC y con microsegundos: sirve para relacionar el evento con la llamada que respondió `202`. `occurred_at` es el momento en que Funnelchat decidió el fallo, en UTC. Mientras tanto, `reactions` de `GET /contacts/{contact_id}/messages` queda como estaba."},
   {"type":"message.received","domains":["conversations"],"status":"live","pending":true,"description":"A contact wrote to one of the WhatsApp numbers of the account."},
   {"type":"message.status_changed","domains":["conversations"],"status":"live","pending":true,"description":"The delivery status of a message you sent with the API changed. One notice per transition, never one that goes back; `queued` is not reported. It must be asked for explicitly in `events`."},
@@ -457,7 +457,7 @@ export interface WebhookEventDataMap {
     };
     reason: string;
   };
-  /** `group.created` (live; typed from: example). Se creó o se importó un grupo dentro de una campaña de la cuenta. */
+  /** `group.created` (live; typed from: example). Se creó o se importó un grupo dentro de una campaña de la cuenta; `source` vale `imported` si el grupo ya existía en WhatsApp y entró por una importación o una sincronización, y `created` en cualquier otro caso. */
   "group.created": {
     group: {
       uid: string;
@@ -571,7 +571,7 @@ export interface WebhookEventDataMap {
     expires_at: string;
     workspace_id: number;
   };
-  /** `mac.usage_100` (live; typed from: example). La cuenta agotó sus contactos activos mensuales del ciclo; se abre una gracia de 24 horas cuyo vencimiento viaja en `grace_expires_at`. */
+  /** `mac.usage_100` (live; typed from: example). La cuenta agotó sus contactos activos mensuales del ciclo; se abre una gracia de 24 horas cuyo vencimiento viaja en `grace_expires_at`. `workspace_id` es el workspace al que se rutea el evento, como en todos los eventos: el workspace con facturación propia cuyo pool se agotó, o el workspace por defecto cuando el pool es el de la cuenta. */
   "mac.usage_100": {
     used: number;
     limit: number;
@@ -580,7 +580,7 @@ export interface WebhookEventDataMap {
     grace_expires_at: string;
     workspace_id: number;
   };
-  /** `mac.usage_80` (live; typed from: example). La cuenta alcanzó el 80% de sus contactos activos mensuales del ciclo. */
+  /** `mac.usage_80` (live; typed from: example). La cuenta alcanzó el 80% de sus contactos activos mensuales del ciclo. `workspace_id` es el workspace al que se rutea el evento, como en todos los eventos: el workspace con facturación propia cuyo pool alcanzó el umbral, o el workspace por defecto cuando el pool es el de la cuenta. */
   "mac.usage_80": {
     used: number;
     limit: number;
