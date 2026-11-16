@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 3a5f39f1bd8d62c5…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 fadcd73731cba99d…) + spec/pending.json.
  */
 /* eslint-disable */
 export interface paths {
@@ -308,7 +308,7 @@ export interface paths {
          *
          *     | HTTP | Cuándo |
          *     |---|---|
-         *     | 422 | Un dato del contacto no es válido, o `custom_fields` no es una lista de hasta 100 ítems con `id` entero y `value` de texto, o un `id` se repite o no es un campo de tu cuenta y de tu workspace (el error viene en `errors["custom_fields.N.id"]`), o un `value` no cumple el formato del tipo de su campo (en `errors["custom_fields.N.value"]`, con el formato que espera). No se crea ni se cambia nada. |
+         *     | 422 | Un dato del contacto no es válido, o `custom_fields` no es una lista de hasta 100 ítems con `id` y `value` de texto, o un `id` se repite o no es un campo de tu cuenta y de tu workspace (el error viene en `errors["custom_fields.N.id"]`), o un `value` no cumple el formato del tipo de su campo (en `errors["custom_fields.N.value"]`, con el formato que espera). No se crea ni se cambia nada. |
          *     | 404 | Tus workspaces comparten los contactos y ya hay un contacto con ese teléfono (o `whatsapp_id`) en otro workspace de tu cuenta, fuera del de tu clave. No se cambia nada. Si cada workspace tiene sus propios contactos, esta respuesta no ocurre: el contacto se crea en el workspace de tu clave. |
          *     | 429 | Demasiadas solicitudes por minuto (ver `Retry-After`). |
          */
@@ -347,7 +347,7 @@ export interface paths {
          *
          *     | HTTP | Cuándo |
          *     |---|---|
-         *     | 422 | Un dato del contacto no es válido, o `custom_fields` no es una lista de hasta 100 ítems con `id` entero y `value` de texto, o un `id` se repite o no es un campo de tu cuenta y de tu workspace (el error viene en `errors["custom_fields.N.id"]`), o un `value` no cumple el formato del tipo de su campo (en `errors["custom_fields.N.value"]`, con el formato que espera). No se crea ni se cambia nada. |
+         *     | 422 | Un dato del contacto no es válido, o `custom_fields` no es una lista de hasta 100 ítems con `id` y `value` de texto, o un `id` se repite o no es un campo de tu cuenta y de tu workspace (el error viene en `errors["custom_fields.N.id"]`), o un `value` no cumple el formato del tipo de su campo (en `errors["custom_fields.N.value"]`, con el formato que espera). No se crea ni se cambia nada. |
          *     | 404 | Tus workspaces comparten los contactos y ya hay un contacto con ese teléfono (o `whatsapp_id`) en otro workspace de tu cuenta, fuera del de tu clave. No se cambia nada. Si cada workspace tiene sus propios contactos, esta respuesta no ocurre: el contacto se crea en el workspace de tu clave. |
          *     | 429 | Demasiadas solicitudes por minuto (ver `Retry-After`). |
          */
@@ -382,7 +382,7 @@ export interface paths {
          *
          *     | HTTP | Cuándo |
          *     |---|---|
-         *     | 422 | El cuerpo no es un arreglo de ítems con `contactId` y `tag.id` enteros, o tiene más de 200 ítems. |
+         *     | 422 | El cuerpo no es un arreglo de ítems con `contactId` y `tag.id`, o tiene más de 200 ítems. |
          *     | 422 | Algún ítem nombra la etiqueta del sistema «No contactar»: el error viene en `errors.tag` y no se aplica ningún ítem de la llamada. |
          *     | 429 | Demasiadas solicitudes por minuto (ver `Retry-After`). |
          */
@@ -416,7 +416,7 @@ export interface paths {
          *
          *     | HTTP | Cuándo |
          *     |---|---|
-         *     | 422 | El cuerpo no es un arreglo de ítems con `contactId` y `tag.id` enteros, o tiene más de 200 ítems. |
+         *     | 422 | El cuerpo no es un arreglo de ítems con `contactId` y `tag.id`, o tiene más de 200 ítems. |
          *     | 422 | Algún ítem nombra la etiqueta del sistema «No contactar»: el error viene en `errors.tag` y no se aplica ningún ítem de la llamada. |
          *     | 429 | Demasiadas solicitudes por minuto (ver `Retry-After`). |
          */
@@ -454,7 +454,7 @@ export interface paths {
          *     | 404 | El campo o el contacto no existe, no es de tu cuenta o está fuera del workspace de tu clave. No se guarda. |
          *     | 422 | `value` no cumple el formato del tipo del campo (numérico, fecha `AAAA-MM-DD` o URL); `message` dice qué formato espera. No se guarda. |
          *
-         *     Cómo escribir `value` según el tipo: ver `type` en `GET /custom-fields`. Si el cuerpo no es una lista de ítems con `customFieldId` y `contactId` enteros y `value` de texto, la llamada entera responde **422** y no guarda nada.
+         *     Cómo escribir `value` según el tipo: ver `type` en `GET /custom-fields`. Si el cuerpo no es una lista de ítems con `customFieldId`, `contactId` y `value` de texto, la llamada entera responde **422** y no guarda nada.
          */
         post: operations["contact.attachCustomField"];
         delete?: never;
@@ -4228,7 +4228,7 @@ export interface paths {
          *     lleva a tu cliente a la `return_url` con el resultado **en la query string**, nada más:
          *     `connect_link_id`, `status` (`completed` o `failed`), `device_id` (solo si completó) y
          *     `error_code` (solo si falló); por ejemplo
-         *     `https://tu-sistema.com/vuelta?connect_link_id=12&status=completed&device_id=345`. Si tu
+         *     `https://tu-sistema.com/vuelta?connect_link_id=<id del link>&status=completed&device_id=<id del número>`. Si tu
          *     `return_url` ya trae parámetros, se suman a los tuyos. El link muere si revocas la clave de
          *     API que lo creó.
          *
@@ -4725,8 +4725,9 @@ export interface paths {
          *     Le pide a Meta el estado actual del número y devuelve lo mismo que
          *     `GET devices/{device}/health`, más `refresh_outcome`:
          *
-         *     - `refreshed`: se consultó a Meta. Si Meta respondió con un error, se ve en `health.state`
-         *       y `stale`.
+         *     - `refreshed`: se consultó a Meta y respondió bien.
+         *     - `failed`: se intentó consultar a Meta, pero falló (Meta rechazó la consulta o no
+         *       respondió). `stale` es `true`; si Meta rechazó la consulta, `health.state` es `unknown`.
          *     - `not_refreshed_yet`: no se consultó, porque el número se actualizó hace menos de 60
          *       segundos o ya hay otra actualización en curso. Los datos son los últimos guardados:
          *       vuelve a intentarlo en un momento.
@@ -5082,7 +5083,8 @@ export interface paths {
          * @description **Lectura** · requiere **Números de WhatsApp → Ver**.
          *
          *     `month` es el mes en `YYYY-MM`; sin `month`, o con un valor que no es un mes válido,
-         *     devuelve el mes en curso. El resumen es el de los números del workspace de la clave.
+         *     devuelve el mes en curso. El resumen es el de los números del workspace activo (con una clave,
+         *     el workspace de la clave).
          */
         get: operations["whatsappCost.index"];
         put?: never;
@@ -5134,11 +5136,11 @@ export interface webhooks {
                      *       "occurred_at": "2026-10-01T12:00:00Z",
                      *       "data": {
                      *         "flow": {
-                     *           "id": 3001,
+                     *           "id": "flw_AHRNv5zDGiU72BDvJYbeGRy",
                      *           "name": "Flujo de ejemplo"
                      *         },
                      *         "contact": {
-                     *           "id": 2001,
+                     *           "id": "ctc_ABViuUDF93I2VL1tInstRDG",
                      *           "name": "Contacto de ejemplo",
                      *           "phone": "+5491100000000"
                      *         }
@@ -5177,7 +5179,7 @@ export interface webhooks {
          * broadcast.finished
          * @description Una campaña llegó a su estado final (enviada, fallida o con fallos parciales), con sus conteos.
          *
-         *     `status` es `success`, `failed` o `partially_failed`. `reason` dice por qué terminó: `completed` (se enviaron todas las páginas), `cancelled` (se cerró una campaña pausada), `template_rejected` (Meta rechazó la plantilla, o su categoría cambió, mientras la campaña esperaba; también cuando Meta la pausó durante el envío y se detuvo la campaña), `approval_expired` (la plantilla no se aprobó a tiempo), `mac_lockout` (la cuenta alcanzó su límite de contactos activos), `mac_check_unavailable` (la campaña la inició una API key y el límite de contactos activos no se pudo verificar, así que no se envió nada), `no_recipients` (la audiencia quedó vacía) o `error` (el envío no pudo despacharse). `totals` son los conteos del envío: `processed` (destinatarios procesados), `failed` y `skipped_unreachable` (destinatarios que el canal no puede alcanzar); valen 0 si la campaña terminó antes de enviar. Se emite una sola vez por campaña.
+         *     `status` es `success`, `failed` o `partially_failed`. `reason` dice por qué terminó: `completed` (se enviaron todas las páginas), `cancelled` (se cerró una campaña pausada), `template_rejected` (Meta rechazó la plantilla, o su categoría cambió, mientras la campaña esperaba; también cuando Meta la pausó durante el envío y se detuvo la campaña), `approval_expired` (la plantilla no se aprobó a tiempo), `manual_start_expired` (la plantilla se aprobó tarde, la campaña quedó lista para comenzarla a mano y nadie la comenzó), `mac_lockout` (la cuenta alcanzó su límite de contactos activos), `mac_check_unavailable` (la campaña la inició una API key y el límite de contactos activos no se pudo verificar, así que no se envió nada), `no_recipients` (la audiencia quedó vacía) o `error` (el envío no pudo despacharse). `totals` son los conteos del envío: `processed` (destinatarios procesados), `failed` y `skipped_unreachable` (destinatarios que el canal no puede alcanzar); valen 0 si la campaña terminó antes de enviar. Se emite una sola vez por campaña.
          */
         post: {
             parameters: {
@@ -5203,7 +5205,7 @@ export interface webhooks {
                      *       "occurred_at": "2026-10-01T12:00:00Z",
                      *       "data": {
                      *         "broadcast": {
-                     *           "id": 6001,
+                     *           "id": "bcs_AFtl3CxBdRN2u8fHLFfw7HG",
                      *           "name": "Campaña de ejemplo"
                      *         },
                      *         "status": "partially_failed",
@@ -5274,22 +5276,22 @@ export interface webhooks {
                      *       "occurred_at": "2026-10-01T12:00:00Z",
                      *       "data": {
                      *         "contact": {
-                     *           "id": 2001,
+                     *           "id": "ctc_ABViuUDF93I2VL1tInstRDG",
                      *           "name": "Contacto de ejemplo",
                      *           "phone": "+5491100000000"
                      *         },
                      *         "board": {
-                     *           "id": 5001,
+                     *           "id": "knb_AAh33Y12B0FvNpBstLof4aN",
                      *           "name": "Embudo de ejemplo"
                      *         },
                      *         "kind": "move",
                      *         "from_stage": {
-                     *           "id": 6001,
+                     *           "id": "stg_AFQNmQUExx0MW4DNcQd3h0a",
                      *           "name": "Nuevo",
                      *           "position": 0
                      *         },
                      *         "to_stage": {
-                     *           "id": 6002,
+                     *           "id": "stg_ABqN4Z04rHLYk42OiiXd6BT",
                      *           "name": "En seguimiento",
                      *           "position": 1
                      *         }
@@ -5354,7 +5356,7 @@ export interface webhooks {
                      *       "occurred_at": "2026-10-01T12:00:00Z",
                      *       "data": {
                      *         "contact": {
-                     *           "id": 2001,
+                     *           "id": "ctc_ABViuUDF93I2VL1tInstRDG",
                      *           "name": "Contacto de ejemplo",
                      *           "phone": "+5491100000000"
                      *         }
@@ -5419,7 +5421,7 @@ export interface webhooks {
                      *       "occurred_at": "2026-10-01T12:00:00Z",
                      *       "data": {
                      *         "contact": {
-                     *           "id": 2001,
+                     *           "id": "ctc_ABViuUDF93I2VL1tInstRDG",
                      *           "name": "Contacto de ejemplo",
                      *           "phone": "+5491100000000"
                      *         },
@@ -5488,12 +5490,12 @@ export interface webhooks {
                      *       "occurred_at": "2026-10-01T12:00:00Z",
                      *       "data": {
                      *         "contact": {
-                     *           "id": 2001,
+                     *           "id": "ctc_ABViuUDF93I2VL1tInstRDG",
                      *           "name": "Contacto de ejemplo",
                      *           "phone": "+5491100000000"
                      *         },
                      *         "tag": {
-                     *           "id": 4001,
+                     *           "id": "tag_AHCtI0e7I43AVkLJRpd7QBU",
                      *           "name": "Etiqueta de ejemplo"
                      *         },
                      *         "source": "manual"
@@ -5558,7 +5560,7 @@ export interface webhooks {
                      *       "occurred_at": "2026-10-01T12:00:00Z",
                      *       "data": {
                      *         "broadcast": {
-                     *           "id": 6001,
+                     *           "id": "bcs_AFtl3CxBdRN2u8fHLFfw7HG",
                      *           "name": "Campaña de ejemplo"
                      *         },
                      *         "reason": "quality_degraded",
@@ -5626,12 +5628,12 @@ export interface webhooks {
                      *       "occurred_at": "2026-10-01T12:00:00Z",
                      *       "data": {
                      *         "contact": {
-                     *           "id": 2001,
+                     *           "id": "ctc_ABViuUDF93I2VL1tInstRDG",
                      *           "name": "Contacto de ejemplo",
                      *           "phone": "+5491100000000"
                      *         },
                      *         "tag": {
-                     *           "id": 4001,
+                     *           "id": "tag_AHCtI0e7I43AVkLJRpd7QBU",
                      *           "name": "Etiqueta de ejemplo"
                      *         },
                      *         "source": "manual"
@@ -5696,7 +5698,7 @@ export interface webhooks {
                      *       "occurred_at": "2026-10-01T12:00:00Z",
                      *       "data": {
                      *         "contact": {
-                     *           "id": 2001,
+                     *           "id": "ctc_ABViuUDF93I2VL1tInstRDG",
                      *           "name": "Contacto de ejemplo",
                      *           "phone": "+5491100000000",
                      *           "email": "contacto@example.com"
@@ -5762,7 +5764,7 @@ export interface webhooks {
                      *       "occurred_at": "2026-10-01T12:00:00Z",
                      *       "data": {
                      *         "template": {
-                     *           "id": 7001,
+                     *           "id": "tpl_AFtfM4vyhniQeLOqzkkVDA4",
                      *           "uid": "1234567890",
                      *           "name": "plantilla_ejemplo",
                      *           "category": "MARKETING"
@@ -5831,11 +5833,11 @@ export interface webhooks {
                      *       "occurred_at": "2026-10-01T12:00:00Z",
                      *       "data": {
                      *         "flow": {
-                     *           "id": 3001,
+                     *           "id": "flw_AHRNv5zDGiU72BDvJYbeGRy",
                      *           "name": "Flujo de ejemplo"
                      *         },
                      *         "contact": {
-                     *           "id": 2001,
+                     *           "id": "ctc_ABViuUDF93I2VL1tInstRDG",
                      *           "name": "Contacto de ejemplo",
                      *           "phone": "+5491100000000"
                      *         },
@@ -5900,9 +5902,9 @@ export interface webhooks {
                      *       "version": 1,
                      *       "occurred_at": "2026-10-01T12:00:00Z",
                      *       "data": {
-                     *         "message_id": 1001,
-                     *         "contact_id": 2001,
-                     *         "device_id": 4521,
+                     *         "message_id": "msg_ADyPfpgQyD89BoEabkSQkV1",
+                     *         "contact_id": "ctc_ABViuUDF93I2VL1tInstRDG",
+                     *         "device_id": "dev_AFHtaOVjNBTEWzCuDrmxMPP",
                      *         "emoji": "👍",
                      *         "reason": "provider_rejected",
                      *         "requested_at": "2026-10-01T11:59:58.123456Z",
@@ -5968,7 +5970,7 @@ export interface webhooks {
                      *       "occurred_at": "2026-10-01T12:00:00Z",
                      *       "data": {
                      *         "contact": {
-                     *           "id": 2001,
+                     *           "id": "ctc_ABViuUDF93I2VL1tInstRDG",
                      *           "name": "Ana Pérez",
                      *           "phone": "+5491100000000",
                      *           "email": "ana@example.com"
@@ -5979,12 +5981,12 @@ export interface webhooks {
                      *         ],
                      *         "custom_fields": [
                      *           {
-                     *             "id": 12,
+                     *             "id": "fld_AGxYus0ZuS8ViUElnapfBA0",
                      *             "name": "Plan",
                      *             "value": "Pro"
                      *           },
                      *           {
-                     *             "id": 15,
+                     *             "id": "fld_AGqBOqs9iRgOq0FfRAR8DxC",
                      *             "name": "Ciudad",
                      *             "value": null
                      *           }
@@ -6973,7 +6975,7 @@ export interface webhooks {
                              */
                             connected_at: string;
                             /** @description The connect link of this connection, or `null` when it did not come from a link. */
-                            connect_link_id: number | null;
+                            connect_link_id: string | null;
                         };
                     };
                 };
@@ -7019,7 +7021,7 @@ export interface webhooks {
                             /** @enum {string} */
                             reason: "qr_logged_out" | "meta_account_not_registered" | "shadow_ban_protection" | "provider_error" | "unknown" | "disconnected_by_user";
                             /** @description The connect link that last connected the number, or `null`. */
-                            connect_link_id: number | null;
+                            connect_link_id: string | null;
                         };
                     };
                 };
@@ -7532,7 +7534,7 @@ export interface webhooks {
                              */
                             deleted_at: string;
                             /** @description The connect link that last connected the number, or `null`. */
-                            connect_link_id: number | null;
+                            connect_link_id: string | null;
                         };
                     };
                 };
@@ -7580,7 +7582,7 @@ export interface webhooks {
                              */
                             changed_at: string;
                             /** @description The connect link that last connected the number, or `null`. */
-                            connect_link_id: number | null;
+                            connect_link_id: string | null;
                         };
                     };
                 };
@@ -7626,7 +7628,7 @@ export interface webhooks {
                              */
                             changed_at: string;
                             /** @description The connect link that last connected the number, or `null`. */
-                            connect_link_id: number | null;
+                            connect_link_id: string | null;
                         };
                     };
                 };
@@ -7672,7 +7674,7 @@ export interface webhooks {
                              */
                             changed_at: string;
                             /** @description The connect link that last connected the number, or `null`. */
-                            connect_link_id: number | null;
+                            connect_link_id: string | null;
                         };
                     };
                 };
@@ -7725,7 +7727,7 @@ export interface webhooks {
                              */
                             reviewed_at: string;
                             /** @description The connect link that last connected the number, or `null`. */
-                            connect_link_id: number | null;
+                            connect_link_id: string | null;
                         };
                     };
                 };
@@ -7995,7 +7997,7 @@ export interface webhooks {
                         data?: {
                             message: {
                                 /** @description The id of the message in the history of the contact. */
-                                id: number;
+                                id: string;
                                 /** @description One of these types, or a new one the spec does not list yet: handle a type you do not know instead of failing. */
                                 type: "text" | "image" | "video" | "document" | "sticker" | "contact" | "audio" | "note" | "action" | "invalid" | "interactive" | "location" | "voice_call" | "video_call" | "event" | "button" | "template" | "notification" | "option_list" | "template_button_reply" | "poll" | "whatsapp_form" | "call_permission_request" | "call_permission_reply" | "request_contact_info" | (string & {});
                                 /** @description `null` when the message has no text (a file without caption, say). */
@@ -8006,7 +8008,7 @@ export interface webhooks {
                                 } | null;
                             };
                             contact: {
-                                id: number | null;
+                                id: string | null;
                                 name: string | null;
                                 /** @description `+` and digits, or `null` when the contact has no phone (a `@lid`, say). */
                                 phone: string | null;
@@ -8016,7 +8018,7 @@ export interface webhooks {
                                 phone: string | null;
                             };
                             /** @description The number of your account that received the message: the same `device_id` you send to reply through it. `null` when the message has no number. */
-                            device_id: number | null;
+                            device_id: string | null;
                         };
                     };
                 };
@@ -8054,10 +8056,10 @@ export interface webhooks {
                     "application/json": {
                         data?: {
                             /** @description The `id` of the message in the history of the contact. */
-                            message_id: number;
-                            contact_id: number;
+                            message_id: string;
+                            contact_id: string;
                             /** @description The number of your account that sent the message. */
-                            device_id: number | null;
+                            device_id: string | null;
                             /** @enum {string} */
                             status: "sent" | "delivered" | "read" | "failed";
                             /** @enum {string|null} */
@@ -8133,13 +8135,13 @@ export interface webhooks {
                         data?: {
                             form: {
                                 /** @description The form (`family_id`). */
-                                id: number;
+                                id: string;
                                 name: string;
-                                version_id: number;
+                                version_id: string;
                             };
-                            message_id: number | null;
-                            contact_id: number | null;
-                            device_id: number | null;
+                            message_id: string | null;
+                            contact_id: string | null;
+                            device_id: string | null;
                             answers: {
                                 key: string;
                                 /** @description The label of the question, or its name when it has no label. */
@@ -8165,7 +8167,11 @@ export interface components {
     schemas: {
         /** ActionGroupResource */
         ActionGroupResource: {
-            id: string;
+            /**
+             * @description Id opaco: un texto que empieza con `acg_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example acg_ACDn7KEh7JAXtdNbZSghXKN
+             */
+            id: string | null;
             name: string;
             status: string;
             info: unknown;
@@ -8175,6 +8181,10 @@ export interface components {
             executed_by: string | null;
             groups: string | string[];
         } | {
+            /**
+             * @description Id opaco: un texto que empieza con `acg_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example acg_ACDn7KEh7JAXtdNbZSghXKN
+             */
             id: string;
             name: string | null;
             status: string;
@@ -8185,6 +8195,10 @@ export interface components {
             executed_by: string | null;
             groups: [
                 {
+                    /**
+                     * @description Id opaco: un texto que empieza con `grp_`. Se usa tal como llega; no se arma ni se interpreta.
+                     * @example grp_AK2GMGeWAAdd8fZbtOVvE3Z
+                     */
                     id: string;
                     name: string;
                 }
@@ -8197,6 +8211,10 @@ export interface components {
         };
         /** ActionResource */
         ActionResource: {
+            /**
+             * @description Id opaco: un texto que empieza con `act_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example act_AIDiFgpC21ihP6Bxi8PQnWD
+             */
             id: string;
             action: string;
             old_value: string;
@@ -8240,7 +8258,11 @@ export interface components {
         ActionStatusEnum: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
         /** AddFormNumberRequest */
         AddFormNumberRequest: {
-            device_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string;
         };
         /**
          * AlertAction
@@ -8249,6 +8271,10 @@ export interface components {
         AlertAction: "disconnected" | "usage_80" | "expiring" | "usage_100" | "upcoming_charge" | "payment_failed" | "plan_blocked" | "reactivated" | "trial_ending" | "cancellation_confirmed" | "dormant_ending" | "blocked" | "no_groups_available" | "daily_report" | "action_failed" | "message_failed" | "full" | "invalid_link" | "started" | "paused" | "resumed" | "cancelled" | "finished" | "summary" | "low_balance" | "topup_succeeded" | "topup_failed";
         /** AlertCampaignResource */
         AlertCampaignResource: {
+            /**
+             * @description Id opaco: un texto que empieza con `cmp_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example cmp_A6RMvAOjr0mHuLr08RpcwWu
+             */
             id: string;
             uuid: string;
             name: string;
@@ -8270,11 +8296,15 @@ export interface components {
             enabled: boolean;
             send_time: string | null;
             all_campaigns: boolean;
-            campaign_ids: string | string[];
+            campaign_ids: string[];
         };
         /** AlertDestinationResource */
         AlertDestinationResource: {
-            id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `ald_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example ald_Atlwq6tfM6G0SC3Hu6slnUc
+             */
+            id: string;
             type: string;
             destination: string;
             name: string | null;
@@ -8320,8 +8350,11 @@ export interface components {
              * @enum {string}
              */
             status: "queued" | "running" | "completed" | "failed";
-            /** @description Número que ejecuta la acción; `null` si es de otro workspace que el de la key. */
-            device_id: number | null;
+            /**
+             * @description Número que ejecuta la acción; `null` si es de otro workspace que el de la key. Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string | null;
             /** @description Grupo de la acción; `null` si todavía no existe (una creación sin terminar) o es de otro workspace que el de la key. */
             group: {
                 uid: string;
@@ -8362,7 +8395,11 @@ export interface components {
          *     en el que WhatsApp no permite borrarla. Los campos que no figuran se ignoran.
          */
         ApiGroupDescriptionRequest: {
-            device_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string;
             description: string | null;
         };
         /**
@@ -8371,7 +8408,11 @@ export interface components {
          *     action).
          */
         ApiGroupDeviceRequest: {
-            device_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string;
         };
         /** ApiGroupImportResource */
         ApiGroupImportResource: {
@@ -8390,7 +8431,11 @@ export interface components {
          *     Los campos que no figuran se ignoran.
          */
         ApiGroupNameRequest: {
-            device_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string;
             name: string;
         };
         /**
@@ -8400,7 +8445,11 @@ export interface components {
          *     Los campos que no figuran se ignoran.
          */
         ApiGroupPhonesRequest: {
-            device_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string;
             phones: string[];
         };
         /**
@@ -8409,7 +8458,11 @@ export interface components {
          *     Los campos que no figuran se ignoran.
          */
         ApiGroupPhotoRequest: {
-            device_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string;
             photo_url: string;
         };
         /**
@@ -8417,7 +8470,11 @@ export interface components {
          * @description Cuerpo de la renovación del link de invitación (`device_id`).
          */
         ApiGroupRenewLinkRequest: {
-            device_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string;
         };
         /**
          * ApiGroupSettingsRequest
@@ -8425,11 +8482,19 @@ export interface components {
          *     Los campos que no figuran se ignoran.
          */
         ApiGroupSettingsRequest: {
-            device_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string;
             members_can_send_messages: boolean;
         };
         /** App.Modules.ScheduledMessages.Resources.MessageTemplateResource */
         "App.Modules.ScheduledMessages.Resources.MessageTemplateResource": {
+            /**
+             * @description Id opaco: un texto que empieza con `mtp_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example mtp_Ax7RTy6z7iuxm2plhdyTXZz
+             */
             id: string;
             type: string;
             value: string;
@@ -8447,6 +8512,10 @@ export interface components {
         };
         /** App.Modules.ScheduledMessages.Resources.ScheduledMessageResource */
         "App.Modules.ScheduledMessages.Resources.ScheduledMessageResource": {
+            /**
+             * @description Id opaco: un texto que empieza con `smg_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example smg_Ap5avHiKWWEBpqsQuJLOBCt
+             */
             id: string;
             /**
              * @description Identificador estable del envío: es el `scheduled_message.uuid` de los eventos `scheduled_message.*`.
@@ -8465,6 +8534,10 @@ export interface components {
             blocked_by_plan_limit: boolean;
             type: string;
             folder: {
+                /**
+                 * @description Id opaco: un texto que empieza con `fdr_`. Se usa tal como llega; no se arma ni se interpreta.
+                 * @example fdr_AcPR1j7N9cs1PrbzZmC0ZiK
+                 */
                 id: string;
                 name: string;
             } | null;
@@ -8475,12 +8548,16 @@ export interface components {
             /** @description Dominio propio con el que se acortan los links del mensaje para contar sus clics, o `null` si no tiene. */
             whalink_custom_domain: string;
             shipping_speed: string;
-            campaign_ids: string;
-            group_ids: string | null;
-            excluded_group_ids: string;
+            campaign_ids: (string | null)[] | null;
+            group_ids: (string | null)[] | null;
+            excluded_group_ids: (string | null)[] | null;
             static_audience: string;
-            campaigns: string;
-            groups: string;
+            campaigns: {
+                [key: string]: unknown;
+            }[];
+            groups: {
+                [key: string]: unknown;
+            }[];
             total_groups: string;
             messages: components["schemas"]["App.Modules.ScheduledMessages.Resources.MessageTemplateResource"][];
             total_left_after_send: string;
@@ -8506,6 +8583,10 @@ export interface components {
             name: string | "";
             description: string | "";
             status: string | "available";
+            /**
+             * @description Id opaco: un texto que empieza con `cmp_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example cmp_A6RMvAOjr0mHuLr08RpcwWu
+             */
             campaign_id: string | null;
         };
         /** BroadcastContactResource */
@@ -8519,6 +8600,10 @@ export interface components {
         };
         /** BroadcastCostResource */
         BroadcastCostResource: {
+            /**
+             * @description Id opaco: un texto que empieza con `bcs_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example bcs_A5b6U3qLB7DSV2TZUayo5Qr
+             */
             broadcast_id: string;
             /** @constant */
             currency: "USD";
@@ -8567,12 +8652,20 @@ export interface components {
         };
         /** BroadcastFolderResource */
         BroadcastFolderResource: {
-            id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `fdr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example fdr_AcPR1j7N9cs1PrbzZmC0ZiK
+             */
+            id: string;
             name: string;
             broadcasts_count: string | 0;
         };
         /** BroadcastMessageResource */
         BroadcastMessageResource: {
+            /**
+             * @description Id opaco: un texto que empieza con `ctc_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example ctc_AAOzYSKDiqHT4hM8LdPB8Ut
+             */
             contact_id: string;
             contact_name: string | "";
             contact_phone: string | "";
@@ -8594,13 +8687,25 @@ export interface components {
         };
         /** BroadcastResource */
         BroadcastResource: {
-            id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `bcs_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example bcs_A5b6U3qLB7DSV2TZUayo5Qr
+             */
+            id: string;
             name: string;
-            device_id: number | null;
-            template_id: number | "";
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string | null;
+            template_id: string | "";
             template: string | null;
             folder: {
-                id: number;
+                /**
+                 * @description Id opaco: un texto que empieza con `fdr_`. Se usa tal como llega; no se arma ni se interpreta.
+                 * @example fdr_A0000000000000000000000
+                 */
+                id: string;
                 name: string;
             } | null;
             value: unknown[] | null;
@@ -8609,7 +8714,11 @@ export interface components {
             excluded_tags: components["schemas"]["TagResource"][];
             some_tags: components["schemas"]["TagResource"][];
             countries: unknown[] | null;
-            kanban_setting_id: number | null;
+            /**
+             * @description Id opaco: un texto que empieza con `knb_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example knb_AD77AjVHX9JMsZN827QxGh9
+             */
+            kanban_setting_id: string | null;
             kanban_stage_ids: unknown[] | null;
             only_stagnant: boolean;
             lead_score_categories: unknown[] | null;
@@ -8675,9 +8784,14 @@ export interface components {
             failure_reason: {
                 reason: string | null;
             } | null;
+            awaiting_manual_start: boolean;
             send_mode: components["schemas"]["BroadcastSendModeEnum"];
             protect_template_category: boolean;
-            adviser_id: number | null;
+            /**
+             * @description Id opaco: un texto que empieza con `usr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example usr_AdaVCroxOubVJxQ0exvtano
+             */
+            adviser_id: string | null;
             adviser_name: string | null;
             publish_as_status: boolean;
         };
@@ -8700,8 +8814,16 @@ export interface components {
         BroadcastsResource: {
             id: string;
             name: string;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
             device_id: string;
             template_id: string | "";
+            /**
+             * @description Id opaco: un texto que empieza con `fdr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example fdr_AcPR1j7N9cs1PrbzZmC0ZiK
+             */
             folder_id: string;
             value: string;
             date_from: string | "";
@@ -8718,6 +8840,7 @@ export interface components {
             failure_reason: {
                 reason: string | null;
             } | null;
+            awaiting_manual_start: string;
             send_mode: string;
             protect_template_category: boolean;
             progress: {
@@ -8733,20 +8856,32 @@ export interface components {
         };
         /** BulkMoveStageRequest */
         BulkMoveStageRequest: {
-            contact_ids: number[];
-            stage_id: number;
+            contact_ids: string[];
+            /**
+             * @description Id opaco: un texto que empieza con `stg_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example stg_AcNbpmjqDBZxtXTACjQVhH4
+             */
+            stage_id: string;
         };
         /** BulkRemoveStageRequest */
         BulkRemoveStageRequest: {
-            contact_ids: number[];
+            contact_ids: string[];
         };
         /** CampaignConditionalResource */
         CampaignConditionalResource: {
+            /**
+             * @description Id opaco: un texto que empieza con `cnd_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example cnd_AdbQuxn9mbGTRJewKwja13E
+             */
             id: string;
             type: string;
             conditions: string;
             action_type: string;
             redirect_url: string;
+            /**
+             * @description Id opaco: un texto que empieza con `grp_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example grp_AK2GMGeWAAdd8fZbtOVvE3Z
+             */
             redirect_group_id: string | null;
             redirect_group_name?: string | null;
             is_group_exclusive: string;
@@ -8757,6 +8892,10 @@ export interface components {
         };
         /** CampaignResource */
         CampaignResource: {
+            /**
+             * @description Id opaco: un texto que empieza con `cmp_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example cmp_A6RMvAOjr0mHuLr08RpcwWu
+             */
             id: string;
             uuid: string;
             name: string;
@@ -8768,9 +8907,16 @@ export interface components {
             group_admins: string;
             disconnected_groups: string;
             connection_error_groups: string;
-            /** @description Id del número de la campaña, o `null` si no tiene o si el número no es del workspace de la clave. */
-            deviceId: string;
-            userId: string;
+            /**
+             * @description Id del número de la campaña, o `null` si no tiene o si el número no es del workspace de la clave. Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            deviceId: string | null;
+            /**
+             * @description Id opaco: un texto que empieza con `usr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example usr_AdaVCroxOubVJxQ0exvtano
+             */
+            userId: string | null;
             type: string;
             groups: string;
             is_active: string;
@@ -8824,15 +8970,26 @@ export interface components {
         };
         /** CampaignsResource */
         CampaignsResource: {
+            /**
+             * @description Id opaco: un texto que empieza con `cmp_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example cmp_A6RMvAOjr0mHuLr08RpcwWu
+             */
             id: string;
             uuid: string;
             name: string;
             /** @description Dominio propio de la campaña para su link público, o `null` si usa el dominio por defecto. */
             custom_domain: string;
             photo: string | "";
-            /** @description Id del número de la campaña, o `null` si no tiene o si el número no es del workspace de la clave. */
-            deviceId: string;
-            userId: string;
+            /**
+             * @description Id del número de la campaña, o `null` si no tiene o si el número no es del workspace de la clave. Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            deviceId: string | null;
+            /**
+             * @description Id opaco: un texto que empieza con `usr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example usr_AdaVCroxOubVJxQ0exvtano
+             */
+            userId: string | null;
             type: string;
             /** @description Si la campaña está activa. */
             is_active: string;
@@ -8891,11 +9048,19 @@ export interface components {
             creation_time: number | null;
             mute: string | null;
             role: string | null;
+            /**
+             * @description Id opaco: un texto que empieza con `grp_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example grp_AK2GMGeWAAdd8fZbtOVvE3Z
+             */
             group_id: string | null;
         };
         /** ConnectLinkResource */
         ConnectLinkResource: {
-            id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `lnk_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example lnk_A2GK1NzySI7ig9NzsrC1gOu
+             */
+            id: string;
             type: string;
             status: string;
             url: string;
@@ -8903,7 +9068,11 @@ export interface components {
             allowed_connection_types: string[] | null;
             provision_us_number: boolean;
             country: string | null;
-            device_id: number | null;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string | null;
             external_reference: string | null;
             return_url: string | null;
             error_code: string | null;
@@ -8912,7 +9081,11 @@ export interface components {
         };
         /** ContactCustomFieldResource */
         ContactCustomFieldResource: {
-            id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `fld_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example fld_Ar7McDNiFfizqFzTybtrwHL
+             */
+            id: string;
             name: string;
             description: string;
             /**
@@ -8948,10 +9121,26 @@ export interface components {
         };
         /** ContactKanbanStageBoardResource */
         ContactKanbanStageBoardResource: {
+            /**
+             * @description Id opaco: un texto que empieza con `knb_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example knb_AD77AjVHX9JMsZN827QxGh9
+             */
             kanban_setting_id: string;
             kanban_name: string;
+            /**
+             * @description Id opaco: un texto que empieza con `stg_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example stg_AcNbpmjqDBZxtXTACjQVhH4
+             */
             current_stage_id: string;
+            /**
+             * @description Id opaco: un texto que empieza con `fld_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example fld_Ar7McDNiFfizqFzTybtrwHL
+             */
             value_custom_field_id: string;
+            /**
+             * @description Id opaco: un texto que empieza con `fld_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example fld_Ar7McDNiFfizqFzTybtrwHL
+             */
             profit_custom_field_id: string;
             stages: string;
         };
@@ -8971,9 +9160,21 @@ export interface components {
         };
         /** ContactNoteResource */
         ContactNoteResource: {
-            id: number;
-            contact_id: number;
-            author_id: number | null;
+            /**
+             * @description Id opaco: un texto que empieza con `not_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example not_AVvQvSdW9VWNGhveya5yq6m
+             */
+            id: string;
+            /**
+             * @description Id opaco: un texto que empieza con `ctc_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example ctc_AAOzYSKDiqHT4hM8LdPB8Ut
+             */
+            contact_id: string;
+            /**
+             * @description Id opaco: un texto que empieza con `usr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example usr_AdaVCroxOubVJxQ0exvtano
+             */
+            author_id: string | null;
             author_name: unknown;
             body: string;
             created_at: string | null;
@@ -8981,7 +9182,11 @@ export interface components {
         };
         /** ContactResource */
         ContactResource: {
-            id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `ctc_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example ctc_AAOzYSKDiqHT4hM8LdPB8Ut
+             */
+            id: string;
             name: string;
             email: string;
             phone: string;
@@ -9009,8 +9214,16 @@ export interface components {
                 deleted_at: string;
                 deleted_scope: string;
             };
-            device_id: number | null;
-            adviser_id: number | null;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string | null;
+            /**
+             * @description Id opaco: un texto que empieza con `usr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example usr_AdaVCroxOubVJxQ0exvtano
+             */
+            adviser_id: string | null;
             paused_at: string | null;
             paused_by?: unknown;
             mac_date: string | null;
@@ -9033,7 +9246,11 @@ export interface components {
         };
         /** ContactTagResource */
         ContactTagResource: {
-            id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `tag_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example tag_AIJEDzSFQ6oDXbab3DubTEG
+             */
+            id: string;
             name: string;
             description: string | "";
             color: string;
@@ -9051,7 +9268,11 @@ export interface components {
          *     Los teléfonos se normalizan y se quitan los repetidos antes de contarlos. Los campos que no figuran se ignoran.
          */
         CreateApiGroupRequest: {
-            device_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string;
             name: string;
             description?: string | null;
             join_approval_required?: boolean;
@@ -9059,7 +9280,11 @@ export interface components {
         };
         /** CustomDomainResource */
         CustomDomainResource: {
-            id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `dom_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dom_Av1pnwIr4tBmDHX5FCLBVpq
+             */
+            id: string;
             hostname: string;
             status: string;
             ssl: {
@@ -9098,7 +9323,11 @@ export interface components {
         };
         /** CustomFieldResource */
         CustomFieldResource: {
-            id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `fld_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example fld_Ar7McDNiFfizqFzTybtrwHL
+             */
+            id: string;
             name: string;
             /**
              * @description Tipo del campo. Se elige al crearlo y no se puede cambiar después. Indica cómo escribir su valor:
@@ -9129,7 +9358,11 @@ export interface components {
         DeviceConnectionEventEnum: 0 | 1;
         /** DeviceConnectionEventResource */
         DeviceConnectionEventResource: {
-            id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `cev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example cev_AD6L39jERuJvkxVTBBlX3qq
+             */
+            id: string;
             phone: string | null;
             event: components["schemas"]["DeviceConnectionEventEnum"];
             created_at: string;
@@ -9138,6 +9371,11 @@ export interface components {
         DeviceHealthDetailResource: {
             health: string;
             identity: string;
+            /**
+             * @description El estado del número en Meta en minúsculas (`connected`, `flagged`, `restricted`,
+             *     `banned`, ...), igual que `health.meta_status`; `null` si todavía no se sabe.
+             */
+            meta_status: string | null;
             entities: string;
             /**
              * @description El nivel de rendimiento de envío que Meta le asigna al número: `standard`, `high`
@@ -9159,7 +9397,11 @@ export interface components {
         };
         /** DeviceResource */
         DeviceResource: {
-            id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            id: string;
             alias: string;
             image: string;
             color: string;
@@ -9170,9 +9412,18 @@ export interface components {
              */
             normalized_number: string;
             first_conecction_at: string;
-            user_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `usr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example usr_AdaVCroxOubVJxQ0exvtano
+             */
+            user_id: string;
             provider: components["schemas"]["WhatsAppProviderEnum"];
             waba_id: string;
+            /**
+             * @description El identificador del número en Meta (`phone_number_id`) de un número oficial; `null`
+             *     en los números por QR.
+             */
+            phone_number_id: string | null;
             whatsapp_username: string | null;
             is_business: number;
             connected: number;
@@ -9215,9 +9466,10 @@ export interface components {
             can_change_to_meta: boolean;
             /**
              * @description Quién de la cuenta hizo la conexión actual (`connected_by_name` es su nombre), o
-             *     `null` si no se sabe; `abilities` dice qué puede hacer con este número quien llama.
+             *     `null` si no se sabe; `abilities` dice qué puede hacer con este número quien llama. Id opaco: un texto que empieza con `usr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example usr_AdaVCroxOubVJxQ0exvtano
              */
-            connected_by_user_id: number | null;
+            connected_by_user_id: string | null;
             connected_by_name: string | null;
             abilities: {
                 connect: boolean;
@@ -9324,6 +9576,10 @@ export interface components {
         FolderResource: {
             id: string;
             name: string | "";
+            /**
+             * @description Id opaco: un texto que empieza con `fdr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example fdr_AcPR1j7N9cs1PrbzZmC0ZiK
+             */
             parent_id: string;
             children?: components["schemas"]["FolderResource"][];
             flows_count?: number;
@@ -9331,8 +9587,16 @@ export interface components {
         /** ForwardMessageRequest */
         ForwardMessageRequest: {
             targets: {
-                contact_id: number;
-                device_id: number;
+                /**
+                 * @description Id opaco: un texto que empieza con `ctc_`. Se usa tal como llega; no se arma ni se interpreta.
+                 * @example ctc_AAOzYSKDiqHT4hM8LdPB8Ut
+                 */
+                contact_id: string;
+                /**
+                 * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+                 * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+                 */
+                device_id: string;
             }[];
             client_reference?: string | null;
         };
@@ -9355,14 +9619,22 @@ export interface components {
             uid: string | "";
             name: string | "";
             description: string | "";
-            device_id: string | "";
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string;
             alias: string | "";
             number: string | "";
             communityUid: string | "";
         };
         /** GroupResource */
         GroupResource: {
-            id: string | unknown;
+            /**
+             * @description `orNull`: a resource of an unsaved group (an event, a test) has no id, and keeps its `null`. Id opaco: un texto que empieza con `grp_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example grp_AK2GMGeWAAdd8fZbtOVvE3Z
+             */
+            id: string | null;
             admins_numbers: string | unknown;
             admins: unknown[] | unknown;
             admins_count: string | unknown;
@@ -9373,7 +9645,11 @@ export interface components {
             communityUid: string | unknown;
             newsletterUid: string | unknown;
             description: (string | "") | unknown;
-            deviceId: string | unknown;
+            /**
+             * @description Id del número del grupo, o `null` si no tiene o si el número no es del workspace de la clave. Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            deviceId: string | null;
             image: string | unknown;
             isFull: (string | boolean) | unknown;
             isApi: boolean | unknown;
@@ -9416,13 +9692,29 @@ export interface components {
         };
         /** KanbanSettingResource */
         KanbanSettingResource: {
-            id: number;
-            user_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `knb_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example knb_AD77AjVHX9JMsZN827QxGh9
+             */
+            id: string;
+            /**
+             * @description Id opaco: un texto que empieza con `usr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example usr_AdaVCroxOubVJxQ0exvtano
+             */
+            user_id: string;
             name: string;
             mode: string;
             stagnant_days: number | null;
-            value_custom_field_id: number | null;
-            profit_custom_field_id: number | null;
+            /**
+             * @description Id opaco: un texto que empieza con `fld_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example fld_Ar7McDNiFfizqFzTybtrwHL
+             */
+            value_custom_field_id: string | null;
+            /**
+             * @description Id opaco: un texto que empieza con `fld_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example fld_Ar7McDNiFfizqFzTybtrwHL
+             */
+            profit_custom_field_id: string | null;
             view_mode: string;
             icon: string | null;
             description: string | null;
@@ -9437,8 +9729,16 @@ export interface components {
         };
         /** KanbanStageResource */
         KanbanStageResource: {
-            id: number;
-            kanban_setting_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `stg_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example stg_AcNbpmjqDBZxtXTACjQVhH4
+             */
+            id: string;
+            /**
+             * @description Id opaco: un texto que empieza con `knb_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example knb_AD77AjVHX9JMsZN827QxGh9
+             */
+            kanban_setting_id: string;
             name: string;
             position: number;
             contacts_count?: number;
@@ -9471,6 +9771,10 @@ export interface components {
             applied_points: string;
             cap_reason: string | null;
             occurred_at: string | null;
+            /**
+             * @description Id opaco: un texto que empieza con `usr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example usr_AdaVCroxOubVJxQ0exvtano
+             */
             actor_user_id?: string;
             reason?: string;
         };
@@ -9513,18 +9817,23 @@ export interface components {
         /** MessageResource */
         MessageResource: {
             chat_id: string;
-            contact_id: number | "";
+            contact_id: string | "";
             content: unknown[] | {
                 [key: string]: unknown;
             } | string;
-            device_id: number | "";
+            device_id: string | "";
             error_code: string;
             file: string;
             forwarded: number;
             group_id: number | "";
-            id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `msg_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example msg_As2pkZIkjmvC3nnoiFlYfDo
+             */
+            id: string;
             origin: components["schemas"]["MessageOriginEnum"] | "";
-            origin_id: number | "";
+            /** @description Id opaco de lo que envió el mensaje, según `origin`: un flujo (`flw_`), una difusión (`bcs_`) o un agente de IA (`ast_`). Vacío o `null` si lo envió una persona. Se usa tal como llega; no se arma ni se interpreta. */
+            origin_id: string | null;
             own: number;
             reference_message: string | null;
             reference_message_uid: string | null;
@@ -9536,7 +9845,11 @@ export interface components {
             type: components["schemas"]["MessageTypeEnum"] | null;
             uid: string;
             info: unknown[] | "";
-            user_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `usr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example usr_AdaVCroxOubVJxQ0exvtano
+             */
+            user_id: string;
             deleted_at: string | null;
             deleted_scope: string | null;
             deleted_by: number | null;
@@ -9554,6 +9867,10 @@ export interface components {
         };
         /** MessageResponseResource */
         MessageResponseResource: {
+            /**
+             * @description Id opaco: un texto que empieza con `mtp_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example mtp_Ax7RTy6z7iuxm2plhdyTXZz
+             */
             message_template_id: string;
             block_type: string;
             group_name: string;
@@ -9571,6 +9888,10 @@ export interface components {
         MessageStatusEnum: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
         /** MessageTemplateResource */
         MessageTemplateResource: {
+            /**
+             * @description Id opaco: un texto que empieza con `mtp_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example mtp_Ax7RTy6z7iuxm2plhdyTXZz
+             */
             id: string;
             type: string;
             value: string;
@@ -9607,17 +9928,33 @@ export interface components {
         MessageTypeEnum: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24;
         /** MoveBroadcastsToFolderRequest */
         MoveBroadcastsToFolderRequest: {
-            broadcast_ids: number[];
-            folder_id?: number | null;
+            broadcast_ids: string[];
+            /**
+             * @description Id opaco: un texto que empieza con `fdr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example fdr_AcPR1j7N9cs1PrbzZmC0ZiK
+             */
+            folder_id?: string | null;
         };
         /** MoveContactStageRequest */
         MoveContactStageRequest: {
-            contact_id: number;
-            stage_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `ctc_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example ctc_AAOzYSKDiqHT4hM8LdPB8Ut
+             */
+            contact_id: string;
+            /**
+             * @description Id opaco: un texto que empieza con `stg_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example stg_AcNbpmjqDBZxtXTACjQVhH4
+             */
+            stage_id: string;
         };
         /** NodeResource */
         NodeResource: {
             uuid: string;
+            /**
+             * @description Id opaco: un texto que empieza con `flw_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example flw_ACsTq6ReBgstljNKKP97Z9A
+             */
             flow_id: string;
             type: number;
             action: string;
@@ -9626,9 +9963,17 @@ export interface components {
         };
         /** OperationPlanResource */
         OperationPlanResource: {
-            id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `opl_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example opl_ABtUsIfSlZNfmXErn5M8lqQ
+             */
+            id: string;
             uuid: string;
-            campaign_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `cmp_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example cmp_A6RMvAOjr0mHuLr08RpcwWu
+             */
+            campaign_id: string | null;
             pipeline_uuid: string | null;
             /**
              * @description Estado del plan según sus acciones en este momento: `scheduled`, `in_progress`, `completed`,
@@ -9652,9 +9997,17 @@ export interface components {
         };
         /** OperationPlanSummaryResource */
         OperationPlanSummaryResource: {
+            /**
+             * @description Id opaco: un texto que empieza con `opl_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example opl_ABtUsIfSlZNfmXErn5M8lqQ
+             */
             id: string;
             uuid: string;
-            campaign_id: string;
+            /**
+             * @description Id opaco: un texto que empieza con `cmp_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example cmp_A6RMvAOjr0mHuLr08RpcwWu
+             */
+            campaign_id: string | null;
             pipeline_uuid: string;
             status: string;
             name: string;
@@ -9682,13 +10035,21 @@ export interface components {
             /** @enum {string} */
             event_type: "join" | "leave";
             event_at: string | null;
-            group_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `grp_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example grp_AK2GMGeWAAdd8fZbtOVvE3Z
+             */
+            group_id: string;
             group_name: string;
             country_code: string;
             country_name: string;
         };
         /** ParticipantResource */
         ParticipantResource: {
+            /**
+             * @description Id opaco: un texto que empieza con `prt_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example prt_ArkOp5YKSGQDE4i8EaPKwMq
+             */
             id: string;
             phone: string;
             action: string;
@@ -9707,9 +10068,21 @@ export interface components {
         };
         /** PublicMessageResource */
         PublicMessageResource: {
-            id: number;
-            contact_id: number | null;
-            device_id: number | null;
+            /**
+             * @description Id opaco: un texto que empieza con `msg_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example msg_As2pkZIkjmvC3nnoiFlYfDo
+             */
+            id: string;
+            /**
+             * @description Id opaco: un texto que empieza con `ctc_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example ctc_AAOzYSKDiqHT4hM8LdPB8Ut
+             */
+            contact_id: string | null;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string | null;
             /** @enum {string} */
             direction: "outbound" | "inbound";
             /** @enum {string} */
@@ -9727,7 +10100,11 @@ export interface components {
         };
         /** QuickReplyResource */
         QuickReplyResource: {
-            id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `qrp_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example qrp_AOd36kHfwqRcunNLOTbwODh
+             */
+            id: string;
             name: string;
             message: string;
             file: string;
@@ -9736,7 +10113,11 @@ export interface components {
             agents: {
                 [key: string]: unknown;
             };
-            user_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `usr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example usr_AdaVCroxOubVJxQ0exvtano
+             */
+            user_id: string;
             created_at: string;
             updated_at: string;
         };
@@ -9747,15 +10128,23 @@ export interface components {
         QuickReplyVisibilityEnum: 1 | 2 | 3;
         /** RemoveContactStageRequest */
         RemoveContactStageRequest: {
-            contact_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `ctc_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example ctc_AAOzYSKDiqHT4hM8LdPB8Ut
+             */
+            contact_id: string;
         };
         /** ReorderKanbanStagesRequest */
         ReorderKanbanStagesRequest: {
-            stage_ids: number[];
+            stage_ids: string[];
         };
         /** SaleResource */
         SaleResource: {
-            id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `sal_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example sal_AE55D4RwzAVq1AXxNG3CtJ9
+             */
+            id: string;
             occurred_at: string;
             platform: string;
             product_name: string | null;
@@ -9765,7 +10154,11 @@ export interface components {
             currency: string;
             attribution: string;
             buyer: {
-                contact_id: number | null;
+                /**
+                 * @description Id opaco: un texto que empieza con `ctc_`. Se usa tal como llega; no se arma ni se interpreta.
+                 * @example ctc_AAOzYSKDiqHT4hM8LdPB8Ut
+                 */
+                contact_id: string | null;
                 name: string | null;
                 phone: string | null;
             } | null;
@@ -9824,12 +10217,20 @@ export interface components {
         ScheduledMessageEditStatusEnum: 1 | 2 | 3 | 4;
         /** ScheduledMessageFolderResource */
         ScheduledMessageFolderResource: {
+            /**
+             * @description Id opaco: un texto que empieza con `fdr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example fdr_AcPR1j7N9cs1PrbzZmC0ZiK
+             */
             id: string;
             name: string;
             scheduled_messages_count: number;
         };
         /** ScheduledMessageIndexResource */
         ScheduledMessageIndexResource: {
+            /**
+             * @description Id opaco: un texto que empieza con `smg_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example smg_Ap5avHiKWWEBpqsQuJLOBCt
+             */
             id: string;
             /**
              * @description Identificador estable del envío: es el `scheduled_message.uuid` de los eventos `scheduled_message.*`.
@@ -9844,9 +10245,13 @@ export interface components {
             /** @description `true` si la última ocurrencia del envío no salió porque se alcanzó el límite de envíos del plan. */
             blocked_by_plan_limit: boolean;
             type: string;
-            folder_id: string;
-            campaign_ids: string;
-            excluded_group_ids: string;
+            /**
+             * @description Id opaco: un texto que empieza con `fdr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example fdr_AcPR1j7N9cs1PrbzZmC0ZiK
+             */
+            folder_id: string | null;
+            campaign_ids: (string | null)[] | null;
+            excluded_group_ids: (string | null)[] | null;
             can_be_edited: string;
             recurrence: {
                 enabled: boolean;
@@ -9865,6 +10270,10 @@ export interface components {
         };
         /** ScheduledMessageResource */
         ScheduledMessageResource: {
+            /**
+             * @description Id opaco: un texto que empieza con `smg_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example smg_Ap5avHiKWWEBpqsQuJLOBCt
+             */
             id: string;
             /**
              * @description Identificador estable del envío: es el `scheduled_message.uuid` de los eventos `scheduled_message.*`.
@@ -9879,8 +10288,12 @@ export interface components {
             audience: string;
             total_readed: string;
             total_played: string;
-            campaigns: string;
-            groups: string;
+            campaigns: {
+                [key: string]: unknown;
+            }[];
+            groups: {
+                [key: string]: unknown;
+            }[];
             total_groups: string;
             messages: components["schemas"]["MessageTemplateResource"][];
         };
@@ -9893,9 +10306,17 @@ export interface components {
         };
         /** SendDirectMessageRequest */
         SendDirectMessageRequest: {
-            device_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string;
             text?: string;
-            contact_id?: number | null;
+            /**
+             * @description Id opaco: un texto que empieza con `ctc_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example ctc_AAOzYSKDiqHT4hM8LdPB8Ut
+             */
+            contact_id?: string | null;
             phone?: string | null;
             whatsapp_id?: string | null;
             /** @description Archivo del mensaje: el nombre de un archivo ya subido a tu cuenta o la URL pública de un archivo (te recomendamos `https://`), que WhatsApp o el proveedor descarga; admite hasta 4096 caracteres. Si empieza con `http`, en mayúsculas o minúsculas, tiene que ser una URL `http://` o `https://`; si no, la respuesta es 422. Consulta la sección «Enviar un archivo por URL». */
@@ -9920,7 +10341,11 @@ export interface components {
          *     `shipping_speed`) se ignoran.
          */
         SendGroupMessageRequest: {
-            device_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string;
             /** @enum {string} */
             type: "text" | "image" | "video" | "audio" | "document";
             text?: string;
@@ -9932,9 +10357,17 @@ export interface components {
         SendMessageRequest: {
             phone?: string;
             whatsapp_id?: string;
-            device_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string;
             text?: string;
-            contact_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `ctc_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example ctc_AAOzYSKDiqHT4hM8LdPB8Ut
+             */
+            contact_id: string;
             /** @description Archivo del mensaje: el nombre de un archivo ya subido a tu cuenta o la URL pública de un archivo (te recomendamos `https://`), que WhatsApp o el proveedor descarga; admite hasta 4096 caracteres. Si empieza con `http`, en mayúsculas o minúsculas, tiene que ser una URL `http://` o `https://`; si no, la respuesta es 422. Consulta la sección «Enviar un archivo por URL». */
             file?: string;
             /**
@@ -9966,15 +10399,27 @@ export interface components {
         };
         /** SendWhatsappFormRequest */
         SendWhatsappFormRequest: {
-            form_id: number;
-            device_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `frv_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example frv_Ath9bJ3RpAYPhnX0EfcLtHJ
+             */
+            form_id: string;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string;
             text?: string;
             button_text?: string;
             client_reference?: string | null;
         };
         /** ShowTypingIndicatorRequest */
         ShowTypingIndicatorRequest: {
-            device_id?: number;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id?: string;
         };
         /**
          * SslValidationMethod
@@ -10004,10 +10449,16 @@ export interface components {
             allowed_connection_types?: ("coexistence" | "dedicated")[];
             /** @description `type: meta` only: offer a US number of the Funnelchat pool. */
             provision_us_number?: boolean;
-            /** @description Reconnect THIS number of the account instead of adding one (uses no new place). */
-            device_id?: number | null;
-            /** @description `type: qr` only: add QR to this coexistence number of the account. */
-            same_number_as?: number | null;
+            /**
+             * @description Reconnect THIS number of the account instead of adding one (uses no new place). Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id?: string | null;
+            /**
+             * @description `type: qr` only: add QR to this coexistence number of the account. Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            same_number_as?: string | null;
             /**
              * @description `type: qr` only, and not with `device_id` (a reconnection creates nothing): country
              *     the WhatsApp session is opened from (ISO 3166-1 alpha-2, two letters, any case).
@@ -10025,8 +10476,12 @@ export interface components {
         };
         /** StoreContactCardRequest */
         StoreContactCardRequest: {
-            device_id: number;
-            contact_card_ids: number[];
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string;
+            contact_card_ids: string[];
             client_reference?: string | null;
         };
         /** StoreContactNoteRequest */
@@ -10041,7 +10496,11 @@ export interface components {
             /** Format: email */
             email?: string | null;
             image?: string | null;
-            deviceId?: number | null;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            deviceId?: string | null;
             /**
              * @description Opcional. Valores de campos personalizados para el contacto, hasta 100 ítems `{id, value}`: `id` es el de un campo de tu cuenta (`GET /custom-fields`) y `value`, su valor (siempre texto, en el formato del tipo del campo). Si un `id` no es de tu cuenta o de tu workspace, o un `value` no cumple el formato de su tipo, la llamada responde 422 y no crea ni cambia nada.
              * @example [
@@ -10056,8 +10515,11 @@ export interface components {
              *     ]
              */
             custom_fields?: {
-                /** @description El `id` de un campo personalizado de tu cuenta (`GET /custom-fields`). */
-                id: number;
+                /**
+                 * @description El `id` de un campo personalizado de tu cuenta (`GET /custom-fields`). Id opaco: un texto que empieza con `fld_`. Se usa tal como llega; no se arma ni se interpreta.
+                 * @example fld_A0000000000000000000000
+                 */
+                id: string;
                 /** @description Valor del campo para el contacto. Siempre es un texto (`"1500"`, no `1500`). Al ponerlo con tu clave se valida contra el tipo del campo (numérico, fecha o URL) y, si no cumple su formato, la API responde 422: el formato de cada tipo está en la descripción de `type` de `GET /custom-fields`. */
                 value: string;
             }[];
@@ -10090,9 +10552,10 @@ export interface components {
             /**
              * @description Id of a number of the account that is connected to the official API in
              *     coexistence: the new QR connection is the SAME number (it does not use a new place
-             *     of the plan).
+             *     of the plan). Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
              */
-            same_number_as?: number | null;
+            same_number_as?: string | null;
             /**
              * @description Country the WhatsApp session is opened from (ISO 3166-1 alpha-2, two letters, any
              *     case): send the country of the phone that will scan the QR. Without it, the default.
@@ -10102,7 +10565,11 @@ export interface components {
         /** StoreFolderRequest */
         StoreFolderRequest: {
             name: string;
-            parent_id?: number | null;
+            /**
+             * @description Id opaco: un texto que empieza con `fdr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example fdr_AcPR1j7N9cs1PrbzZmC0ZiK
+             */
+            parent_id?: string | null;
         };
         /** StoreKanbanSettingRequest */
         StoreKanbanSettingRequest: {
@@ -10110,7 +10577,11 @@ export interface components {
             /** @enum {string} */
             mode?: "tags" | "stages";
             structure?: {
-                tag_id: number;
+                /**
+                 * @description Id opaco: un texto que empieza con `tag_`. Se usa tal como llega; no se arma ni se interpreta.
+                 * @example tag_AIJEDzSFQ6oDXbab3DubTEG
+                 */
+                tag_id: string;
                 position: number;
             }[] | null;
             stages?: {
@@ -10128,7 +10599,11 @@ export interface components {
         /** StoreKanbanStageRequest */
         StoreKanbanStageRequest: {
             name: string;
-            after_stage_id?: number | null;
+            /**
+             * @description Id opaco: un texto que empieza con `stg_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example stg_AcNbpmjqDBZxtXTACjQVhH4
+             */
+            after_stage_id?: string | null;
         };
         /** StoreLeadScoreAdjustmentRequest */
         StoreLeadScoreAdjustmentRequest: {
@@ -10178,8 +10653,12 @@ export interface components {
         };
         /** StoreWhatsappFormRequest */
         StoreWhatsappFormRequest: {
-            device_id: number;
-            device_ids?: number[];
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string;
+            device_ids?: string[];
             template_key: string;
         };
         /**
@@ -10192,7 +10671,11 @@ export interface components {
         };
         /** TagResource */
         TagResource: {
-            id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `tag_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example tag_AIJEDzSFQ6oDXbab3DubTEG
+             */
+            id: string;
             name: string;
             description: string;
             color: string | null;
@@ -10203,6 +10686,10 @@ export interface components {
         };
         /** TemplateMetricsResource */
         TemplateMetricsResource: {
+            /**
+             * @description Id opaco: un texto que empieza con `tpl_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example tpl_AlgBF7nTNqV0atiwNuKFmT8
+             */
             template_id: string;
             from: string;
             to: string;
@@ -10220,7 +10707,11 @@ export interface components {
         };
         /** TemplateResource */
         TemplateResource: {
-            id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `tpl_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example tpl_AlgBF7nTNqV0atiwNuKFmT8
+             */
+            id: string;
             name: string;
             text: string;
             header: string;
@@ -10236,8 +10727,16 @@ export interface components {
             file: string;
             params: unknown[] | "";
             buttons: unknown[] | "";
-            user_id: number;
-            device_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `usr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example usr_AdaVCroxOubVJxQ0exvtano
+             */
+            user_id: string;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string;
             /** Format: date-time */
             created_at: string | null;
             /** Format: date-time */
@@ -10252,9 +10751,21 @@ export interface components {
         };
         /** Ticket */
         Ticket: {
-            id: number;
-            user_id: number;
-            contact_id: number | null;
+            /**
+             * @description Id opaco: un texto que empieza con `tkt_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example tkt_AF55AkRPf2n0s11MKuItMb0
+             */
+            id: string;
+            /**
+             * @description Id opaco: un texto que empieza con `usr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example usr_AdaVCroxOubVJxQ0exvtano
+             */
+            user_id: string;
+            /**
+             * @description Id opaco: un texto que empieza con `ctc_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example ctc_AAOzYSKDiqHT4hM8LdPB8Ut
+             */
+            contact_id: string | null;
             title: string;
             description: string | null;
             deadline: number | null;
@@ -10262,7 +10773,11 @@ export interface components {
             created_at: string | null;
             /** Format: date-time */
             updated_at: string | null;
-            actor_user_id: number | null;
+            /**
+             * @description Id opaco: un texto que empieza con `usr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example usr_AdaVCroxOubVJxQ0exvtano
+             */
+            actor_user_id: string | null;
         };
         /** UpdateAlertDailyReportRequest */
         UpdateAlertDailyReportRequest: {
@@ -10289,7 +10804,11 @@ export interface components {
             phone?: string | null;
             notes?: string | null;
             status?: number;
-            adviser_id?: number | null;
+            /**
+             * @description Id opaco: un texto que empieza con `usr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example usr_AdaVCroxOubVJxQ0exvtano
+             */
+            adviser_id?: string | null;
             active_conversation?: boolean;
             favorite?: boolean;
             fixed?: boolean;
@@ -10300,14 +10819,22 @@ export interface components {
         /** UpdateFolderRequest */
         UpdateFolderRequest: {
             name?: string;
-            parent_id?: number | null;
+            /**
+             * @description Id opaco: un texto que empieza con `fdr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example fdr_AcPR1j7N9cs1PrbzZmC0ZiK
+             */
+            parent_id?: string | null;
         };
         /** UpdateKanbanSettingRequest */
         UpdateKanbanSettingRequest: {
             name?: string | null;
             mode?: string;
             structure?: {
-                tag_id: number;
+                /**
+                 * @description Id opaco: un texto que empieza con `tag_`. Se usa tal como llega; no se arma ni se interpreta.
+                 * @example tag_AIJEDzSFQ6oDXbab3DubTEG
+                 */
+                tag_id: string;
                 position: number;
             }[] | null;
             stagnant_days?: number | null;
@@ -10346,12 +10873,12 @@ export interface components {
                 on_release: "restore" | "keep";
                 config?: {
                     keywords?: string[];
-                    broadcast_ids?: number[] | null;
+                    broadcast_ids?: string[] | null;
                     group_ids?: string[] | null;
-                    flow_ids?: number[] | null;
+                    flow_ids?: string[] | null;
                     whalink_ids?: string[] | null;
-                    tag_ids?: number[] | null;
-                    stage_ids?: number[] | null;
+                    tag_ids?: string[] | null;
+                    stage_ids?: string[] | null;
                 };
             }[];
             decay_steps: {
@@ -10361,7 +10888,11 @@ export interface components {
         };
         /** UpdateMessageTemplateRequest */
         UpdateMessageTemplateRequest: {
-            device_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+             */
+            device_id: string;
             /** @enum {string} */
             category: "UTILITY" | "MARKETING" | "AUTHENTICATION";
             /** @enum {string} */
@@ -10400,8 +10931,11 @@ export interface components {
              *     ]
              */
             custom_fields?: {
-                /** @description El `id` de un campo personalizado de tu cuenta (`GET /custom-fields`). */
-                id: number;
+                /**
+                 * @description El `id` de un campo personalizado de tu cuenta (`GET /custom-fields`). Id opaco: un texto que empieza con `fld_`. Se usa tal como llega; no se arma ni se interpreta.
+                 * @example fld_A0000000000000000000000
+                 */
+                id: string;
                 /** @description Valor del campo para el contacto. Siempre es un texto (`"1500"`, no `1500`). Al ponerlo con tu clave se valida contra el tipo del campo (numérico, fecha o URL) y, si no cumple su formato, la API responde 422: el formato de cada tipo está en la descripción de `type` de `GET /custom-fields`. */
                 value: string;
             }[];
@@ -10472,7 +11006,11 @@ export interface components {
         };
         /** WebhookSubscriptionDeliveryResource */
         WebhookSubscriptionDeliveryResource: {
-            id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `dlv_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example dlv_AV4KGFgTXNQdIf5kXJtT4oE
+             */
+            id: string;
             /**
              * @description El id del sobre: agrupa los intentos de un mismo evento y es el
              *     mismo valor que el receptor vio en el cuerpo.
@@ -10522,7 +11060,11 @@ export interface components {
                 checked_at: string | null;
             } | null;
             devices: {
-                device_id: number;
+                /**
+                 * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+                 * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+                 */
+                device_id: string;
                 number: string;
             }[];
         };
@@ -10537,16 +11079,32 @@ export interface components {
         };
         /** WhatsappForm */
         WhatsappForm: {
-            id: number;
-            user_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `frv_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example frv_Ath9bJ3RpAYPhnX0EfcLtHJ
+             */
+            id: string;
+            /**
+             * @description Id opaco: un texto que empieza con `usr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example usr_AdaVCroxOubVJxQ0exvtano
+             */
+            user_id: string;
             workspace_id: number | null;
             phone_number_id: string;
-            family_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `frm_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example frm_AyJUGabeXUAk9dbBuWegw4B
+             */
+            family_id: string;
             name: string;
             category: string;
             status: string;
             version: number;
-            parent_flow_id: number | null;
+            /**
+             * @description Id opaco: un texto que empieza con `frv_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example frv_Ath9bJ3RpAYPhnX0EfcLtHJ
+             */
+            parent_flow_id: string | null;
             definition: unknown[];
             flow_json: unknown[] | null;
             flow_json_hash: string | null;
@@ -10570,12 +11128,24 @@ export interface components {
             updated_at: string | null;
             /** Format: date-time */
             deleted_at: string | null;
-            actor_user_id: number | null;
+            /**
+             * @description Id opaco: un texto que empieza con `usr_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example usr_AdaVCroxOubVJxQ0exvtano
+             */
+            actor_user_id: string | null;
         };
         /** WhatsappFormResource */
         WhatsappFormResource: {
-            id: number;
-            family_id: number;
+            /**
+             * @description Id opaco: un texto que empieza con `frv_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example frv_Ath9bJ3RpAYPhnX0EfcLtHJ
+             */
+            id: string;
+            /**
+             * @description Id opaco: un texto que empieza con `frm_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example frm_AyJUGabeXUAk9dbBuWegw4B
+             */
+            family_id: string;
             name: string;
             label: string;
             category: string;
@@ -10589,7 +11159,11 @@ export interface components {
             first_screen: string | null;
             first_screen_dynamic: boolean;
             lint_errors_count: number;
-            draft_id?: number;
+            /**
+             * @description Id opaco: un texto que empieza con `frv_`. Se usa tal como llega; no se arma ni se interpreta.
+             * @example frv_Ath9bJ3RpAYPhnX0EfcLtHJ
+             */
+            draft_id?: string;
             draft_version?: number;
             sends?: number;
             responses?: number;
@@ -10621,7 +11195,7 @@ export interface components {
         /** @description Your own reference for the number (for example the id of your customer). Free text, not unique. */
         PendingExternalReference: string | null;
         PendingWebhookDevice: {
-            id: number;
+            id: string;
             name: string | null;
             /** @description Digits only, without `+`. */
             number: string | null;
@@ -10852,15 +11426,16 @@ export interface operations {
         parameters: {
             query?: {
                 name?: string | null;
-                device_id?: number | null;
+                device_id?: string | null;
                 "status[]"?: "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
-                folder_id?: number | null;
+                folder_id?: string | null;
                 unclassified?: string | null;
                 send_type?: "immediate" | "scheduled" | null;
                 device_type?: "business" | "api" | null;
                 send_at_from?: string | null;
                 send_at_to?: string | null;
                 publish_as_status?: "only" | "exclude" | null;
+                awaiting_manual_start?: "only" | "exclude" | null;
                 perPage?: number;
                 orderBy?: "name" | "created_at" | "updated_at";
                 orderByMethod?: "asc" | "desc";
@@ -10928,17 +11503,25 @@ export interface operations {
                     date_to?: string | null;
                     only_with_phone?: boolean;
                     only_paused?: boolean;
-                    device_id?: number | null;
+                    /**
+                     * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+                     * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+                     */
+                    device_id?: string | null;
                     only_hard_bounced?: boolean;
-                    kanban_setting_id?: number | null;
-                    kanban_stage_ids?: number[] | null;
+                    /**
+                     * @description Id opaco: un texto que empieza con `knb_`. Se usa tal como llega; no se arma ni se interpreta.
+                     * @example knb_AD77AjVHX9JMsZN827QxGh9
+                     */
+                    kanban_setting_id?: string | null;
+                    kanban_stage_ids?: string[] | null;
                     only_stagnant?: boolean | null;
                     exclude_never_replied?: boolean;
                     lead_score_categories?: ("insufficient_data" | "hot" | "warm" | "cold")[] | null;
                     lead_score_min?: number | null;
                     lead_score_max?: number | null;
                     custom_field_filters?: {
-                        custom_field_ids: number[];
+                        custom_field_ids: string[];
                         /** @enum {integer} */
                         type: "0" | "1" | "2" | "3" | "4";
                         /** @enum {string|null} */
@@ -11014,17 +11597,25 @@ export interface operations {
                     date_to?: string | null;
                     only_with_phone?: boolean;
                     only_paused?: boolean;
-                    device_id?: number | null;
+                    /**
+                     * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+                     * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+                     */
+                    device_id?: string | null;
                     only_hard_bounced?: boolean;
-                    kanban_setting_id?: number | null;
-                    kanban_stage_ids?: number[] | null;
+                    /**
+                     * @description Id opaco: un texto que empieza con `knb_`. Se usa tal como llega; no se arma ni se interpreta.
+                     * @example knb_AD77AjVHX9JMsZN827QxGh9
+                     */
+                    kanban_setting_id?: string | null;
+                    kanban_stage_ids?: string[] | null;
                     only_stagnant?: boolean | null;
                     exclude_never_replied?: boolean;
                     lead_score_categories?: ("insufficient_data" | "hot" | "warm" | "cold")[] | null;
                     lead_score_min?: number | null;
                     lead_score_max?: number | null;
                     custom_field_filters?: {
-                        custom_field_ids: number[];
+                        custom_field_ids: string[];
                         /** @enum {integer} */
                         type: "0" | "1" | "2" | "3" | "4";
                         /** @enum {string|null} */
@@ -11119,7 +11710,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                broadcast: number;
+                broadcast: string;
             };
             cookie?: never;
         };
@@ -11160,7 +11751,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                broadcast: number;
+                broadcast: string;
             };
             cookie?: never;
         };
@@ -11218,7 +11809,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                broadcast: number;
+                broadcast: string;
             };
             cookie?: never;
         };
@@ -11231,7 +11822,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        broadcast_id: number;
+                        /**
+                         * @description Id opaco: un texto que empieza con `bcs_`. Se usa tal como llega; no se arma ni se interpreta.
+                         * @example bcs_A5b6U3qLB7DSV2TZUayo5Qr
+                         */
+                        broadcast_id: string;
                         statistics: {
                             delivered_messages_count: number;
                             readed_messages_count: number;
@@ -11250,7 +11845,11 @@ export interface operations {
                             clicks_count: number;
                         }[];
                     } | {
-                        broadcast_id: number;
+                        /**
+                         * @description Id opaco: un texto que empieza con `bcs_`. Se usa tal como llega; no se arma ni se interpreta.
+                         * @example bcs_A5b6U3qLB7DSV2TZUayo5Qr
+                         */
+                        broadcast_id: string;
                         statistics: {
                             delivered_messages_count: string | 0;
                             readed_messages_count: string | 0;
@@ -11281,7 +11880,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                broadcast: number;
+                broadcast: string;
             };
             cookie?: never;
         };
@@ -11309,7 +11908,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                broadcast: number;
+                broadcast: string;
             };
             cookie?: never;
         };
@@ -11357,7 +11956,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                broadcast: number;
+                broadcast: string;
             };
             cookie?: never;
         };
@@ -11409,7 +12008,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                broadcast: number;
+                broadcast: string;
             };
             cookie?: never;
         };
@@ -11529,7 +12128,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                broadcastFolder: number;
+                broadcastFolder: string;
             };
             cookie?: never;
         };
@@ -11562,7 +12161,7 @@ export interface operations {
                          */
                         error: string;
                         /** @constant */
-                        message: "You do not have permission to edit this folder.";
+                        message: "No tienes permiso para editar esta carpeta.";
                     };
                 };
             };
@@ -11575,7 +12174,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                broadcastFolder: number;
+                broadcastFolder: string;
             };
             cookie?: never;
         };
@@ -11602,7 +12201,7 @@ export interface operations {
                          */
                         error: string;
                         /** @constant */
-                        message: "You do not have permission to delete this folder.";
+                        message: "No tienes permiso para eliminar esta carpeta.";
                     };
                 };
             };
@@ -11622,9 +12221,9 @@ export interface operations {
                 created_at?: string;
                 created_from?: string;
                 created_to?: string;
-                "tag_ids[]"?: number[];
+                "tag_ids[]"?: string[];
                 tag_mode?: "all" | "any" | "exclude";
-                "custom_field_ids[]"?: number[];
+                "custom_field_ids[]"?: string[];
                 custom_field_mode?: "all" | "any" | "exclude";
                 custom_field_value?: string;
                 custom_field_date_from?: string;
@@ -11642,7 +12241,7 @@ export interface operations {
                 tag_filters?: {
                     /** @enum {string} */
                     mode: "all" | "any" | "exclude";
-                    tag_ids?: number[];
+                    tag_ids?: string[];
                 }[];
                 custom_field_filters?: {
                     /**
@@ -11662,7 +12261,7 @@ export interface operations {
                     numeric_value?: number | null;
                     /** @enum {string|null} */
                     date_operator?: "lt" | "gt" | "eq" | "period" | null;
-                    custom_field_ids?: number[];
+                    custom_field_ids?: string[];
                 }[];
                 perPage?: number;
                 orderBy?: "id" | "name" | "email" | "phone" | "status" | "favorite" | "unread_messages" | "created_at" | "updated_at";
@@ -11818,9 +12417,17 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    contactId: number;
+                    /**
+                     * @description Id opaco: un texto que empieza con `ctc_`. Se usa tal como llega; no se arma ni se interpreta.
+                     * @example ctc_AAOzYSKDiqHT4hM8LdPB8Ut
+                     */
+                    contactId: string;
                     tag: {
-                        id: number;
+                        /**
+                         * @description Id opaco: un texto que empieza con `tag_`. Se usa tal como llega; no se arma ni se interpreta.
+                         * @example tag_A0000000000000000000000
+                         */
+                        id: string;
                         name?: string;
                     };
                 }[];
@@ -11880,9 +12487,17 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    contactId: number;
+                    /**
+                     * @description Id opaco: un texto que empieza con `ctc_`. Se usa tal como llega; no se arma ni se interpreta.
+                     * @example ctc_AAOzYSKDiqHT4hM8LdPB8Ut
+                     */
+                    contactId: string;
                     tag: {
-                        id: number;
+                        /**
+                         * @description Id opaco: un texto que empieza con `tag_`. Se usa tal como llega; no se arma ni se interpreta.
+                         * @example tag_A0000000000000000000000
+                         */
+                        id: string;
                         name?: string;
                     };
                 }[];
@@ -11942,8 +12557,16 @@ export interface operations {
         requestBody?: {
             content: {
                 "application/json": {
-                    customFieldId: number;
-                    contactId: number;
+                    /**
+                     * @description Id opaco: un texto que empieza con `fld_`. Se usa tal como llega; no se arma ni se interpreta.
+                     * @example fld_Ar7McDNiFfizqFzTybtrwHL
+                     */
+                    customFieldId: string;
+                    /**
+                     * @description Id opaco: un texto que empieza con `ctc_`. Se usa tal como llega; no se arma ni se interpreta.
+                     * @example ctc_AAOzYSKDiqHT4hM8LdPB8Ut
+                     */
+                    contactId: string;
                     /** @description Valor del campo para el contacto. Siempre es un texto (`"1500"`, no `1500`). Al ponerlo con tu clave se valida contra el tipo del campo (numérico, fecha o URL) y, si no cumple su formato, la API responde 422: el formato de cada tipo está en la descripción de `type` de `GET /custom-fields`. */
                     value: string;
                 }[];
@@ -11990,8 +12613,16 @@ export interface operations {
         requestBody?: {
             content: {
                 "application/json": {
-                    customFieldId: number;
-                    contactId: number;
+                    /**
+                     * @description Id opaco: un texto que empieza con `fld_`. Se usa tal como llega; no se arma ni se interpreta.
+                     * @example fld_Ar7McDNiFfizqFzTybtrwHL
+                     */
+                    customFieldId: string;
+                    /**
+                     * @description Id opaco: un texto que empieza con `ctc_`. Se usa tal como llega; no se arma ni se interpreta.
+                     * @example ctc_AAOzYSKDiqHT4hM8LdPB8Ut
+                     */
+                    contactId: string;
                 }[];
             };
         };
@@ -12030,7 +12661,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                contact: number;
+                contact: string;
             };
             cookie?: never;
         };
@@ -12068,7 +12699,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                contact: number;
+                contact: string;
             };
             cookie?: never;
         };
@@ -12111,7 +12742,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                contact: number;
+                contact: string;
             };
             cookie?: never;
         };
@@ -12174,7 +12805,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                contact: number;
+                contact: string;
             };
             cookie?: never;
         };
@@ -12233,11 +12864,11 @@ export interface operations {
     "contact.metaWindow": {
         parameters: {
             query: {
-                device_id: number;
+                device_id: string;
             };
             header?: never;
             path: {
-                contact: number;
+                contact: string;
             };
             cookie?: never;
         };
@@ -12290,7 +12921,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -12355,22 +12986,22 @@ export interface operations {
             content: {
                 "application/json": {
                     all?: boolean;
-                    contactIds?: number[];
+                    contactIds?: string[];
                     /** Format: date-time */
                     created_from?: string | null;
                     /** Format: date-time */
                     created_to?: string | null;
                     /** @enum {string|null} */
                     tag_mode?: "all" | "any" | "exclude" | null;
-                    tag_ids?: number[] | null;
+                    tag_ids?: string[] | null;
                     tag_filters?: {
-                        tag_ids: number[];
+                        tag_ids: string[];
                         /** @enum {string} */
                         mode: "all" | "any" | "exclude";
                     }[] | null;
                     /** @enum {string|null} */
                     custom_field_mode?: "all" | "any" | "exclude" | null;
-                    custom_field_ids?: number[] | null;
+                    custom_field_ids?: string[] | null;
                     custom_field_value?: string | null;
                     /** Format: date */
                     custom_field_date_from?: string | null;
@@ -12380,7 +13011,7 @@ export interface operations {
                     custom_field_numeric_operator?: "lt" | "eq" | "gt" | null;
                     custom_field_numeric_value?: number | null;
                     custom_field_filters?: {
-                        custom_field_ids: number[];
+                        custom_field_ids: string[];
                         /** @enum {integer} */
                         type: "0" | "1" | "2" | "3" | "4";
                         /** @enum {string|null} */
@@ -12431,7 +13062,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                contact: number;
+                contact: string;
             };
             cookie?: never;
         };
@@ -12472,7 +13103,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                contact: number;
+                contact: string;
             };
             cookie?: never;
         };
@@ -12532,7 +13163,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                contact: number;
+                contact: string;
             };
             cookie?: never;
         };
@@ -12675,7 +13306,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                contact: number;
+                contact: string;
             };
             cookie?: never;
         };
@@ -12736,7 +13367,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                contact: number;
+                contact: string;
             };
             cookie?: never;
         };
@@ -12779,8 +13410,8 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                contact: number;
-                note: number;
+                contact: string;
+                note: string;
             };
             cookie?: never;
         };
@@ -12815,18 +13446,18 @@ export interface operations {
         parameters: {
             query?: {
                 perName?: string;
-                contactId?: number;
+                contactId?: string;
                 cursor?: string;
                 updated_since?: string;
                 favorites?: boolean;
                 ownContacts?: boolean;
                 ownAndUnassigned?: boolean;
-                deviceId?: number;
-                advisorId?: number;
+                deviceId?: string;
+                advisorId?: string;
                 advisorIds?: string;
                 activeConversation?: boolean;
                 tags?: string;
-                kanbanSettingId?: number;
+                kanbanSettingId?: string;
                 kanbanStageIds?: string;
                 unreadMessages?: boolean;
                 awaitingReply?: boolean;
@@ -13182,7 +13813,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                contact: number;
+                contact: string;
             };
             cookie?: never;
         };
@@ -13302,7 +13933,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                contactId: number;
+                contactId: string;
             };
             cookie?: never;
         };
@@ -13521,7 +14152,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                customField: number;
+                customField: string;
             };
             cookie?: never;
         };
@@ -13559,7 +14190,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                customField: number;
+                customField: string;
             };
             cookie?: never;
         };
@@ -13611,7 +14242,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                contactId: number;
+                contactId: string;
             };
             cookie?: never;
         };
@@ -13672,7 +14303,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                contactFlowId: number;
+                contactFlowId: string;
             };
             cookie?: never;
         };
@@ -13686,7 +14317,11 @@ export interface operations {
                 content: {
                     "application/json": {
                         contact_flow: {
-                            id: number;
+                            /**
+                             * @description Id opaco: un texto que empieza con `run_`. Se usa tal como llega; no se arma ni se interpreta.
+                             * @example run_A0000000000000000000000
+                             */
+                            id: string;
                             status: number;
                         };
                     };
@@ -13730,7 +14365,7 @@ export interface operations {
         parameters: {
             query?: {
                 name?: string;
-                folder_id?: number;
+                folder_id?: string;
                 unclassified?: string;
                 trigger_type?: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "inbound_automation";
                 status?: "active" | "inactive";
@@ -13738,7 +14373,7 @@ export interface operations {
                 date_to?: string;
                 date_field?: "created_at" | "updated_at";
                 device_id?: string;
-                "device_ids[]"?: number[];
+                "device_ids[]"?: string[];
                 perPage?: number;
                 orderBy?: "name" | "created_at" | "updated_at";
                 orderByMethod?: "asc" | "desc";
@@ -13803,7 +14438,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                flow: number;
+                flow: string;
             };
             cookie?: never;
         };
@@ -13843,7 +14478,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                flow: number;
+                flow: string;
             };
             cookie?: never;
         };
@@ -13905,7 +14540,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                flow: number;
+                flow: string;
             };
             cookie?: never;
         };
@@ -13946,7 +14581,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                flow: number;
+                flow: string;
             };
             cookie?: never;
         };
@@ -13989,7 +14624,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                flow: number;
+                flow: string;
             };
             cookie?: never;
         };
@@ -14055,7 +14690,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                flow: number;
+                flow: string;
             };
             cookie?: never;
         };
@@ -14217,7 +14852,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                folder: number;
+                folder: string;
             };
             cookie?: never;
         };
@@ -14255,7 +14890,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                folder: number;
+                folder: string;
             };
             cookie?: never;
         };
@@ -14296,7 +14931,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                folder: number;
+                folder: string;
             };
             cookie?: never;
         };
@@ -14332,8 +14967,8 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                contact: number;
-                message: number;
+                contact: string;
+                message: string;
             };
             cookie?: never;
         };
@@ -14350,7 +14985,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        contact_id: number;
+                        /**
+                         * @description Id opaco: un texto que empieza con `ctc_`. Se usa tal como llega; no se arma ni se interpreta.
+                         * @example ctc_AAOzYSKDiqHT4hM8LdPB8Ut
+                         */
+                        contact_id: string;
                         /** @enum {string} */
                         mode: "internal" | "native";
                         /** @enum {string} */
@@ -14540,7 +15179,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                kanbanSetting: number;
+                kanbanSetting: string;
             };
             cookie?: never;
         };
@@ -14578,7 +15217,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                kanbanSetting: number;
+                kanbanSetting: string;
             };
             cookie?: never;
         };
@@ -14621,7 +15260,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                kanbanSetting: number;
+                kanbanSetting: string;
             };
             cookie?: never;
         };
@@ -14655,11 +15294,11 @@ export interface operations {
     "kanbanSetting.members": {
         parameters: {
             query?: {
-                "contact_ids[]"?: number[];
+                "contact_ids[]"?: string[];
             };
             header?: never;
             path: {
-                kanbanSetting: number;
+                kanbanSetting: string;
             };
             cookie?: never;
         };
@@ -14672,7 +15311,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        member_contact_ids: number[];
+                        member_contact_ids: string[];
                     };
                 };
             };
@@ -14702,7 +15341,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                contact: number;
+                contact: string;
             };
             cookie?: never;
         };
@@ -14762,7 +15401,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                kanbanSetting: number;
+                kanbanSetting: string;
             };
             cookie?: never;
         };
@@ -14803,7 +15442,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                kanbanSetting: number;
+                kanbanSetting: string;
             };
             cookie?: never;
         };
@@ -14848,7 +15487,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                kanbanSetting: number;
+                kanbanSetting: string;
             };
             cookie?: never;
         };
@@ -14889,7 +15528,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                kanbanSetting: number;
+                kanbanSetting: string;
             };
             cookie?: never;
         };
@@ -14930,7 +15569,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                kanbanSetting: number;
+                kanbanSetting: string;
             };
             cookie?: never;
         };
@@ -14973,7 +15612,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                kanbanSetting: number;
+                kanbanSetting: string;
             };
             cookie?: never;
         };
@@ -15016,8 +15655,8 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                kanbanSetting: number;
-                stage: number;
+                kanbanSetting: string;
+                stage: string;
             };
             cookie?: never;
         };
@@ -15058,12 +15697,12 @@ export interface operations {
     "kanbanStage.destroy": {
         parameters: {
             query?: {
-                reassign_to_stage_id?: number | null;
+                reassign_to_stage_id?: string | null;
             };
             header?: never;
             path: {
-                kanbanSetting: number;
-                stage: number;
+                kanbanSetting: string;
+                stage: string;
             };
             cookie?: never;
         };
@@ -15108,7 +15747,7 @@ export interface operations {
                 valueMin?: number;
                 valueMax?: number;
                 stagnant?: boolean;
-                "tagIds[]"?: number[];
+                "tagIds[]"?: string[];
                 "leadScoreCategories[]"?: "insufficient_data" | "hot" | "warm" | "cold";
                 leadScoreMin?: number;
                 leadScoreMax?: number;
@@ -15123,8 +15762,8 @@ export interface operations {
             };
             header?: never;
             path: {
-                kanbanSetting: number;
-                stage: number;
+                kanbanSetting: string;
+                stage: string;
             };
             cookie?: never;
         };
@@ -15259,7 +15898,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                contact: number;
+                contact: string;
             };
             cookie?: never;
         };
@@ -15336,7 +15975,11 @@ export interface operations {
                         }[];
                         state: string;
                         grace: {
-                            grace_period_id: number | null;
+                            /**
+                             * @description Id opaco: un texto que empieza con `grc_`. Se usa tal como llega; no se arma ni se interpreta.
+                             * @example grc_Abpdm0h18fu1zWzH0sOPgSM
+                             */
+                            grace_period_id: string | null;
                             started_at: string | null;
                             expires_at: string | null;
                             seconds_remaining: number;
@@ -15446,8 +16089,8 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                contact: number;
-                message: number;
+                contact: string;
+                message: string;
             };
             cookie?: never;
         };
@@ -15666,8 +16309,8 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                contact: number;
-                message: number;
+                contact: string;
+                message: string;
             };
             cookie?: never;
         };
@@ -15763,8 +16406,8 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                contact: number;
-                message: number;
+                contact: string;
+                message: string;
             };
             cookie?: never;
         };
@@ -15854,11 +16497,12 @@ export interface operations {
                 language_code?: string | null;
                 status?: "PENDING" | "APPROVED" | "REJECTED" | "PENDING_DELETION" | "PAUSED" | "DISABLED" | "ARCHIVED" | null;
                 category?: string | null;
-                deviceId?: number | null;
+                deviceId?: string | null;
                 type?: "text" | "image" | "document" | "video" | "location" | "default" | null;
                 created_by_webhook?: boolean;
                 "quality[]"?: "GREEN" | "YELLOW" | "RED" | "UNKNOWN" | "NOT_APPLICABLE" | null;
                 include?: "quality_counts" | null;
+                scope?: "waba" | null;
                 perPage?: number;
                 orderBy?: "name" | "created_at" | "updated_at";
                 orderByMethod?: "asc" | "desc";
@@ -15963,7 +16607,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                template: number;
+                template: string;
             };
             cookie?: never;
         };
@@ -16001,7 +16645,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                template: number;
+                template: string;
             };
             cookie?: never;
         };
@@ -16055,7 +16699,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -16151,7 +16795,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                device: number;
+                device: string;
                 template: string;
             };
             cookie?: never;
@@ -16159,7 +16803,11 @@ export interface operations {
         requestBody?: {
             content: {
                 "application/json": {
-                    contact_id?: number | null;
+                    /**
+                     * @description Id opaco: un texto que empieza con `ctc_`. Se usa tal como llega; no se arma ni se interpreta.
+                     * @example ctc_AAOzYSKDiqHT4hM8LdPB8Ut
+                     */
+                    contact_id?: string | null;
                     phone?: string | null;
                     whatsapp_id?: string | null;
                     template_variables?: {
@@ -16284,8 +16932,8 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                device: number;
-                template: number;
+                device: string;
+                template: string;
             };
             cookie?: never;
         };
@@ -16520,7 +17168,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                quickReply: number;
+                quickReply: string;
             };
             cookie?: never;
         };
@@ -16558,7 +17206,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                quickReply: number;
+                quickReply: string;
             };
             cookie?: never;
         };
@@ -16608,7 +17256,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                quickReply: number;
+                quickReply: string;
             };
             cookie?: never;
         };
@@ -16794,8 +17442,8 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                contact: number;
-                message: number;
+                contact: string;
+                message: string;
             };
             cookie?: never;
         };
@@ -16943,7 +17591,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                tag: number;
+                tag: string;
             };
             cookie?: never;
         };
@@ -16982,7 +17630,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                tag: number;
+                tag: string;
             };
             cookie?: never;
         };
@@ -17049,7 +17697,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                tag: number;
+                tag: string;
             };
             cookie?: never;
         };
@@ -17153,7 +17801,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                template: number;
+                template: string;
             };
             cookie?: never;
         };
@@ -17193,7 +17841,7 @@ export interface operations {
         parameters: {
             query?: {
                 status?: "0" | "1" | "2";
-                userId?: number;
+                userId?: string;
                 perPage?: number;
             };
             header?: never;
@@ -17261,8 +17909,16 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    userId: number;
-                    contactId: number;
+                    /**
+                     * @description Id opaco: un texto que empieza con `usr_`. Se usa tal como llega; no se arma ni se interpreta.
+                     * @example usr_AdaVCroxOubVJxQ0exvtano
+                     */
+                    userId: string;
+                    /**
+                     * @description Id opaco: un texto que empieza con `ctc_`. Se usa tal como llega; no se arma ni se interpreta.
+                     * @example ctc_AAOzYSKDiqHT4hM8LdPB8Ut
+                     */
+                    contactId: string;
                     title: string;
                     description: string;
                 };
@@ -17405,8 +18061,16 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    ticketId: number;
-                    userId: number;
+                    /**
+                     * @description Id opaco: un texto que empieza con `tkt_`. Se usa tal como llega; no se arma ni se interpreta.
+                     * @example tkt_AF55AkRPf2n0s11MKuItMb0
+                     */
+                    ticketId: string;
+                    /**
+                     * @description Id opaco: un texto que empieza con `usr_`. Se usa tal como llega; no se arma ni se interpreta.
+                     * @example usr_AdaVCroxOubVJxQ0exvtano
+                     */
+                    userId: string;
                 };
             };
         };
@@ -17517,7 +18181,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                contact: number;
+                contact: string;
             };
             cookie?: never;
         };
@@ -17622,7 +18286,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                user: number;
+                user: string;
             };
             cookie?: never;
         };
@@ -17760,7 +18424,7 @@ export interface operations {
             query?: {
                 q?: string | null;
                 status?: "draft" | "published" | "deprecated" | null;
-                device_id?: number | null;
+                device_id?: string | null;
                 page?: number | null;
                 perPage?: number;
             };
@@ -17875,7 +18539,7 @@ export interface operations {
             query?: {
                 from?: string | null;
                 to?: string | null;
-                version_id?: number | null;
+                version_id?: string | null;
                 origin?: string | null;
                 status?: string | null;
                 kind?: string | null;
@@ -17886,7 +18550,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                familyId: number;
+                familyId: string;
             };
             cookie?: never;
         };
@@ -17950,7 +18614,7 @@ export interface operations {
             query?: {
                 from?: string | null;
                 to?: string | null;
-                version_id?: number | null;
+                version_id?: string | null;
                 origin?: string | null;
                 status?: string | null;
                 kind?: string | null;
@@ -17961,7 +18625,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                familyId: number;
+                familyId: string;
             };
             cookie?: never;
         };
@@ -18021,8 +18685,8 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                familyId: number;
-                runId: number;
+                familyId: string;
+                runId: string;
             };
             cookie?: never;
         };
@@ -18036,10 +18700,18 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: {
-                            id: number;
+                            /**
+                             * @description Id opaco: un texto que empieza con `frs_`. Se usa tal como llega; no se arma ni se interpreta.
+                             * @example frs_A0000000000000000000000
+                             */
+                            id: string;
                             flow_token: string;
                             contact: {
-                                id: number;
+                                /**
+                                 * @description Id opaco: un texto que empieza con `ctc_`. Se usa tal como llega; no se arma ni se interpreta.
+                                 * @example ctc_A0000000000000000000000
+                                 */
+                                id: string;
                                 name: string | null;
                                 phone: string | null;
                             };
@@ -18066,10 +18738,18 @@ export interface operations {
                             };
                             origin: string;
                             node_id: string | null;
-                            automation_run_id: number | null;
+                            /**
+                             * @description Id opaco: un texto que empieza con `run_`. Se usa tal como llega; no se arma ni se interpreta.
+                             * @example run_ALAdQ3qabmqPYfqMegvNKGD
+                             */
+                            automation_run_id: string | null;
                             conversation_id: number | null;
                             version: number;
-                            version_id: number;
+                            /**
+                             * @description Id opaco: un texto que empieza con `frv_`. Se usa tal como llega; no se arma ni se interpreta.
+                             * @example frv_Ath9bJ3RpAYPhnX0EfcLtHJ
+                             */
+                            version_id: string;
                             output_id: string | null;
                             output_label: string | null;
                             reason: string | null;
@@ -18089,8 +18769,16 @@ export interface operations {
                                 unknown: boolean;
                             }[];
                             effects: (unknown[] | {
-                                id: number;
-                                run_id: number;
+                                /**
+                                 * @description Id opaco: un texto que empieza con `fre_`. Se usa tal como llega; no se arma ni se interpreta.
+                                 * @example fre_A0000000000000000000000
+                                 */
+                                id: string;
+                                /**
+                                 * @description Id opaco: un texto que empieza con `frs_`. Se usa tal como llega; no se arma ni se interpreta.
+                                 * @example frs_AnDmFEzqEmkKMjG1tTqkO2C
+                                 */
+                                run_id: string;
                                 kind: string;
                                 kind_label: string;
                                 status: string;
@@ -18131,7 +18819,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                familyId: number;
+                familyId: string;
             };
             cookie?: never;
         };
@@ -18145,7 +18833,11 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: {
-                            id: number;
+                            /**
+                             * @description Id opaco: un texto que empieza con `frv_`. Se usa tal como llega; no se arma ni se interpreta.
+                             * @example frv_A0000000000000000000000
+                             */
+                            id: string;
                             version: number;
                             name: string;
                             status: string;
@@ -18202,7 +18894,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                familyId: number;
+                familyId: string;
             };
             cookie?: never;
         };
@@ -18216,8 +18908,16 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: {
-                            family_id: number;
-                            form_id: number;
+                            /**
+                             * @description Id opaco: un texto que empieza con `frm_`. Se usa tal como llega; no se arma ni se interpreta.
+                             * @example frm_AyJUGabeXUAk9dbBuWegw4B
+                             */
+                            family_id: string;
+                            /**
+                             * @description Id opaco: un texto que empieza con `frv_`. Se usa tal como llega; no se arma ni se interpreta.
+                             * @example frv_Ath9bJ3RpAYPhnX0EfcLtHJ
+                             */
+                            form_id: string;
                             name: string;
                             status: string;
                             version: number;
@@ -18252,7 +18952,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: number;
+                id: string;
             };
             cookie?: never;
         };
@@ -18301,7 +19001,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: number;
+                id: string;
             };
             cookie?: never;
         };
@@ -18346,7 +19046,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: number;
+                id: string;
             };
             cookie?: never;
         };
@@ -18395,7 +19095,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: number;
+                id: string;
             };
             cookie?: never;
         };
@@ -18441,7 +19141,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: number;
+                id: string;
             };
             cookie?: never;
         };
@@ -18492,7 +19192,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: number;
+                id: string;
             };
             cookie?: never;
         };
@@ -18562,7 +19262,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: number;
+                id: string;
             };
             cookie?: never;
         };
@@ -18610,7 +19310,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: number;
+                id: string;
             };
             cookie?: never;
         };
@@ -18658,8 +19358,8 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: number;
-                deviceId: number;
+                id: string;
+                deviceId: string;
             };
             cookie?: never;
         };
@@ -18736,7 +19436,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: number;
+                id: string;
             };
             cookie?: never;
         };
@@ -18782,7 +19482,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                contact: number;
+                contact: string;
             };
             cookie?: never;
         };
@@ -18965,7 +19665,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The campaign ID */
-                campaign: number;
+                campaign: string;
             };
             cookie?: never;
         };
@@ -18991,7 +19691,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The campaign ID */
-                campaign: number;
+                campaign: string;
             };
             cookie?: never;
         };
@@ -19014,7 +19714,7 @@ export interface operations {
     "campaign.availableGroups": {
         parameters: {
             query: {
-                device_id: number;
+                device_id: string;
                 type: "groups" | "ad-groups" | "channels";
                 page?: number;
                 pageSize?: number;
@@ -19023,7 +19723,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The campaign ID */
-                campaign: number;
+                campaign: string;
             };
             cookie?: never;
         };
@@ -19054,7 +19754,7 @@ export interface operations {
                 orderBy?: string;
                 orderByMethod?: string;
                 perPage?: number;
-                deviceId?: number;
+                deviceId?: string;
                 status?: number;
                 origin?: "0" | "1";
                 adminConnection?: "1" | "2" | "3";
@@ -19063,7 +19763,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The campaign ID */
-                campaign: number;
+                campaign: string;
             };
             cookie?: never;
         };
@@ -19124,7 +19824,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The campaign ID */
-                campaign: number;
+                campaign: string;
             };
             cookie?: never;
         };
@@ -19137,11 +19837,19 @@ export interface operations {
                 content: {
                     "application/json": {
                         campaign: {
-                            id: number;
+                            /**
+                             * @description Id opaco: un texto que empieza con `cmp_`. Se usa tal como llega; no se arma ni se interpreta.
+                             * @example cmp_A6RMvAOjr0mHuLr08RpcwWu
+                             */
+                            id: string;
                             name: string;
                         };
                         data: {
-                            id: number;
+                            /**
+                             * @description Id opaco: un texto que empieza con `pip_`. Se usa tal como llega; no se arma ni se interpreta.
+                             * @example pip_AZvqAW2QLyWa0UzGEx8obE8
+                             */
+                            id: string;
                             pipeline_id: string;
                             name: string | null;
                             group_index: number | null;
@@ -19184,9 +19892,9 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The campaign ID */
-                campaign: number;
+                campaign: string;
                 /** @description The pipeline ID */
-                pipeline: number;
+                pipeline: string;
             };
             cookie?: never;
         };
@@ -19199,9 +19907,17 @@ export interface operations {
                 content: {
                     "application/json": {
                         pipeline_id: string;
-                        id: number;
+                        /**
+                         * @description Id opaco: un texto que empieza con `pip_`. Se usa tal como llega; no se arma ni se interpreta.
+                         * @example pip_AZvqAW2QLyWa0UzGEx8obE8
+                         */
+                        id: string;
                         campaign: {
-                            id: number;
+                            /**
+                             * @description Id opaco: un texto que empieza con `cmp_`. Se usa tal como llega; no se arma ni se interpreta.
+                             * @example cmp_A6RMvAOjr0mHuLr08RpcwWu
+                             */
+                            id: string;
                             name: string;
                         };
                         summary: {
@@ -19237,7 +19953,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The campaign ID */
-                campaign: number;
+                campaign: string;
             };
             cookie?: never;
         };
@@ -19276,7 +19992,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The campaign ID */
-                campaign: number;
+                campaign: string;
             };
             cookie?: never;
         };
@@ -19289,7 +20005,11 @@ export interface operations {
                 content: {
                     "application/json": {
                         campaign: {
-                            id: number;
+                            /**
+                             * @description Id opaco: un texto que empieza con `cmp_`. Se usa tal como llega; no se arma ni se interpreta.
+                             * @example cmp_A6RMvAOjr0mHuLr08RpcwWu
+                             */
+                            id: string;
                             name: string;
                         };
                         data: components["schemas"]["OperationPlanSummaryResource"][];
@@ -19316,9 +20036,9 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The campaign ID */
-                campaign: number;
+                campaign: string;
                 /** @description The plan ID */
-                plan: number;
+                plan: string;
             };
             cookie?: never;
         };
@@ -19344,7 +20064,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The campaign ID */
-                campaign: number;
+                campaign: string;
             };
             cookie?: never;
         };
@@ -19403,9 +20123,9 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The campaign ID */
-                campaign: number;
+                campaign: string;
                 /** @description The action ID */
-                action: number;
+                action: string;
             };
             cookie?: never;
         };
@@ -19462,7 +20182,7 @@ export interface operations {
                 type?: "1" | "2" | "3" | "4";
                 perPage?: number;
                 status?: "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
-                deviceId?: number;
+                deviceId?: string;
                 noCampaign?: boolean;
             };
             header?: never;
@@ -19581,7 +20301,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -19642,7 +20362,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -19703,7 +20423,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -19761,7 +20481,7 @@ export interface operations {
     "groupMetadata.show": {
         parameters: {
             query: {
-                device_id: number;
+                device_id: string;
                 group_uid: string;
                 type?: "groups" | "ad-groups" | "channels";
             };
@@ -20330,7 +21050,7 @@ export interface operations {
     "apiGroupAction.inviteLink": {
         parameters: {
             query: {
-                device_id: number;
+                device_id: string;
             };
             header?: never;
             path: {
@@ -20361,7 +21081,7 @@ export interface operations {
     "apiGroupAction.joinRequests": {
         parameters: {
             query: {
-                device_id: number;
+                device_id: string;
             };
             header?: never;
             path: {
@@ -20462,7 +21182,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The campaign ID */
-                campaign: number;
+                campaign: string;
             };
             cookie?: never;
         };
@@ -20647,7 +21367,7 @@ export interface operations {
                  *     enviar. Acepta `true`, `false`, `1` o `0`.
                  */
                 only_needs_connection?: "true" | "false" | "1" | "0";
-                folder_id?: number | null;
+                folder_id?: string | null;
                 unclassified?: "true" | "false" | "1" | "0";
             };
             header?: never;
@@ -20797,7 +21517,15 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: {
+                            /**
+                             * @description Id opaco: un texto que empieza con `snd_`. Se usa tal como llega; no se arma ni se interpreta.
+                             * @example snd_Aa722thR6FCue9NVxngPN1w
+                             */
                             template_id: string;
+                            /**
+                             * @description Id opaco: un texto que empieza con `grp_`. Se usa tal como llega; no se arma ni se interpreta.
+                             * @example grp_AK2GMGeWAAdd8fZbtOVvE3Z
+                             */
                             group_id: string;
                             group_name: string;
                             campaign_name: string;
@@ -20990,9 +21718,15 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: {
+                            /**
+                             * @description Id opaco: un texto que empieza con `mtp_`. Se usa tal como llega; no se arma ni se interpreta.
+                             * @example mtp_Ax7RTy6z7iuxm2plhdyTXZz
+                             */
                             message_template_id: string;
                             block_type: string;
-                            options: string;
+                            options: {
+                                [key: string]: unknown;
+                            }[];
                             responses_total: string;
                             untagged_total: string;
                         }[];
@@ -21012,7 +21746,7 @@ export interface operations {
                 unit?: "day" | "month" | "hour";
                 type?: "in" | "out";
                 target?: "groups" | "campaigns";
-                "ids[]"?: number[];
+                "ids[]"?: string[];
                 fill_missing?: boolean;
             };
             header?: never;
@@ -21068,7 +21802,7 @@ export interface operations {
                 end_date?: string;
                 unit?: "day" | "month" | "hour";
                 target?: "groups" | "campaigns";
-                "ids[]"?: number[];
+                "ids[]"?: string[];
                 status?: "active" | "inactive";
             };
             header?: never;
@@ -21163,7 +21897,7 @@ export interface operations {
                 end_date?: string;
                 unit?: "day" | "month" | "hour";
                 target?: "groups" | "campaigns";
-                "ids[]"?: number[];
+                "ids[]"?: string[];
                 fill_missing?: boolean;
             };
             header?: never;
@@ -21198,7 +21932,7 @@ export interface operations {
                 start_date?: string;
                 end_date?: string;
                 target?: "groups" | "campaigns";
-                "ids[]"?: number[];
+                "ids[]"?: string[];
                 page?: number;
                 per_page?: number;
                 "devices[]"?: string[];
@@ -21218,6 +21952,10 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: {
+                            /**
+                             * @description Id opaco: un texto que empieza con `clk_`. Se usa tal como llega; no se arma ni se interpreta.
+                             * @example clk_ArgtiCUsSwmKD1I85RovOkY
+                             */
                             id: string;
                             address: string;
                             browser: string;
@@ -21227,7 +21965,11 @@ export interface operations {
                             platform: string;
                             referrer: string;
                             group: {
-                                id: string;
+                                /**
+                                 * @description Id opaco: un texto que empieza con `grp_`. Se usa tal como llega; no se arma ni se interpreta.
+                                 * @example grp_AK2GMGeWAAdd8fZbtOVvE3Z
+                                 */
+                                id: string | null;
                                 name: string;
                             };
                             phone: string;
@@ -21261,7 +22003,7 @@ export interface operations {
                 start_date?: string;
                 end_date?: string;
                 target?: "groups" | "campaigns";
-                "ids[]"?: number[];
+                "ids[]"?: string[];
                 "countries[]"?: string[];
             };
             header?: never;
@@ -21372,6 +22114,7 @@ export interface operations {
              *
              *     - `workspace_account_level`: es de la cuenta entera y solo la usa una clave del workspace por defecto.
              *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
              */
             403: {
                 headers: {
@@ -21526,6 +22269,7 @@ export interface operations {
              *
              *     - `workspace_account_level`: es de la cuenta entera y solo la usa una clave del workspace por defecto.
              *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
              */
             403: {
                 headers: {
@@ -21597,6 +22341,7 @@ export interface operations {
              *
              *     - `workspace_account_level`: es de la cuenta entera y solo la usa una clave del workspace por defecto.
              *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
              */
             403: {
                 headers: {
@@ -21691,6 +22436,7 @@ export interface operations {
              * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
              *
              *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
              */
             403: {
                 headers: {
@@ -21762,6 +22508,7 @@ export interface operations {
              *
              *     - `workspace_account_level`: es de la cuenta entera y solo la usa una clave del workspace por defecto.
              *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
              */
             403: {
                 headers: {
@@ -21833,6 +22580,7 @@ export interface operations {
              *
              *     - `workspace_account_level`: es de la cuenta entera y solo la usa una clave del workspace por defecto.
              *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
              */
             403: {
                 headers: {
@@ -21882,7 +22630,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: number;
+                id: string;
             };
             cookie?: never;
         };
@@ -21906,6 +22654,7 @@ export interface operations {
              * @description Quien llama no puede usar esta ruta (`forbidden`). Los códigos de workspace que puede traer `error` con una clave:
              *
              *     - `workspace_deleted`: el workspace de la clave ya no existe.
+             *     - `workspace_permission_denied`: el usuario de la clave no tiene ese permiso en su workspace (su rol no lo incluye).
              */
             403: {
                 headers: {
@@ -21989,7 +22738,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The device ID */
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -22101,7 +22850,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The device ID */
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -22521,7 +23270,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                link: number;
+                link: string;
             };
             cookie?: never;
         };
@@ -22611,7 +23360,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                link: number;
+                link: string;
             };
             cookie?: never;
         };
@@ -22954,7 +23703,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                customDomain: number;
+                customDomain: string;
             };
             cookie?: never;
         };
@@ -23062,7 +23811,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                customDomain: number;
+                customDomain: string;
             };
             cookie?: never;
         };
@@ -23175,7 +23924,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                customDomain: number;
+                customDomain: string;
             };
             cookie?: never;
         };
@@ -23438,7 +24187,11 @@ export interface operations {
                     "application/json": {
                         error: string;
                         message: string;
-                        device_id?: number;
+                        /**
+                         * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+                         * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+                         */
+                        device_id?: string;
                     };
                 };
             };
@@ -23451,7 +24204,11 @@ export interface operations {
                     "application/json": {
                         error: string;
                         message: string;
-                        device_id?: number;
+                        /**
+                         * @description Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta. Id opaco: un texto que empieza con `dev_`. Se usa tal como llega; no se arma ni se interpreta.
+                         * @example dev_Ac7Ku7iIZDXJTjdCu0UB1mX
+                         */
+                        device_id?: string;
                     };
                 };
             };
@@ -23491,7 +24248,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The device ID */
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -23583,7 +24340,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The device ID */
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -23623,7 +24380,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DeviceResource"];
+                    "application/json": components["schemas"]["DeviceResource"] | string;
                 };
             };
             /** @description El número no admite esta edición (`unsupported_provider`). */
@@ -23687,7 +24444,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown[];
+                    "application/json": string;
                 };
             };
             422: components["responses"]["AccountsValidationException"];
@@ -23727,7 +24484,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The device ID */
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -23833,7 +24590,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The device ID */
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -23848,7 +24605,7 @@ export interface operations {
                     "application/json": {
                         data: unknown[];
                         numbers_capacity: string | null;
-                    };
+                    } | string;
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
@@ -23898,7 +24655,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown[];
+                    "application/json": string;
                 };
             };
             /**
@@ -23938,7 +24695,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The device ID */
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -23953,7 +24710,7 @@ export interface operations {
                     "application/json": {
                         data: unknown[];
                         numbers_capacity: string | null;
-                    };
+                    } | string;
                 };
             };
             401: components["responses"]["AccountsAuthenticationException"];
@@ -24003,7 +24760,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown[];
+                    "application/json": string;
                 };
             };
             /**
@@ -24045,7 +24802,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The device ID */
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -24139,7 +24896,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The device ID */
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -24231,7 +24988,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The device ID */
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -24338,7 +25095,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The device ID */
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -24436,7 +25193,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The device ID */
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -24538,7 +25295,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The device ID */
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -24641,7 +25398,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The device ID */
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -24730,7 +25487,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The device ID */
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -24745,6 +25502,11 @@ export interface operations {
                     "application/json": {
                         health: string;
                         identity: string;
+                        /**
+                         * @description El estado del número en Meta en minúsculas (`connected`, `flagged`, `restricted`,
+                         *     `banned`, ...), igual que `health.meta_status`; `null` si todavía no se sabe.
+                         */
+                        meta_status: string | null;
                         entities: string;
                         /**
                          * @description El nivel de rendimiento de envío que Meta le asigna al número: `standard`, `high`
@@ -24764,7 +25526,7 @@ export interface operations {
                             business_id: string | null;
                         } | null;
                         /** @enum {string} */
-                        refresh_outcome: "refreshed" | "not_refreshed_yet";
+                        refresh_outcome: "not_refreshed_yet" | "failed" | "refreshed";
                     };
                 };
             };
@@ -24843,7 +25605,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The device ID */
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -24970,7 +25732,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The device ID */
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -25089,7 +25851,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The device ID */
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -25216,7 +25978,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description The device ID */
-                device: number;
+                device: string;
             };
             cookie?: never;
         };
@@ -25988,7 +26750,11 @@ export interface operations {
                         /** @enum {string|null} */
                         error: "non_2xx" | "internal_error" | "timeout" | "connection_failed" | "tls_error" | "destination_not_allowed" | "secret_unreadable" | null;
                         duration_ms: number | null;
-                        delivery_id: number;
+                        /**
+                         * @description Id opaco: un texto que empieza con `dlv_`. Se usa tal como llega; no se arma ni se interpreta.
+                         * @example dlv_AV4KGFgTXNQdIf5kXJtT4oE
+                         */
+                        delivery_id: string;
                     };
                 };
             };

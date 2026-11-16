@@ -17,6 +17,7 @@ import {
 import { isSendRequest } from '../src/core/retry.js';
 import { SECRET, sign } from './fixtures/portal-signature-vectors.js';
 import { TEST_API_KEY, mockFetch } from './helpers.js';
+import { CONTACT, DEVICE, DEVICE_2 } from './ids.js';
 
 const client = (fetchImpl: typeof fetch, maxRetries = 2) => new Funnelchat({ apiKey: TEST_API_KEY, fetch: fetchImpl, maxRetries });
 const BASE = 'https://api.funnelchat.com/api/v1';
@@ -31,19 +32,19 @@ const signed = (event: object) => {
 describe('a message to a group', () => {
   it('posts the body to the group by its uid and resolves to the queued action', async () => {
     const { fetch, calls } = mockFetch({ status: 202, body: { action_id: ACTION, status: 'queued' } });
-    const accepted = await client(fetch).groups.sendMessage(GROUP, { device_id: 4, type: 'text', text: 'Hi everyone' });
+    const accepted = await client(fetch).groups.sendMessage(GROUP, { device_id: DEVICE_2, type: 'text', text: 'Hi everyone' });
     expect(accepted).toEqual({ action_id: ACTION, status: 'queued' });
     expect(calls[0]?.method).toBe('POST');
     expect(calls[0]?.url).toBe(`${BASE}/groups/120363000000000001%40g.us/messages`);
-    expect(JSON.parse(calls[0]?.body ?? '')).toEqual({ device_id: 4, type: 'text', text: 'Hi everyone' });
+    expect(JSON.parse(calls[0]?.body ?? '')).toEqual({ device_id: DEVICE_2, type: 'text', text: 'Hi everyone' });
   });
 
   it('follows a group of a number, and is not taken for a send', async () => {
     const { fetch, calls } = mockFetch({ status: 201, body: { data: { uid: GROUP, name: 'Example group', imported: true, is_admin: true } } });
-    const { data } = await client(fetch).groups.follow(GROUP, { device_id: 4 });
+    const { data } = await client(fetch).groups.follow(GROUP, { device_id: DEVICE_2 });
     expect(calls[0]?.method).toBe('POST');
     expect(calls[0]?.url).toBe(`${BASE}/groups/120363000000000001%40g.us/import`);
-    expect(JSON.parse(calls[0]?.body ?? '')).toEqual({ device_id: 4 });
+    expect(JSON.parse(calls[0]?.body ?? '')).toEqual({ device_id: DEVICE_2 });
     expect(data).toEqual({ uid: GROUP, name: 'Example group', imported: true, is_admin: true });
     expect(isSendRequest('POST', `/api/v1/groups/${encodeURIComponent(GROUP)}/import`)).toBe(false);
   });
@@ -53,7 +54,7 @@ describe('a message to a group', () => {
       action_id: ACTION,
       type: 'send_message',
       status: 'completed',
-      device_id: 4,
+      device_id: DEVICE_2,
       group: { uid: GROUP, name: 'Example group' },
       result: { message: { uid: '3EB0C767D26A1D4E5F6A' } },
       reason: null,
@@ -76,7 +77,7 @@ describe('a message to a group', () => {
     expect(isSendRequest('GET', `/api/v1/groups/${encodeURIComponent(GROUP)}/messages`)).toBe(false);
 
     const { fetch, calls } = mockFetch({ status: 503, body: { error: 'gate_unavailable', message: '…' }, headers: { 'retry-after': '0' } });
-    await expect(client(fetch).groups.sendMessage(GROUP, { device_id: 4, type: 'text', text: 'x' })).rejects.toBeDefined();
+    await expect(client(fetch).groups.sendMessage(GROUP, { device_id: DEVICE_2, type: 'text', text: 'x' })).rejects.toBeDefined();
     expect(calls).toHaveLength(1);
   });
 
@@ -86,7 +87,7 @@ describe('a message to a group', () => {
       { status: 202, body: { action_id: ACTION, status: 'queued' } },
     );
     const error = await client(fetch)
-      .groups.sendMessage(GROUP, { device_id: 4, type: 'text', text: 'x' }, { retrySend: true })
+      .groups.sendMessage(GROUP, { device_id: DEVICE_2, type: 'text', text: 'x' }, { retrySend: true })
       .catch((e: unknown) => e);
     expect(error).toBeInstanceOf(RateLimitError);
     expect(calls).toHaveLength(1);
@@ -99,7 +100,7 @@ describe('a message to a group', () => {
   ])('%i %s arrives as a typed error', async (status, code, Class) => {
     const { fetch } = mockFetch({ status, body: { error: code, message: '…' } });
     const error = await client(fetch)
-      .groups.sendMessage(GROUP, { device_id: 4, type: 'image', media_url: 'https://files.example.com/a.jpg', caption: 'Look' })
+      .groups.sendMessage(GROUP, { device_id: DEVICE_2, type: 'image', media_url: 'https://files.example.com/a.jpg', caption: 'Look' })
       .catch((e: unknown) => e);
     expect(error).toBeInstanceOf(Class);
     expect(error).toMatchObject({ status, code });
@@ -143,9 +144,9 @@ describe('group events and the workspace of every event', () => {
       occurred_at: '2026-11-04T12:00:00Z',
       data: {
         message: { id: 1001, type: 'image', text: null, media: { file: 'https://files.example.com/a.jpg' } },
-        contact: { id: 2001, name: null, phone: '+5491100000000' },
+        contact: { id: CONTACT, name: null, phone: '+5491100000000' },
         receiver: { phone: '+5491100000001' },
-        device_id: 3,
+        device_id: DEVICE,
         workspace_id: 37,
       },
     });

@@ -6,6 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { type APIError, APIPromise, Funnelchat, InternalServerError, NotFoundError } from '../src/index.js';
 import { TEST_API_KEY, mockFetch } from './helpers.js';
+import { CONTACT } from './ids.js';
 
 const client = (fetchImpl: typeof fetch) => new Funnelchat({ apiKey: TEST_API_KEY, fetch: fetchImpl, maxRetries: 0 });
 const RID = '3f2b1c9e-6d0a-4b7e-9a51-0c2d4e6f8a10';
@@ -38,22 +39,22 @@ describe('X-Request-Id', () => {
   });
 
   it('comes with the body through withResponse()', async () => {
-    const { fetch } = mockFetch({ status: 200, body: { id: 2001 }, headers: { 'x-request-id': RID } });
-    const promise = client(fetch).contacts.retrieve(2001);
+    const { fetch } = mockFetch({ status: 200, body: { id: CONTACT }, headers: { 'x-request-id': RID } });
+    const promise = client(fetch).contacts.retrieve(CONTACT);
     expect(promise).toBeInstanceOf(APIPromise);
     expect(promise).toBeInstanceOf(Promise);
     const { data, requestId, response } = await promise.withResponse();
-    expect(data).toEqual({ id: 2001 });
+    expect(data).toEqual({ id: CONTACT });
     expect(requestId).toBe(RID);
     expect(response.status).toBe(200);
   });
 
   it('awaiting the promise still gives the body, once per request', async () => {
-    const { fetch, calls } = mockFetch({ status: 200, body: { id: 2001 }, headers: { 'x-request-id': RID } });
-    const promise = client(fetch).contacts.retrieve(2001);
-    await expect(promise).resolves.toEqual({ id: 2001 });
+    const { fetch, calls } = mockFetch({ status: 200, body: { id: CONTACT }, headers: { 'x-request-id': RID } });
+    const promise = client(fetch).contacts.retrieve(CONTACT);
+    await expect(promise).resolves.toEqual({ id: CONTACT });
     expect((await promise.withResponse()).requestId).toBe(RID);
-    await expect(promise.then((c) => c)).resolves.toEqual({ id: 2001 });
+    await expect(promise.then((c) => c)).resolves.toEqual({ id: CONTACT });
     expect(calls).toHaveLength(1);
   });
 

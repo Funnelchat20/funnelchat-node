@@ -74,7 +74,7 @@ describe.skipIf(!SANDBOX_URL)('numbers against the sandbox', () => {
     expect(qr.qr_code).toMatch(/^data:image\/png;base64,/);
     expect(qr.expires_in).toBe(5); // a QR is asked for every 5 seconds and scanned at once
 
-    const ids: number[] = [];
+    const ids: string[] = [];
     for await (const number of funnelchat.devices.list({ external_reference: 'customer-81' })) ids.push(number.id);
     expect(ids).toEqual([device.id]);
 

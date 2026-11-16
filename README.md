@@ -45,7 +45,7 @@ One call, from your number to a phone (with country code, digits only):
 
 ```ts
 const { message } = await funnelchat.messages.sendDirect({ device_id: device.id, phone: '5491100000000', text: 'Hi Ana!' });
-console.log(message.id, message.contact_id, message.status); // 1002 2001 'queued'
+console.log(message.id, message.contact_id, message.status); // msg_Hj2Rw9KpXc5LnT7vQeZ0bYa ctc_ABsza6Ialu1BCUyPFZ8WJvV 'queued'
 ```
 
 If that phone is not a contact yet, it is created in the workspace of your key; `message.contact_id` is its id. The answer is the queued message: accepted is not delivered yet. With an official number, free text only goes within 24 hours of the contact's last message, so the first message to a new contact is an [approved template](#templates).
@@ -214,21 +214,21 @@ Sending with a key follows the WhatsApp rules. **Every send answers right away w
 **Open window: free text.** With an official Meta number you can only send free text if the contact wrote to you in the last 24 hours. Check the window first:
 
 ```ts
-const window = await funnelchat.contacts.metaWindow(2001, { device_id: 3 });
+const window = await funnelchat.contacts.metaWindow('ctc_ABsza6Ialu1BCUyPFZ8WJvV', { device_id: 'dev_K7xv2LpQe9TnWc4RsYb1MzA' });
 
 if (window.is_open) {
-  const { message } = await funnelchat.messages.send(2001, {
-    device_id: 3,
+  const { message } = await funnelchat.messages.send('ctc_ABsza6Ialu1BCUyPFZ8WJvV', {
+    device_id: 'dev_K7xv2LpQe9TnWc4RsYb1MzA',
     phone: '5491100000000',            // the phone of the same contact, without +
     text: 'Hi! Here is the info…',
     client_reference: 'order-8841',    // optional: your reference to follow it
   });
-  console.log(message.id, message.status); // 1002 'queued'
+  console.log(message.id, message.status); // msg_Hj2Rw9KpXc5LnT7vQeZ0bYa 'queued'
 }
 ```
 
 - **By phone, without `contact_id`:** `sendDirect` and `templates.send` take `phone` (7 to 15 digits, with country code) and create the contact in the workspace of your key when it does not exist yet, as `contacts.upsert` would; the contact stays even if a rule then stops the send. With an official number you can send `whatsapp_id` (Meta's id of the person, such as `US.13491208655302741918`) instead of `phone`; with a QR number that is a `422`. A phone that is a contact of another workspace of your account answers `404`, and nothing is created or sent. With `contact_id` too, `phone` or `whatsapp_id` must be that contact's: otherwise `422 recipient_mismatch`. Creating the contact takes **Contacts and conversations → Edit**, which **Send** includes.
-- `message.id` is the same `message_id` of `message.status_changed`. With it, `funnelchat.messages.get(2001, message.id)` tells you how it is going: `status` moves from `queued` to `sent`, `delivered`, `read` or `failed`, and a `failed` one carries `error` (`code`, `title` and `reason`).
+- `message.id` is the same `message_id` of `message.status_changed`. With it, `funnelchat.messages.get('ctc_ABsza6Ialu1BCUyPFZ8WJvV', message.id)` tells you how it is going: `status` moves from `queued` to `sent`, `delivered`, `read` or `failed`, and a `failed` one carries `error` (`code`, `title` and `reason`).
 - `client_reference` (1 to 64 visible ASCII characters, no spaces) comes back in the history of the contact and in `message.status_changed`.
 - `send` is `POST /api/v1/contacts/{contact}/message` and checks the `phone` (or `whatsapp_id`) of the body against the contact of the route: when it does not match, `422 recipient_mismatch`. `sendDirect` is `POST /api/v1/message/send-message`, with `device_id` and the recipient (`phone`, `whatsapp_id` or `contact_id`) in the body.
 - Contact cards (`sendContactCard`) return `{ messages }`, one per card; a forward (`forward`) one item per destination with its `message` (or `null` when that destination was blocked); a template (`templates.send`) and a form (`sendForm`) `{ message }`.
@@ -236,8 +236,8 @@ if (window.is_open) {
 **A file by URL.** `file` is the URL of the file. When it does not end in a known extension (a signed URL, or one without extension), say what it is with `file_type` and, for a document, the name it arrives with:
 
 ```ts
-await funnelchat.messages.send(2001, {
-  device_id: 3,
+await funnelchat.messages.send('ctc_ABsza6Ialu1BCUyPFZ8WJvV', {
+  device_id: 'dev_K7xv2LpQe9TnWc4RsYb1MzA',
   phone: '5491100000000',
   file: 'https://files.example.com/download?signature=abc123',
   file_type: 'document',        // image, video, audio, document or sticker
@@ -249,16 +249,16 @@ Without `file_type`, a URL without a known extension answers `422` with `errors.
 
 #### Templates
 
-**Closed window: an approved template.** It is the only way to write to a contact after 24 hours with an official number. The route takes the number (`3`) and the id of the template (`45`), from `funnelchat.templates.list()`; send only the ones with `available: true` (Meta pauses or disables the others):
+**Closed window: an approved template.** It is the only way to write to a contact after 24 hours with an official number. The route takes the number (`dev_K7xv2LpQe9TnWc4RsYb1MzA`) and the id of the template (`tpl_Vc8Lm2QxR5eYh1TnKw9ZpB3`), from `funnelchat.templates.list()`; send only the ones with `available: true` (Meta pauses or disables the others):
 
 ```ts
-const { message } = await funnelchat.templates.send(3, '45', {
+const { message } = await funnelchat.templates.send('dev_K7xv2LpQe9TnWc4RsYb1MzA', 'tpl_Vc8Lm2QxR5eYh1TnKw9ZpB3', {
   phone: '5491100000000',                  // a new phone becomes a contact, as with sendDirect
   template_variables: { body: ['Lucía'] }, // the body variables, in order
 });
 ```
 
-A template you created directly in Meta does not appear in `templates.list()`? Bring the number's templates from Meta with `await funnelchat.templates.sync(3)` and list again (official numbers only; with `status: 'in_progress'`, the rest arrives in a few seconds).
+A template you created directly in Meta does not appear in `templates.list()`? Bring the number's templates from Meta with `await funnelchat.templates.sync('dev_K7xv2LpQe9TnWc4RsYb1MzA')` and list again (official numbers only; with `status: 'in_progress'`, the rest arrives in a few seconds).
 
 #### When a send is stopped
 
@@ -312,7 +312,7 @@ console.log(link.url); // https://api.funnelchat.com/connect/… — it carries 
 
 ```ts
 const { data } = await funnelchat.connectLinks.get(link.id);
-console.log(data.status, data.device_id, data.error_code); // 'completed', 9, null
+console.log(data.status, data.device_id, data.error_code); // 'completed', 'dev_Bn4YcT1sWk7MfQ9eLxH2VoD', null
 
 for await (const open of funnelchat.connectLinks.list({ status: 'pending', external_reference: 'customer-81' })) {
   await funnelchat.connectLinks.revoke(open.id); // only a pending link; any other answers 409
@@ -490,7 +490,7 @@ Each HTTP status has its class: `BadRequestError` (400), `AuthenticationError` (
 import { APIError, RateLimitError } from '@funnelchat-hq/sdk';
 
 try {
-  await funnelchat.contacts.retrieve(2001);
+  await funnelchat.contacts.retrieve('ctc_ABsza6Ialu1BCUyPFZ8WJvV');
 } catch (error) {
   if (error instanceof RateLimitError) {
     console.log(`Wait ${error.retryAfter} s`);
@@ -528,7 +528,7 @@ The errors of the API entry and of access control apply to any route (`ACCESS_ER
 **The `X-Request-Id` of a successful response** is at hand too: every call returns a promise with `withResponse()`.
 
 ```ts
-const { data, requestId, response } = await funnelchat.contacts.retrieve(2001).withResponse();
+const { data, requestId, response } = await funnelchat.contacts.retrieve('ctc_ABsza6Ialu1BCUyPFZ8WJvV').withResponse();
 ```
 
 ### Retries
@@ -548,7 +548,7 @@ await funnelchat.tags.list({}, { maxRetries: 0, timeoutMs: 5000, signal: AbortSi
 `request` calls any route. With a route of the spec (every function the portal publishes), the path parameters, the query, the body and the response are typed:
 
 ```ts
-const contact = await funnelchat.request('GET', '/api/v1/contacts/{contact}', { path: { contact: 2001 } });
+const contact = await funnelchat.request('GET', '/api/v1/contacts/{contact}', { path: { contact: 'ctc_ABsza6Ialu1BCUyPFZ8WJvV' } });
 
 const stats = await funnelchat.request('GET', '/api/v1/broadcasts/{broadcast}/statistics', { path: { broadcast: 77 } });
 ```
@@ -582,6 +582,14 @@ The types come from the spec the developer portal publishes (`spec/funnelchat.js
 - the `type` of a `message.received` message, which takes the types the spec lists or any other string.
 
 The layer never adds an operation or an event the portal does not publish. `src/pending/` has what is not OpenAPI (the `workspace_id` of every event) and `src/core/error-codes.ts` the error codes.
+
+### Upgrading from 0.6
+
+0.7.0 takes the types of portal v0.7.0, where the API uses **opaque ids**, with no transition: every id of ours that was a number is now a string with a prefix per type, such as `ctc_ABsza6Ialu1BCUyPFZ8WJvV` (three letters, `_`, 23 base62 characters; `^ctc_[A-Za-z0-9]{23}$`). An integer, or an id of another type, answers `404` as if it did not exist. The `uid` of a group, the `uuid` of a campaign, the `uid` of a message, the ids of a WABA and `workspace_id` stay as they were. The portal's **Identifiers** page has the table of prefixes.
+
+- Contacts, numbers (`device_id`), messages, templates, forms (and their versions), tags, custom fields, connect links, flows, campaigns and the rest are `string` in every parameter, body, answer and webhook event: `funnelchat.contacts.retrieve('ctc_…')`, `device_id: 'dev_…'`, `event.data.message_id`, `connect_link_id`. Arrays of ids, such as `contactIds` and `contact_card_ids`, are `string[]`. Your code stops compiling where it passes or compares a number.
+- **Store ids as text, as they arrive.** Do not build them, parse them or convert them with `Number()`, and do not rely on their prefix or length beyond the pattern above. A column that held the integer id needs a text type (for example `VARCHAR(40)`).
+- The ids you stored before are not valid: read them again from the API (`list`, or the id the webhook brings) and replace them.
 
 ### Upgrading from 0.5
 
@@ -630,7 +638,7 @@ Everything generated comes from one script:
 
 ```bash
 curl -fsSo /tmp/funnelchat.json https://developers-portal.funnelchat.app/specs/funnelchat.json
-npm run generate -- --spec /tmp/funnelchat.json --source url=https://developers-portal.funnelchat.app/specs/funnelchat.json --source portal_version=v0.6.19
+npm run generate -- --spec /tmp/funnelchat.json --source url=https://developers-portal.funnelchat.app/specs/funnelchat.json --source portal_version=v0.7.0
 npm run generate   # with the spec in spec/, for example after editing spec/pending.json
 ```
 

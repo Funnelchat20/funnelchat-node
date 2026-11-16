@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 3a5f39f1bd8d62c5…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 fadcd73731cba99d…) + spec/pending.json.
  */
 
 /** One operation of the public API. `pending` = corrected by spec/pending.json. */

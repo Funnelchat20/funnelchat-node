@@ -34,7 +34,7 @@
       "PendingWebhookDevice": {
         "type": "object",
         "properties": {
-          "id": { "type": "integer" },
+          "id": { "type": "string", "pattern": "^dev_[A-Za-z0-9]{23}$" },
           "name": { "type": ["string", "null"] },
           "number": { "type": ["string", "null"], "description": "Digits only, without `+`." },
           "connection": { "$ref": "#/components/schemas/PendingDeviceConnection" },
@@ -312,7 +312,11 @@
                     "properties": {
                       "device": { "$ref": "#/components/schemas/PendingWebhookDevice" },
                       "connected_at": { "type": "string", "format": "date-time", "description": "ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`." },
-                      "connect_link_id": { "type": ["integer", "null"], "description": "The connect link of this connection, or `null` when it did not come from a link." }
+                      "connect_link_id": {
+                        "type": ["string", "null"],
+                        "pattern": "^lnk_[A-Za-z0-9]{23}$",
+                        "description": "The connect link of this connection, or `null` when it did not come from a link."
+                      }
                     },
                     "required": ["device", "connected_at", "connect_link_id"]
                   }
@@ -345,7 +349,7 @@
                       "device": { "$ref": "#/components/schemas/PendingWebhookDevice" },
                       "disconnected_at": { "type": "string", "format": "date-time", "description": "ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`." },
                       "reason": { "type": "string", "enum": ["qr_logged_out", "meta_account_not_registered", "shadow_ban_protection", "provider_error", "unknown", "disconnected_by_user"] },
-                      "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
+                      "connect_link_id": { "type": ["string", "null"], "pattern": "^lnk_[A-Za-z0-9]{23}$", "description": "The connect link that last connected the number, or `null`." }
                     },
                     "required": ["device", "disconnected_at", "connect_link_id", "reason"]
                   }
@@ -768,7 +772,7 @@
                     "properties": {
                       "device": { "$ref": "#/components/schemas/PendingWebhookDevice" },
                       "deleted_at": { "type": "string", "format": "date-time", "description": "ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`." },
-                      "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
+                      "connect_link_id": { "type": ["string", "null"], "pattern": "^lnk_[A-Za-z0-9]{23}$", "description": "The connect link that last connected the number, or `null`." }
                     },
                     "required": ["device", "deleted_at", "connect_link_id"]
                   }
@@ -802,7 +806,7 @@
                       "previous_state": { "type": "string", "enum": ["available", "limited", "blocked", "unknown"] },
                       "state": { "type": "string", "enum": ["available", "limited", "blocked", "unknown"] },
                       "changed_at": { "type": "string", "format": "date-time", "description": "ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`." },
-                      "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
+                      "connect_link_id": { "type": ["string", "null"], "pattern": "^lnk_[A-Za-z0-9]{23}$", "description": "The connect link that last connected the number, or `null`." }
                     },
                     "required": ["device", "previous_state", "state", "changed_at", "connect_link_id"]
                   }
@@ -836,7 +840,7 @@
                       "previous": { "type": "string" },
                       "current": { "type": "string" },
                       "changed_at": { "type": "string", "format": "date-time", "description": "ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`." },
-                      "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
+                      "connect_link_id": { "type": ["string", "null"], "pattern": "^lnk_[A-Za-z0-9]{23}$", "description": "The connect link that last connected the number, or `null`." }
                     },
                     "required": ["device", "previous", "current", "changed_at", "connect_link_id"]
                   }
@@ -870,7 +874,7 @@
                       "previous": { "type": "string" },
                       "current": { "type": "string" },
                       "changed_at": { "type": "string", "format": "date-time", "description": "ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`." },
-                      "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
+                      "connect_link_id": { "type": ["string", "null"], "pattern": "^lnk_[A-Za-z0-9]{23}$", "description": "The connect link that last connected the number, or `null`." }
                     },
                     "required": ["device", "previous", "current", "changed_at", "connect_link_id"]
                   }
@@ -907,7 +911,7 @@
                       "verified_name": { "type": ["string", "null"] },
                       "rejection_reason": { "type": ["string", "null"], "description": "Meta's reason in a rejection, or `null`." },
                       "reviewed_at": { "type": "string", "format": "date-time", "description": "ISO 8601 in UTC, ending in `Z`, such as `2026-10-05T03:00:00Z`." },
-                      "connect_link_id": { "type": ["integer", "null"], "description": "The connect link that last connected the number, or `null`." }
+                      "connect_link_id": { "type": ["string", "null"], "pattern": "^lnk_[A-Za-z0-9]{23}$", "description": "The connect link that last connected the number, or `null`." }
                     },
                     "required": ["device", "decision", "previous_status", "status", "verified_name", "rejection_reason", "reviewed_at", "connect_link_id"]
                   }
@@ -1242,7 +1246,7 @@
                       "message": {
                         "type": "object",
                         "properties": {
-                          "id": { "type": "integer", "description": "The id of the message in the history of the contact." },
+                          "id": { "type": "string", "pattern": "^msg_[A-Za-z0-9]{23}$", "description": "The id of the message in the history of the contact." },
                           "type": {
                             "type": "string",
                             "description": "One of these types, or a new one the spec does not list yet: handle a type you do not know instead of failing.",
@@ -1293,7 +1297,7 @@
                       "contact": {
                         "type": "object",
                         "properties": {
-                          "id": { "type": ["integer", "null"] },
+                          "id": { "type": ["string", "null"], "pattern": "^ctc_[A-Za-z0-9]{23}$" },
                           "name": { "type": ["string", "null"] },
                           "phone": { "type": ["string", "null"], "description": "`+` and digits, or `null` when the contact has no phone (a `@lid`, say)." }
                         },
@@ -1307,7 +1311,8 @@
                         "required": ["phone"]
                       },
                       "device_id": {
-                        "type": ["integer", "null"],
+                        "type": ["string", "null"],
+                        "pattern": "^dev_[A-Za-z0-9]{23}$",
                         "description": "The number of your account that received the message: the same `device_id` you send to reply through it. `null` when the message has no number."
                       }
                     },
@@ -1347,9 +1352,9 @@
                   "data": {
                     "type": "object",
                     "properties": {
-                      "message_id": { "type": "integer", "description": "The `id` of the message in the history of the contact." },
-                      "contact_id": { "type": "integer" },
-                      "device_id": { "type": ["integer", "null"], "description": "The number of your account that sent the message." },
+                      "message_id": { "type": "string", "pattern": "^msg_[A-Za-z0-9]{23}$", "description": "The `id` of the message in the history of the contact." },
+                      "contact_id": { "type": "string", "pattern": "^ctc_[A-Za-z0-9]{23}$" },
+                      "device_id": { "type": ["string", "null"], "pattern": "^dev_[A-Za-z0-9]{23}$", "description": "The number of your account that sent the message." },
                       "status": { "type": "string", "enum": ["sent", "delivered", "read", "failed"] },
                       "previous_status": { "type": ["string", "null"], "enum": ["sent", "delivered", "read", "failed", null] },
                       "error": {
@@ -1406,15 +1411,15 @@
                       "form": {
                         "type": "object",
                         "properties": {
-                          "id": { "type": "integer", "description": "The form (`family_id`)." },
+                          "id": { "type": "string", "pattern": "^frm_[A-Za-z0-9]{23}$", "description": "The form (`family_id`)." },
                           "name": { "type": "string" },
-                          "version_id": { "type": "integer" }
+                          "version_id": { "type": "string", "pattern": "^frv_[A-Za-z0-9]{23}$" }
                         },
                         "required": ["id", "name", "version_id"]
                       },
-                      "message_id": { "type": ["integer", "null"] },
-                      "contact_id": { "type": ["integer", "null"] },
-                      "device_id": { "type": ["integer", "null"] },
+                      "message_id": { "type": ["string", "null"], "pattern": "^msg_[A-Za-z0-9]{23}$" },
+                      "contact_id": { "type": ["string", "null"], "pattern": "^ctc_[A-Za-z0-9]{23}$" },
+                      "device_id": { "type": ["string", "null"], "pattern": "^dev_[A-Za-z0-9]{23}$" },
                       "answers": {
                         "type": "array",
                         "items": {

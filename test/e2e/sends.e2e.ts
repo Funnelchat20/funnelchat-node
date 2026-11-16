@@ -35,7 +35,7 @@ describe.skipIf(!SANDBOX_URL)('against the sandbox', () => {
       .withResponse();
     expect(data.message.status).toBe('queued');
     expect(data.message.client_reference).toBe(reference);
-    expect(typeof data.message.id).toBe('number');
+    expect(data.message.id).toMatch(/^msg_[A-Za-z0-9]{23}$/);
     expect(requestId).toMatch(/^[0-9a-f-]{36}$/i);
 
     const sent = (await receiver.waitFor(
