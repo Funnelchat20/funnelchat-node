@@ -5,6 +5,7 @@
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { Funnelchat, type WebhookEvent } from '../../src/index.js';
+import { CONTACT, DEVICE, DEVICE_2, TAG, TEMPLATE } from '../ids.js';
 
 /** Where the sandbox listens (`FUNNELCHAT_SANDBOX_URL`), or `undefined` to skip the e2e tests. */
 export const SANDBOX_URL = process.env.FUNNELCHAT_SANDBOX_URL?.replace(/\/+$/, '') || undefined;
@@ -12,8 +13,15 @@ export const SANDBOX_URL = process.env.FUNNELCHAT_SANDBOX_URL?.replace(/\/+$/, '
 /** Any key with the shape of a real one works against the sandbox. */
 export const SANDBOX_KEY = '1|fc_live_sandbox';
 
-/** Seed data of every sandbox session. */
-export const SEED = { officialDevice: 3, qrDevice: 4, contact: 2001, phone: '5491100000000', tag: 4001, template: '45' } as const;
+/** Seed data of every sandbox session: the sandbox seeds these same opaque ids (see test/ids.ts). */
+export const SEED = {
+  officialDevice: DEVICE,
+  qrDevice: DEVICE_2,
+  contact: CONTACT,
+  phone: '5491100000000',
+  tag: TAG,
+  template: TEMPLATE,
+} as const;
 
 export function sandboxClient(): Funnelchat {
   return new Funnelchat({ apiKey: SANDBOX_KEY, baseUrl: SANDBOX_URL, maxRetries: 0 });

@@ -20,6 +20,7 @@ import {
 } from '../src/index.js';
 import { SECRET, sign } from './fixtures/portal-signature-vectors.js';
 import { TEST_API_KEY, mockFetch } from './helpers.js';
+import { DEVICE_3, LINK } from './ids.js';
 
 const client = (fetchImpl: typeof fetch, maxRetries = 0) => new Funnelchat({ apiKey: TEST_API_KEY, fetch: fetchImpl, maxRetries });
 const BASE = 'https://api.funnelchat.com/api/v1';
@@ -31,21 +32,21 @@ describe('numbers and connect links', () => {
     const funnelchat = client(fetch);
     await funnelchat.devices.list({ external_reference: 'customer-81' });
     await funnelchat.devices.create({ connection: 'qr', alias: 'Sales', country: 'br', external_reference: 'customer-81' });
-    await funnelchat.devices.qr(9);
-    await funnelchat.devices.update(9, { external_reference: 'customer-82' });
+    await funnelchat.devices.qr(DEVICE_3);
+    await funnelchat.devices.update(DEVICE_3, { external_reference: 'customer-82' });
     await funnelchat.connectLinks.create({ type: 'meta', allowed_connection_types: ['coexistence'] });
-    await funnelchat.connectLinks.get(31);
+    await funnelchat.connectLinks.get(LINK);
     await funnelchat.connectLinks.list({ status: 'pending', external_reference: 'customer-81' });
-    const revoked = await funnelchat.connectLinks.revoke(31);
+    const revoked = await funnelchat.connectLinks.revoke(LINK);
     expect(calls.map((c) => `${c.method} ${c.url.replace(BASE, '')}`)).toEqual([
       'GET /devices?external_reference=customer-81',
       'POST /devices',
-      'GET /devices/9/qr',
-      'PUT /devices/9',
+      `GET /devices/${DEVICE_3}/qr`,
+      `PUT /devices/${DEVICE_3}`,
       'POST /connect-links',
-      'GET /connect-links/31',
+      `GET /connect-links/${LINK}`,
       'GET /connect-links?status=pending&external_reference=customer-81',
-      'DELETE /connect-links/31',
+      `DELETE /connect-links/${LINK}`,
     ]);
     expect(JSON.parse(calls[1]?.body ?? '')).toEqual({ connection: 'qr', alias: 'Sales', country: 'br', external_reference: 'customer-81' });
     expect(revoked).toBeNull();
@@ -57,8 +58,8 @@ describe('numbers and connect links', () => {
     await devices.list({ headers: { 'X-Extra': '1' }, maxRetries: 0 });
     await devices.list({ perPage: 50 }, { headers: { 'X-Extra': '2' } });
     await devices.list();
-    const deleted = await devices.delete(9);
-    expect(calls.map((c) => `${c.method} ${c.url.replace(BASE, '')}`)).toEqual(['GET /devices', 'GET /devices?perPage=50', 'GET /devices', 'DELETE /devices/9']);
+    const deleted = await devices.delete(DEVICE_3);
+    expect(calls.map((c) => `${c.method} ${c.url.replace(BASE, '')}`)).toEqual(['GET /devices', 'GET /devices?perPage=50', 'GET /devices', `DELETE /devices/${DEVICE_3}`]);
     expect(calls[0]?.headers['x-extra']).toBe('1');
     expect(calls[1]?.headers['x-extra']).toBe('2');
     expect(deleted).toBeNull();

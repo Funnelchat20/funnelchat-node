@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { BASE_URLS, Funnelchat, FunnelchatError, VERSION } from '../src/index.js';
 import { serializeQuery } from '../src/core/url.js';
 import { TEST_API_KEY, mockFetch } from './helpers.js';
+import { CONTACT, CONTACT_2, CUSTOM_FIELD, DEVICE, MESSAGE, TAG, TEMPLATE } from './ids.js';
 
 const client = (fetchImpl: typeof fetch, options: Partial<ConstructorParameters<typeof Funnelchat>[0]> = {}) =>
   new Funnelchat({ apiKey: TEST_API_KEY, fetch: fetchImpl, maxRetries: 0, ...options });
@@ -66,15 +67,15 @@ describe('request building', () => {
 
   it('does not send a content-type without a body', async () => {
     const { fetch, calls } = mockFetch({ body: {} });
-    await client(fetch).contacts.retrieve(2001);
+    await client(fetch).contacts.retrieve(CONTACT);
     expect(calls[0]?.headers['content-type']).toBeUndefined();
   });
 
   it('interpolates and encodes path parameters', async () => {
     const { fetch, calls } = mockFetch({ body: {} });
-    await client(fetch).groups.metadata('120363000000000001@g.us', { device_id: 3, group_uid: '120363000000000001@g.us' });
+    await client(fetch).groups.metadata('120363000000000001@g.us', { device_id: DEVICE, group_uid: '120363000000000001@g.us' });
     expect(calls[0]?.url).toBe(
-      'https://api.funnelchat.com/api/v1/groups/120363000000000001%40g.us/metadata?device_id=3&group_uid=120363000000000001%40g.us',
+      `https://api.funnelchat.com/api/v1/groups/120363000000000001%40g.us/metadata?device_id=${DEVICE}&group_uid=120363000000000001%40g.us`,
     );
   });
 
@@ -133,31 +134,31 @@ describe('resources build the right requests', () => {
 
   it('messages.send fills contact_id from the route and carries client_reference', async () => {
     const req = await capture(
-      (c) => c.messages.send(2001, { device_id: 3, phone: '5491100000000', text: 'Hi! Here is the info…', client_reference: 'order-123' }),
+      (c) => c.messages.send(CONTACT, { device_id: DEVICE, phone: '5491100000000', text: 'Hi! Here is the info…', client_reference: 'order-123' }),
       { status: 204 },
     );
     expect(req).toEqual({
       method: 'POST',
-      path: '/api/v1/contacts/2001/message',
+      path: `/api/v1/contacts/${CONTACT}/message`,
       search: '',
-      body: { device_id: 3, phone: '5491100000000', text: 'Hi! Here is the info…', client_reference: 'order-123', contact_id: 2001 },
+      body: { device_id: DEVICE, phone: '5491100000000', text: 'Hi! Here is the info…', client_reference: 'order-123', contact_id: CONTACT },
     });
   });
 
   it('templates.send', async () => {
     const req = await capture((c) =>
-      c.templates.send(3, '45', { phone: '5491100000000', contact_id: 2001, template_variables: { body: ['Lucía'] } }),
+      c.templates.send(DEVICE, TEMPLATE, { phone: '5491100000000', contact_id: CONTACT, template_variables: { body: ['Lucía'] } }),
     );
     expect(req).toMatchObject({
       method: 'POST',
-      path: '/api/v1/devices/3/templates/45/send-template',
-      body: { phone: '5491100000000', contact_id: 2001, template_variables: { body: ['Lucía'] } },
+      path: `/api/v1/devices/${DEVICE}/templates/${TEMPLATE}/send-template`,
+      body: { phone: '5491100000000', contact_id: CONTACT, template_variables: { body: ['Lucía'] } },
     });
   });
 
   it('contacts.metaWindow', async () => {
-    const req = await capture((c) => c.contacts.metaWindow(2001, { device_id: 3 }));
-    expect(req).toMatchObject({ method: 'GET', path: '/api/v1/contacts/2001/meta-window', search: '?device_id=3' });
+    const req = await capture((c) => c.contacts.metaWindow(CONTACT, { device_id: DEVICE }));
+    expect(req).toMatchObject({ method: 'GET', path: `/api/v1/contacts/${CONTACT}/meta-window`, search: `?device_id=${DEVICE}` });
   });
 
   it('contacts.upsert and contacts.delete', async () => {
@@ -165,22 +166,22 @@ describe('resources build the right requests', () => {
       method: 'POST',
       path: '/api/v1/contacts/update-or-create',
     });
-    expect(await capture((c) => c.contacts.delete({ contactIds: [1, 2] }))).toMatchObject({
+    expect(await capture((c) => c.contacts.delete({ contactIds: [CONTACT, CONTACT_2] }))).toMatchObject({
       method: 'POST',
       path: '/api/v1/contacts/delete',
-      body: { contactIds: [1, 2] },
+      body: { contactIds: [CONTACT, CONTACT_2] },
     });
   });
 
   it('messages.react and removeReaction', async () => {
-    expect(await capture((c) => c.messages.react(2001, 99, { emoji: '👍' }))).toMatchObject({
+    expect(await capture((c) => c.messages.react(CONTACT, MESSAGE, { emoji: '👍' }))).toMatchObject({
       method: 'PUT',
-      path: '/api/v1/contacts/2001/messages/99/reaction',
+      path: `/api/v1/contacts/${CONTACT}/messages/${MESSAGE}/reaction`,
       body: { emoji: '👍' },
     });
-    expect(await capture((c) => c.messages.removeReaction(2001, 99), { status: 204 })).toMatchObject({
+    expect(await capture((c) => c.messages.removeReaction(CONTACT, MESSAGE), { status: 204 })).toMatchObject({
       method: 'DELETE',
-      path: '/api/v1/contacts/2001/messages/99/reaction',
+      path: `/api/v1/contacts/${CONTACT}/messages/${MESSAGE}/reaction`,
     });
   });
 
@@ -206,14 +207,14 @@ describe('resources build the right requests', () => {
   });
 
   it.each([
-    ['devices.retrieve', (c: Funnelchat) => c.devices.retrieve(3), 'GET', '/api/v1/devices/3'],
-    ['devices.status', (c: Funnelchat) => c.devices.status(3), 'GET', '/api/v1/devices/3/status'],
+    ['devices.retrieve', (c: Funnelchat) => c.devices.retrieve(DEVICE), 'GET', `/api/v1/devices/${DEVICE}`],
+    ['devices.status', (c: Funnelchat) => c.devices.status(DEVICE), 'GET', `/api/v1/devices/${DEVICE}/status`],
     ['groups.retrieve', (c: Funnelchat) => c.groups.retrieve('xK9mQz'), 'GET', '/api/v1/groups/xK9mQz'],
-    ['customFields.retrieve', (c: Funnelchat) => c.customFields.retrieve(5), 'GET', '/api/v1/custom-fields/5'],
-    ['tags.retrieve', (c: Funnelchat) => c.tags.retrieve(8), 'GET', '/api/v1/tags/8'],
-    ['templates.retrieve', (c: Funnelchat) => c.templates.retrieve(45), 'GET', '/api/v1/templates/45'],
+    ['customFields.retrieve', (c: Funnelchat) => c.customFields.retrieve(CUSTOM_FIELD), 'GET', `/api/v1/custom-fields/${CUSTOM_FIELD}`],
+    ['tags.retrieve', (c: Funnelchat) => c.tags.retrieve(TAG), 'GET', `/api/v1/tags/${TAG}`],
+    ['templates.retrieve', (c: Funnelchat) => c.templates.retrieve(TEMPLATE), 'GET', `/api/v1/templates/${TEMPLATE}`],
     ['conversations.countUnread', (c: Funnelchat) => c.conversations.countUnread(), 'GET', '/api/v1/conversations/count/unread'],
-    ['contacts.createNote', (c: Funnelchat) => c.contacts.createNote(2001, { body: 'nota' }), 'POST', '/api/v1/contacts/2001/notes'],
+    ['contacts.createNote', (c: Funnelchat) => c.contacts.createNote(CONTACT, { body: 'nota' }), 'POST', `/api/v1/contacts/${CONTACT}/notes`],
   ] as const)('%s', async (_name, run, method, path) => {
     expect(await capture(run)).toMatchObject({ method, path });
   });

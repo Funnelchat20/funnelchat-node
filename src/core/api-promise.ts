@@ -25,7 +25,7 @@ export interface APIResponse<T> {
  * A `Promise` of the response body with one extra method:
  *
  * ```ts
- * const { data, requestId } = await funnelchat.contacts.retrieve(2001).withResponse();
+ * const { data, requestId } = await funnelchat.contacts.retrieve('ctc_ABsza6Ialu1BCUyPFZ8WJvV').withResponse();
  * ```
  */
 export class APIPromise<T> extends Promise<T> {

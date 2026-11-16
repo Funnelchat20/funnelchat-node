@@ -38,7 +38,7 @@ for (const [format, sdk] of [['esm', esm], ['cjs', cjs]]) {
   for await (const tag of client.tags.list({ perPage: 1 })) ids.push(tag.id);
   check(`${format}: paginates after retrying a 429`, ids.join() === '1,2' && calls.length === 3);
 
-  const error = await client.messages.send(2001, { device_id: 3, phone: '5491100000000', text: 'hola' }).catch((e) => e);
+  const error = await client.messages.send('ctc_ABsza6Ialu1BCUyPFZ8WJvV', { device_id: 'dev_K7xv2LpQe9TnWc4RsYb1MzA', phone: '5491100000000', text: 'hola' }).catch((e) => e);
   check(`${format}: a send is not retried and keeps retryAfter`, error instanceof RateLimitError && error.retryAfter === 3 && calls.length === 4);
   check(`${format}: sends the User-Agent`, calls[0].init.headers['User-Agent'] === `funnelchat-node/${sdk.VERSION} node/${process.version}`);
 

@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { Funnelchat, Page } from '../src/index.js';
 import { nextPageQuery } from '../src/core/pagination.js';
 import { TEST_API_KEY, mockFetch } from './helpers.js';
+import { CONTACT } from './ids.js';
+
+/** A well-formed opaque tag id for item n. */
+const tagId = (n: number) => `tag_${String(n).padStart(23, '0')}`;
 
 const client = (fetchImpl: typeof fetch) => new Funnelchat({ apiKey: TEST_API_KEY, fetch: fetchImpl, maxRetries: 0 });
 
@@ -27,37 +31,37 @@ function cursorPage(items: unknown[], nextCursor: string | null) {
 describe('pagination', () => {
   it('walks every item of every page with for await (page numbers)', async () => {
     const { fetch, calls } = mockFetch(
-      laravelPage([{ id: 1 }, { id: 2 }], 1, 3),
-      laravelPage([{ id: 3 }, { id: 4 }], 2, 3),
-      laravelPage([{ id: 5 }], 3, 3),
+      laravelPage([{ id: tagId(1) }, { id: tagId(2) }], 1, 3),
+      laravelPage([{ id: tagId(3) }, { id: tagId(4) }], 2, 3),
+      laravelPage([{ id: tagId(5) }], 3, 3),
     );
-    const ids: number[] = [];
-    for await (const tag of client(fetch).tags.list({ perPage: 2, name: 'vip' })) ids.push((tag as { id: number }).id);
+    const ids: string[] = [];
+    for await (const tag of client(fetch).tags.list({ perPage: 2, name: 'vip' })) ids.push((tag as { id: string }).id);
 
-    expect(ids).toEqual([1, 2, 3, 4, 5]);
+    expect(ids).toEqual([1, 2, 3, 4, 5].map(tagId));
     expect(calls.map((c) => new URL(c.url).search)).toEqual(['?perPage=2&name=vip', '?perPage=2&name=vip&page=2', '?perPage=2&name=vip&page=3']);
   });
 
   it('follows next_cursor and drops page for cursor routes', async () => {
     const { fetch, calls } = mockFetch(cursorPage([{ id: 'a' }, { id: 'b' }], 'CUR2'), cursorPage([{ id: 'c' }], null));
     const items: unknown[] = [];
-    for await (const message of client(fetch).messages.list(2001, { perPage: 2 })) items.push(message);
+    for await (const message of client(fetch).messages.list(CONTACT, { perPage: 2 })) items.push(message);
 
     expect(items).toEqual([{ id: 'a' }, { id: 'b' }, { id: 'c' }]);
-    expect(calls[0]?.url).toBe('https://api.funnelchat.com/api/v1/contacts/2001/messages?perPage=2');
-    expect(calls[1]?.url).toBe('https://api.funnelchat.com/api/v1/contacts/2001/messages?perPage=2&cursor=CUR2');
+    expect(calls[0]?.url).toBe(`https://api.funnelchat.com/api/v1/contacts/${CONTACT}/messages?perPage=2`);
+    expect(calls[1]?.url).toBe(`https://api.funnelchat.com/api/v1/contacts/${CONTACT}/messages?perPage=2&cursor=CUR2`);
   });
 
   it('await gives the first page, with hasNextPage and getNextPage', async () => {
-    const { fetch, calls } = mockFetch(laravelPage([{ id: 1 }], 1, 2), laravelPage([{ id: 2 }], 2, 2));
+    const { fetch, calls } = mockFetch(laravelPage([{ id: tagId(1) }], 1, 2), laravelPage([{ id: tagId(2) }], 2, 2));
     const first = await client(fetch).contacts.list();
     expect(first).toBeInstanceOf(Page);
-    expect(first.data).toEqual([{ id: 1 }]);
+    expect(first.data).toEqual([{ id: tagId(1) }]);
     expect(first.hasNextPage()).toBe(true);
     expect(first.nextPageQuery()).toEqual({ page: 2 });
 
     const second = await first.getNextPage();
-    expect(second.data).toEqual([{ id: 2 }]);
+    expect(second.data).toEqual([{ id: tagId(2) }]);
     expect(second.hasNextPage()).toBe(false);
     await expect(second.getNextPage()).rejects.toThrow('There are no more pages.');
     expect(calls).toHaveLength(2);
@@ -73,15 +77,15 @@ describe('pagination', () => {
   });
 
   it('treats a plain array as a single page', async () => {
-    const { fetch, calls } = mockFetch({ status: 200, body: [{ id: 3 }, { id: 4 }] });
+    const { fetch, calls } = mockFetch({ status: 200, body: [{ id: tagId(3) }, { id: tagId(4) }] });
     const items: unknown[] = [];
     for await (const device of client(fetch).devices.list()) items.push(device);
-    expect(items).toEqual([{ id: 3 }, { id: 4 }]);
+    expect(items).toEqual([{ id: tagId(3) }, { id: tagId(4) }]);
     expect(calls).toHaveLength(1);
   });
 
   it('iterates pages with iterPages', async () => {
-    const { fetch } = mockFetch(laravelPage([{ id: 1 }], 1, 2), laravelPage([{ id: 2 }], 2, 2));
+    const { fetch } = mockFetch(laravelPage([{ id: tagId(1) }], 1, 2), laravelPage([{ id: tagId(2) }], 2, 2));
     const sizes: number[] = [];
     for await (const page of (await client(fetch).tags.list()).iterPages()) sizes.push(page.data.length);
     expect(sizes).toEqual([1, 1]);
@@ -96,10 +100,10 @@ describe('pagination', () => {
   });
 
   it('paginates any route with paginate(), typed or not', async () => {
-    const { fetch, calls } = mockFetch(laravelPage([{ id: 1 }], 1, 1), { status: 200, body: { data: [{ x: 1 }], meta: { current_page: '1', last_page: '1' } } });
+    const { fetch, calls } = mockFetch(laravelPage([{ id: tagId(1) }], 1, 1), { status: 200, body: { data: [{ x: 1 }], meta: { current_page: '1', last_page: '1' } } });
     const c = client(fetch);
     const typed = await c.paginate('/api/v1/custom-fields', { query: { perPage: 50 } });
-    expect(typed.data).toEqual([{ id: 1 }]);
+    expect(typed.data).toEqual([{ id: tagId(1) }]);
     const untyped = await c.paginate<{ x: number }>('/api/v1/something-new', { query: { page: 1 } });
     expect(untyped.data[0]?.x).toBe(1);
     expect(untyped.hasNextPage()).toBe(false);

@@ -148,7 +148,7 @@ export class Funnelchat {
    * query, body and response are typed; any other path works untyped.
    *
    * ```ts
-   * const contact = await funnelchat.request('GET', '/api/v1/contacts/{contact}', { path: { contact: 2001 } });
+   * const contact = await funnelchat.request('GET', '/api/v1/contacts/{contact}', { path: { contact: 'ctc_ABsza6Ialu1BCUyPFZ8WJvV' } });
    * ```
    */
   request<P extends ApiPath, M extends MethodsOf<P>>(method: M, path: P, ...options: OptionsArg<TypedRequestOptions<P, M>>): APIPromise<ResponseBody<P, M>>;

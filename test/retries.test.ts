@@ -10,6 +10,7 @@ import {
 import { MAX_RETRY_DELAY_MS, isRetryable, isSendRequest, retryDelayMs } from '../src/core/retry.js';
 import { routes } from '../src/generated/routes.js';
 import { type MockReply, TEST_API_KEY, hangUntilAborted, mockFetch, networkError } from './helpers.js';
+import { CONTACT, DEVICE, MESSAGE, TEMPLATE } from './ids.js';
 
 const rateLimited = (retryAfter?: string): MockReply => ({
   status: 429,
@@ -139,7 +140,7 @@ describe('retries', () => {
 
 describe('sends are not retried unless asked', () => {
   const send = (c: Funnelchat, retrySend?: boolean) =>
-    c.messages.send(2001, { device_id: 3, phone: '5491100000000', text: 'Hola' }, retrySend === undefined ? {} : { retrySend });
+    c.messages.send(CONTACT, { device_id: DEVICE, phone: '5491100000000', text: 'Hola' }, retrySend === undefined ? {} : { retrySend });
 
   it.each([
     ['429 with Retry-After', rateLimited('1')],
@@ -171,8 +172,8 @@ describe('sends are not retried unless asked', () => {
     const { fetch, calls } = mockFetch(serverError);
     await expect(
       client(fetch).request('POST', '/api/v1/devices/{device}/templates/{template}/send-template', {
-        path: { device: 3, template: '45' },
-        body: { phone: '5491100000000', contact_id: 2001 },
+        path: { device: DEVICE, template: TEMPLATE },
+        body: { phone: '5491100000000', contact_id: CONTACT },
       }),
     ).rejects.toBeInstanceOf(InternalServerError);
     await vi.runAllTimersAsync();
@@ -181,7 +182,7 @@ describe('sends are not retried unless asked', () => {
 
   it('still retries idempotent operations of the send area (reactions are PUT/DELETE)', async () => {
     const { fetch, calls } = mockFetch(serverError, { status: 202, body: {} });
-    const promise = client(fetch).messages.react(2001, 99, { emoji: '👍' });
+    const promise = client(fetch).messages.react(CONTACT, MESSAGE, { emoji: '👍' });
     await vi.runAllTimersAsync();
     await expect(promise).resolves.toEqual({});
     expect(calls).toHaveLength(2);
@@ -238,15 +239,15 @@ describe('retry policy helpers', () => {
     for (const route of sendPosts) {
       expect(isSendRequest('POST', route.path.replace(/\{[^}]+\}/g, '123'))).toBe(true);
     }
-    expect(isSendRequest('POST', '/api/v1/contacts/2001/message')).toBe(true);
+    expect(isSendRequest('POST', `/api/v1/contacts/${CONTACT}/message`)).toBe(true);
     expect(isSendRequest('POST', '/api/v1/message/send-message')).toBe(true);
-    expect(isSendRequest('GET', '/api/v1/contacts/2001/messages')).toBe(false);
+    expect(isSendRequest('GET', `/api/v1/contacts/${CONTACT}/messages`)).toBe(false);
     expect(isSendRequest('POST', '/api/v1/contacts/delete')).toBe(false);
     expect(isSendRequest('POST', '/api/v1/contacts')).toBe(false);
-    expect(isSendRequest('POST', '/api/v1/contacts/2001/message/form')).toBe(true);
+    expect(isSendRequest('POST', `/api/v1/contacts/${CONTACT}/message/form`)).toBe(true);
     // A message to a group is a send too (communities v2.35.5, **Groups and campaigns → Send**).
     expect(isSendRequest('POST', '/api/v1/groups/120363000000000001@g.us/messages')).toBe(true);
-    expect(isSendRequest('PUT', '/api/v1/contacts/2001/messages/9/reaction')).toBe(false);
+    expect(isSendRequest('PUT', `/api/v1/contacts/${CONTACT}/messages/${MESSAGE}/reaction`)).toBe(false);
   });
 
   it('repeats reads and idempotent writes on any transient failure, other writes only when not applied', () => {
