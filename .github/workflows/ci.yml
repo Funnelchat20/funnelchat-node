@@ -41,6 +41,40 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  e2e:
+    name: End to end against funnelchat-sandbox
+    runs-on: ubuntu-latest
+    env:
+      # A fixed version: the tests use the ids it seeds (SEED in test/e2e/sandbox.ts). Raise it on purpose.
+      SANDBOX_VERSION: 0.7.0
+      FUNNELCHAT_SANDBOX_URL: http://127.0.0.1:4010
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Start funnelchat-sandbox ${{ env.SANDBOX_VERSION }}
+        run: |
+          npx --yes "@funnelchat-hq/sandbox@${SANDBOX_VERSION}" --port 4010 > "$RUNNER_TEMP/sandbox.log" 2>&1 &
+          for _ in $(seq 1 60); do
+            if curl -fsS "$FUNNELCHAT_SANDBOX_URL/_sandbox/state" > /dev/null 2>&1; then exit 0; fi
+            sleep 1
+          done
+          echo "::error::funnelchat-sandbox ${SANDBOX_VERSION} did not answer on $FUNNELCHAT_SANDBOX_URL"
+          cat "$RUNNER_TEMP/sandbox.log"
+          exit 1
+
+      - run: npm run test:e2e
+
+      - name: Log of the sandbox
+        if: failure()
+        run: cat "$RUNNER_TEMP/sandbox.log"
+
   runtime-floor:
     name: Built package on Node 18
     runs-on: ubuntu-latest
