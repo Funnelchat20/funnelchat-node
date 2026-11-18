@@ -3,7 +3,7 @@
  */
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { APIError, APIPromise, Funnelchat, KnownErrorCode, Page, WebhookEvent, WebhookEventOf, WebhookEventType, components } from '../src/index.js';
-import { CONTACT } from './ids.js';
+import { CONTACT, DEVICE, FORM, TEMPLATE } from './ids.js';
 
 type PublicMessage = components['schemas']['PublicMessageResource'];
 
@@ -30,7 +30,8 @@ async function readmeFirstUse(funnelchat: Funnelchat, event: WebhookEvent, show:
     await new Promise((resolve) => setTimeout(resolve, qr.expires_in * 1000));
   }
   const { data: link } = await funnelchat.connectLinks.create({ type: 'qr' });
-  expectTypeOf(link.url).toEqualTypeOf<string>();
+  // The link shares its type with `connectLinks.get`, where `url` is null: it only comes on creation.
+  expectTypeOf(link.url).toEqualTypeOf<string | null>();
 
   // 3. Send a message
   const { message } = await funnelchat.messages.sendDirect({ device_id: device.id, phone: '5491100000000', text: 'Hi Ana!' });
@@ -108,6 +109,25 @@ function typeChecks(client: Funnelchat) {
     expectTypeOf<Awaited<ReturnType<typeof client.messages.get>>>().toEqualTypeOf<PublicMessage>();
     expectTypeOf<PublicMessage['status']>().toEqualTypeOf<'queued' | 'sent' | 'delivered' | 'read' | 'failed' | null>();
     expectTypeOf<NonNullable<PublicMessage['error']>['reason']>().toMatchTypeOf<string | null>();
+    // One of several properties, as the API asks for it.
+    void (() => client.messages.send(CONTACT, { device_id: DEVICE, phone: '5491100000000', text: 'Hi' }));
+    void (() => client.messages.send(CONTACT, { device_id: DEVICE, whatsapp_id: '5491100000000', text: 'Hi' }));
+    // @ts-expect-error a send to a contact names its phone or its whatsapp_id
+    void (() => client.messages.send(CONTACT, { device_id: DEVICE, text: 'Hi' }));
+    void (() => client.messages.sendDirect({ device_id: DEVICE, contact_id: CONTACT, text: 'Hi' }));
+    // @ts-expect-error sendDirect needs contact_id, phone or whatsapp_id
+    void (() => client.messages.sendDirect({ device_id: DEVICE, text: 'Hi' }));
+    void (() => client.contacts.create({ whatsapp_id: '5491100000000' }));
+    // @ts-expect-error a contact needs its phone or its whatsapp_id
+    void (() => client.contacts.create({ name: 'Ana' }));
+    // A field with a default the API fills in is optional.
+    void (() => client.forms.update(FORM, { definition: { screens: [] } }));
+    // The body variables of a template, by number.
+    void (() => client.templates.send(DEVICE, TEMPLATE, { phone: '5491100000000', template_variables: { body: { '1': 'Lucía' } } }));
+    // @ts-expect-error a list of variables is not what the API reads
+    void (() => client.templates.send(DEVICE, TEMPLATE, { phone: '5491100000000', template_variables: { body: ['Lucía'] } }));
+    // @ts-expect-error a template goes to a phone or a whatsapp_id, with or without contact_id
+    void (() => client.templates.send(DEVICE, TEMPLATE, { contact_id: CONTACT }));
     // A file by URL: file_type and file_name.
     expectTypeOf(client.messages.send).parameter(1).toHaveProperty('file_type');
     expectTypeOf(client.messages.send).parameter(1).toHaveProperty('file_name');
@@ -123,12 +143,19 @@ function typeChecks(client: Funnelchat) {
     expectTypeOf<Awaited<ReturnType<typeof client.devices.create>>['data']['connection']>().toEqualTypeOf<'qr' | 'coexistence' | 'dedicated' | null>();
     expectTypeOf<Awaited<ReturnType<typeof client.devices.retrieve>>['external_reference']>().toEqualTypeOf<string | null>();
     expectTypeOf<Awaited<ReturnType<typeof client.devices.qr>>['data']['qr_code']>().toEqualTypeOf<string | null>();
-    expectTypeOf<Awaited<ReturnType<typeof client.connectLinks.create>>['data']['url']>().toEqualTypeOf<string>();
-    // The spec types the status of a link as a string: pending, completed, failed, expired or revoked.
-    expectTypeOf<Awaited<ReturnType<typeof client.connectLinks.get>>['data']['status']>().toEqualTypeOf<string>();
-    // The spec no longer ties the fields of a link to its type: the API still answers 422 to a meta link
-    // without allowed_connection_types, and to a country on a meta link.
+    expectTypeOf<Awaited<ReturnType<typeof client.connectLinks.create>>['data']['url']>().toEqualTypeOf<string | null>();
+    expectTypeOf<Awaited<ReturnType<typeof client.connectLinks.get>>['data']['status']>().toEqualTypeOf<
+      'pending' | 'completed' | 'failed' | 'expired' | 'revoked'
+    >();
+    // The spec ties the fields of a link to its type, as the API does (422 otherwise).
     void (() => client.connectLinks.create({ type: 'meta', allowed_connection_types: ['dedicated'] }));
+    // @ts-expect-error a meta link needs allowed_connection_types
+    void (() => client.connectLinks.create({ type: 'meta' }));
+    // @ts-expect-error a meta link takes no country
+    void (() => client.connectLinks.create({ type: 'meta', allowed_connection_types: ['dedicated'], country: 'br' }));
+    void (() => client.connectLinks.create({ type: 'qr', device_id: DEVICE }));
+    // @ts-expect-error reconnecting a number by QR keeps its country
+    void (() => client.connectLinks.create({ type: 'qr', device_id: DEVICE, country: 'br' }));
     // @ts-expect-error only qr numbers are created directly
     void (() => client.devices.create({ connection: 'coexistence' }));
     void (() => client.devices.list({ external_reference: 'customer-81' }));

@@ -49,8 +49,9 @@ export class Templates extends Resource {
 
   /**
    * `POST /api/v1/devices/{device}/templates/{template}/send-template`: sends an approved template
-   * (the way to write to a contact outside the 24-hour window). `phone` and `contact_id` are
-   * required; `template_variables.body` fills the body variables in order.
+   * (the way to write to a contact outside the 24-hour window). `phone` or `whatsapp_id` is
+   * required, `contact_id` optional; `template_variables.body` gives the value of each `{{n}}` of
+   * the body by its number (`{ '1': 'Lucía' }`): a missing or extra one fails the send.
    *
    * Resolves to `{ message }`, the registered message with `status: 'queued'`. A variable that
    * points to a field that does not exist is a `422 template_unresolved_placeholder` with

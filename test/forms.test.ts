@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { Funnelchat, routes } from '../src/index.js';
 import { TEST_API_KEY, mockFetch } from './helpers.js';
-import { DEVICE, DEVICE_2, FORM, FORM_2, FORM_VERSION } from './ids.js';
+import { DEVICE, DEVICE_2, FORM, FORM_2, FORM_RUN as RUN, FORM_RUN_2 as RUN_2, FORM_VERSION } from './ids.js';
 
 const client = (fetchImpl: typeof fetch) => new Funnelchat({ apiKey: TEST_API_KEY, fetch: fetchImpl, maxRetries: 0 });
 const BASE = 'https://api.funnelchat.com/api/v1';
@@ -53,12 +53,12 @@ describe('forms', () => {
 
   it('pages through the answers of a form', async () => {
     const { fetch, calls } = mockFetch(
-      { body: { data: [{ id: 1 }], meta: { current_page: 1, last_page: 2 }, columns: [] } },
-      { body: { data: [{ id: 2 }], meta: { current_page: 2, last_page: 2 }, columns: [] } },
+      { body: { data: [{ id: RUN }], meta: { current_page: 1, last_page: 2 }, columns: [] } },
+      { body: { data: [{ id: RUN_2 }], meta: { current_page: 2, last_page: 2 }, columns: [] } },
     );
-    const ids: unknown[] = [];
-    for await (const answer of client(fetch).forms.listResponses(FORM_2, { version_id: FORM_VERSION })) ids.push((answer as { id: number }).id);
-    expect(ids).toEqual([1, 2]);
+    const ids: string[] = [];
+    for await (const answer of client(fetch).forms.listResponses(FORM_2, { version_id: FORM_VERSION })) ids.push(answer.id);
+    expect(ids).toEqual([RUN, RUN_2]);
     expect(calls[1]?.url).toBe(`${BASE}/forms/families/${FORM_2}/responses?version_id=${FORM_VERSION}&page=2`);
   });
 

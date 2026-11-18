@@ -139,8 +139,8 @@ The SDK covers every function the developer portal publishes for an API key, the
 **253 operations and 56 webhook events**, in the 30 groups of the portal (named as the portal names them):
 
 - **[Primer uso](https://developers-portal.funnelchat.app/):** Mensajes.
-- **[Funciones de WhatsApp](https://developers-portal.funnelchat.app/docs/mas-funciones/whatsapp/):** Números, Grupos, Atender una conversación, Cola de mensajes de un número, Acciones de grupo, Plantillas, Formularios, Conversions API, Costos y cuentas de Meta.
-- **[Funciones de Funnelchat](https://developers-portal.funnelchat.app/docs/mas-funciones/funnelchat/):** Contactos, Conversaciones, Etiquetas, Campos personalizados, Automatizaciones, Campañas, Envíos programados, Estadísticas, Difusiones, Tableros, Tickets, Notas, Respuestas rápidas, Carpetas de flujos, Puntaje, Ventas, Dominios propios, Tu cuenta y tu equipo, Alertas, Webhooks.
+- **[Funciones de WhatsApp](https://developers-portal.funnelchat.app/docs/mas-funciones/whatsapp/):** Números, Grupos, Contactos, Conversaciones, Atender una conversación, Cola de mensajes de un número, Acciones de grupo, Plantillas, Formularios, Costos y cuentas de Meta, Tu cuenta y tu equipo, Webhooks.
+- **[Funciones de la plataforma](https://developers-portal.funnelchat.app/docs/mas-funciones/funnelchat/):** Etiquetas, Campos personalizados, Automatizaciones, Campañas, Envíos programados, Estadísticas, Difusiones, Tableros, Tickets, Notas, Respuestas rápidas, Carpetas de flujos, Puntaje, Ventas, Dominios propios, Conversions API, Alertas.
 <!-- /generated:functions -->
 
 The resources ([The pieces](#the-pieces)) wrap the most used ones. Any of them is a typed call with [`request`](#any-route), or `paginate` for a list, by the method and path the portal shows:
@@ -253,8 +253,8 @@ Without `file_type`, a URL without a known extension answers `422` with `errors.
 
 ```ts
 const { message } = await funnelchat.templates.send('dev_K7xv2LpQe9TnWc4RsYb1MzA', 'tpl_Vc8Lm2QxR5eYh1TnKw9ZpB3', {
-  phone: '5491100000000',                  // a new phone becomes a contact, as with sendDirect
-  template_variables: { body: ['Lucía'] }, // the body variables, in order
+  phone: '5491100000000',                       // a new phone becomes a contact, as with sendDirect
+  template_variables: { body: { '1': 'Lucía' } }, // the value of each {{n}} of the body, by its number
 });
 ```
 

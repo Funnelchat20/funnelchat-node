@@ -8,8 +8,14 @@ type ShowPath = '/api/v1/contacts/{contact}/messages/{message}';
 type SendMessageBody = Body<'/api/v1/contacts/{contact}/message', 'POST'>;
 type FormContactId = PathParams<'/api/v1/contacts/{contact}/message/form', 'POST'>['contact'];
 
-/** Body of {@link Messages.send}: `contact_id` is optional, it defaults to the contact of the route. */
-export type SendMessageParams = Omit<SendMessageBody, 'contact_id'> & { contact_id?: SendMessageBody['contact_id'] };
+/** Each member of a union without `K` (a plain `Omit` keeps only the keys every member has). */
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
+
+/**
+ * Body of {@link Messages.send}: `contact_id` is optional, it defaults to the contact of the route.
+ * `phone` or `whatsapp_id` of that contact always goes.
+ */
+export type SendMessageParams = DistributiveOmit<SendMessageBody, 'contact_id'> & { contact_id?: SendMessageBody['contact_id'] };
 
 /**
  * Messages to one contact (conversations area): send text, files, buttons and forms, read the

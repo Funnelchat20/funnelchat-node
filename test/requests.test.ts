@@ -147,12 +147,12 @@ describe('resources build the right requests', () => {
 
   it('templates.send', async () => {
     const req = await capture((c) =>
-      c.templates.send(DEVICE, TEMPLATE, { phone: '5491100000000', contact_id: CONTACT, template_variables: { body: ['Lucía'] } }),
+      c.templates.send(DEVICE, TEMPLATE, { phone: '5491100000000', contact_id: CONTACT, template_variables: { body: { '1': 'Lucía' } } }),
     );
     expect(req).toMatchObject({
       method: 'POST',
       path: `/api/v1/devices/${DEVICE}/templates/${TEMPLATE}/send-template`,
-      body: { phone: '5491100000000', contact_id: CONTACT, template_variables: { body: ['Lucía'] } },
+      body: { phone: '5491100000000', contact_id: CONTACT, template_variables: { body: { '1': 'Lucía' } } },
     });
   });
 
