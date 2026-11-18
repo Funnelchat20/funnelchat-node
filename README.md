@@ -165,7 +165,7 @@ const { data: tickets } = await funnelchat.request('GET', '/api/v1/tickets');
 |---|---|---|
 | `apiKey` | Your key. | `FUNNELCHAT_API_KEY` |
 | `environment` | `production` (`https://api.funnelchat.com`) or `staging`. | `production` |
-| `baseUrl` | Another base URL, for example the [sandbox](#test-against-the-sandbox)'s; it wins over `environment`. | — |
+| `baseUrl` | Another base URL, for example the [sandbox](#test-against-the-sandbox)'s; it wins over `environment`. | `FUNNELCHAT_BASE_URL`, or the URL of `environment` |
 | `timeoutMs` | Maximum time of each attempt. | `30000` |
 | `maxRetries` | Automatic retries (see [Retries](#retries)). `0` turns them off. | `2` |
 | `defaultHeaders` | Headers sent with every request. | — |
@@ -567,21 +567,51 @@ The types of the spec are exported too: `paths`, `components`, `operations`, and
 
 ### Test against the sandbox
 
-The sandbox imitates the API on your machine: sends with their status cycle, signed webhooks and the WhatsApp rules, without a real account. Start it with `npx @funnelchat-hq/sandbox` and point the client at it:
+The sandbox imitates the API on your machine: sends with their status cycle, signed webhooks and the WhatsApp rules, without a real account and without sending anything. Start it (it listens on `http://127.0.0.1:4010`):
+
+```bash
+npx @funnelchat-hq/sandbox
+```
+
+Then point the client at it, with any key shaped like a real one:
 
 ```ts
-const funnelchat = new Funnelchat({ apiKey: '1|fc_live_sandbox', baseUrl: 'http://localhost:4010' });
+const funnelchat = new Funnelchat({ apiKey: '1|fc_live_sandbox', baseUrl: 'http://127.0.0.1:4010' });
 ```
+
+Or leave the code as it is and set the base URL in the environment, which the client reads when you do not pass `baseUrl`:
+
+```bash
+FUNNELCHAT_BASE_URL=http://127.0.0.1:4010 FUNNELCHAT_API_KEY='1|fc_live_sandbox' node app.js
+```
+
+**Without `baseUrl` or `FUNNELCHAT_BASE_URL`, the client calls production**, whatever key you give it: check `funnelchat.baseUrl` before trying anything with a real key. Use `127.0.0.1` rather than `localhost`, which Node 18 may resolve to an address the sandbox does not listen on.
+
+Each session of the sandbox starts with two numbers, an official one (`dev_Sandbox0Oficial00000000`) and a QR one (`dev_Sandbox0QR0000000000000`), and a contact (`ctc_Sandbox0Contacto0000000`, phone `5491100000000`). `POST /_sandbox/reset` starts over, and `GET /_sandbox/state` shows what it holds.
 
 ### Pending of the spec
 
 The types come from the spec the developer portal publishes (`spec/funnelchat.json`; where it came from, its URL and its `sha256`, in `spec/procedencia.json`). Where production answers otherwise than that spec says, or the spec shows an event only by an example or without one, a separate layer corrects it, `spec/pending.json`, which generation applies **only while the spec still says exactly what the entry corrects**; each entry cites the production code it was read in:
 
-- what a send answers (`{ message }`, never `null`), the body of `devices.qr`, the items of `templates.list`, and the answer of `webhooks.update`;
-- the `data` of the events the spec shows only by an example, or without one, such as the `device.*` events, `message.received` and `message.status_changed`;
+- what a send answers (`{ message }`, never `null`);
+- the `data` of the events the spec shows only by an example, or without one, or vaguer than production sends it, such as the `device.*` events, `message.received`, `message.status_changed` and `group_participant.*`;
 - the `type` of a `message.received` message, which takes the types the spec lists or any other string.
 
 The layer never adds an operation or an event the portal does not publish. `src/pending/` has what is not OpenAPI (the `workspace_id` of every event) and `src/core/error-codes.ts` the error codes.
+
+### Upgrading from 0.7
+
+0.8.0 takes the types of the portal spec of 18-11-2026, which match what production takes in these places:
+
+- `messages.sendForm`: `form_id` is the form's `family_id` (`frm_…`), not a version (`frv_…`), which production refuses.
+- `templates.send`: `template_variables.body` is an object by the number of each variable, `{ '1': 'Lucía' }`, not a list. `phone` or `whatsapp_id` goes always.
+- `templates.create`: `device_id` is required and `params` is `{ body, samples }`.
+- A body that needs one of several fields says so: `messages.send` (`phone` or `whatsapp_id`), `messages.sendDirect` (`contact_id`, `phone` or `whatsapp_id`), `contacts.create` (`phone` or `whatsapp_id`) and `contacts.delete` (`contactIds`, or `all: true`). `connectLinks.create`, `groups.sendMessage` and `POST /api/v1/groups` (by `request`) take one of their variants: a Meta link needs `allowed_connection_types` and takes no `country`, and a QR link that reconnects a number takes no `country`.
+- A connect link's `url` is `string | null`: only the answer of `create` has it. Its `status` is one of `pending`, `completed`, `failed`, `expired` and `revoked`.
+- The `data` of `account.blocked` and the `mac.*` events no longer has a numeric `workspace_id`.
+- Without `baseUrl`, the client takes the `FUNNELCHAT_BASE_URL` environment variable before the URL of `environment`.
+
+A body that compiled with 0.7 and stops compiling here was already refused by production.
 
 ### Upgrading from 0.6
 
@@ -630,7 +660,7 @@ FUNNELCHAT_SANDBOX_URL=http://127.0.0.1:4010 npm run test:e2e   # against a runn
 
 The SDK runs on Node 18 or later; the development tools (vitest 4, eslint 9) need Node 20.19 or later.
 
-Every pull request and every push to `main` runs `.github/workflows/ci.yml`: the checks above on Node 20, 22 and 24, and the built package on Node 18 (`scripts/smoke.mjs`).
+Every pull request and every push to `main` runs `.github/workflows/ci.yml`: the checks above on Node 20, 22 and 24, the e2e tests against `@funnelchat-hq/sandbox` at a fixed version (0.7.0; the tests use the ids it seeds, `SEED` in `test/e2e/sandbox.ts`), and the built package on Node 18 (`scripts/smoke.mjs`).
 
 To release, push a `vX.Y.Z` tag on a commit of `main` matching the `version` in `package.json`. `.github/workflows/publish.yml` fails before publishing when the tag does not match or its commit is not on `main`, runs CI on it, and publishes through npm Trusted Publishing, with provenance. A pre-release (`vX.Y.Z-rc.N`, `vX.Y.Z-beta.N`) is published with the `next` dist-tag, never as `latest`.
 
