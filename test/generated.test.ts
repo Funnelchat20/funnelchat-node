@@ -27,6 +27,7 @@ interface PortalCategory {
   url: string | null;
 }
 interface Generator {
+  narrowCombinators<T>(node: T): T;
   portalGroups(spec: object): { groups: Map<string, PortalGroup>; warnings: string[]; categories: PortalCategory[] };
   readmeBlock(groups: { name: string; category: string | null }[], operations: number, events: number, catalog?: PortalCategory[]): string;
 }
@@ -177,6 +178,51 @@ describe('groups and categories of the portal', () => {
     const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
     const { portalGroups, readmeBlock } = await generator();
     expect(readme).toContain(readmeBlock([...routeGroups], routes.length, webhookEvents.length, portalGroups(snapshot).categories));
+  });
+});
+
+describe('one of several properties, and the variants of a body', () => {
+  const base = {
+    type: 'object',
+    properties: {
+      contact_id: { type: ['string', 'null'] },
+      phone: { type: 'string' },
+      whatsapp_id: { type: ['string', 'null'], enum: ['a', null] },
+      device_id: { type: 'string' },
+    },
+    required: ['device_id'],
+  };
+
+  it('turns an anyOf next to properties into a oneOf whose members take the schema of what they require', async () => {
+    const { narrowCombinators } = await generator();
+    const schema = {
+      ...structuredClone(base),
+      anyOf: [
+        { required: ['contact_id'], properties: { contact_id: { not: { type: 'null' } } } },
+        { required: ['phone'] },
+        { required: ['whatsapp_id'], properties: { whatsapp_id: { not: { type: 'null' } } } },
+      ],
+    };
+    expect(narrowCombinators({ components: { schemas: { Send: schema } } }).components.schemas.Send).toEqual({
+      ...base,
+      oneOf: [
+        { required: ['contact_id'], properties: { contact_id: { type: 'string' } } },
+        { required: ['phone'], properties: { phone: { type: 'string' } } },
+        { required: ['whatsapp_id'], properties: { whatsapp_id: { type: 'string', enum: ['a'] } } },
+      ],
+    });
+  });
+
+  it('completes the members of a oneOf, and leaves alone a combinator with no properties next to it', async () => {
+    const { narrowCombinators } = await generator();
+    const variants = {
+      ...structuredClone(base),
+      oneOf: [{ properties: { type: { const: 'qr' }, device_id: { not: { type: 'null' } } }, required: ['device_id'] }, { $ref: '#/x' }],
+    };
+    const union = { anyOf: [{ type: 'string' }, { type: 'null' }] };
+    const out = narrowCombinators({ a: variants, b: structuredClone(union) });
+    expect(out.a.oneOf).toEqual([{ properties: { type: { const: 'qr' }, device_id: { type: 'string' } }, required: ['device_id'] }, { $ref: '#/x' }]);
+    expect(out.b).toEqual(union);
   });
 });
 
