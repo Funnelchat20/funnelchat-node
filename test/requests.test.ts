@@ -23,6 +23,27 @@ describe('client configuration', () => {
     expect(BASE_URLS).toEqual({ production: 'https://api.funnelchat.com', staging: 'https://api-staging.funnelchat.com' });
   });
 
+  it('reads the base URL from FUNNELCHAT_BASE_URL, over environment and under baseUrl', async () => {
+    vi.stubEnv('FUNNELCHAT_BASE_URL', ' http://127.0.0.1:4010/ ');
+    const { fetch, calls } = mockFetch({ body: [] }, { body: [] }, { body: [] });
+    const fromEnv = client(fetch);
+    expect(fromEnv.baseUrl).toBe('http://127.0.0.1:4010');
+    await fromEnv.request('GET', '/api/v1/devices');
+    await client(fetch, { environment: 'staging' }).request('GET', '/api/v1/devices');
+    await client(fetch, { baseUrl: 'http://localhost:4210' }).request('GET', '/api/v1/devices');
+    expect(calls.map((c) => c.url)).toEqual([
+      'http://127.0.0.1:4010/api/v1/devices',
+      'http://127.0.0.1:4010/api/v1/devices',
+      'http://localhost:4210/api/v1/devices',
+    ]);
+  });
+
+  it('ignores an empty FUNNELCHAT_BASE_URL', () => {
+    vi.stubEnv('FUNNELCHAT_BASE_URL', '  ');
+    expect(client(vi.fn() as never).baseUrl).toBe('https://api.funnelchat.com');
+    expect(client(vi.fn() as never, { environment: 'staging' }).baseUrl).toBe('https://api-staging.funnelchat.com');
+  });
+
   it('reads the key from FUNNELCHAT_API_KEY when apiKey is not passed', async () => {
     vi.stubEnv('FUNNELCHAT_API_KEY', '2|fc_live_from_env');
     const { fetch, calls } = mockFetch({ body: [] });

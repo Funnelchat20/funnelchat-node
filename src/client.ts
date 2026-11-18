@@ -50,9 +50,13 @@ export const DEFAULT_MAX_RETRIES = 2;
 export interface ClientOptions {
   /** `<id>|fc_live_...`. Default: the `FUNNELCHAT_API_KEY` environment variable. */
   apiKey?: string;
-  /** Overrides the URL of `environment` (for example a local edge). */
+  /**
+   * The URL every request goes to, over the one of `environment`: `http://127.0.0.1:4010` for
+   * funnelchat-sandbox, for example. Default: the `FUNNELCHAT_BASE_URL` environment variable, and
+   * without it the URL of `environment`.
+   */
   baseUrl?: string;
-  /** Default: `production`. */
+  /** Default: `production`. `baseUrl` and `FUNNELCHAT_BASE_URL` go over it. */
   environment?: Environment;
   /** Timeout of each attempt, in milliseconds. Default: 30 000. */
   timeoutMs?: number;
@@ -121,7 +125,7 @@ export class Funnelchat {
     this.#apiKey = apiKey;
     this.#fetch = fetchImpl;
     this.#defaultHeaders = { ...options.defaultHeaders };
-    this.baseUrl = (options.baseUrl ?? BASE_URLS[environment]).replace(/\/+$/, '');
+    this.baseUrl = (options.baseUrl ?? readEnv('FUNNELCHAT_BASE_URL') ?? BASE_URLS[environment]).replace(/\/+$/, '');
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.maxRetries = options.maxRetries ?? DEFAULT_MAX_RETRIES;
 
