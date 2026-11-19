@@ -1,6 +1,6 @@
 /**
  * GENERATED FILE — do not edit. Run `npm run generate`.
- * Source: spec/funnelchat.json (sha256 fadcd73731cba99d…) + spec/pending.json.
+ * Source: spec/funnelchat.json (sha256 4a8fbaee9d8b251f…) + spec/pending.json.
  */
 import type { components } from './openapi.js';
 
@@ -16,9 +16,9 @@ export interface WebhookEventInfo {
 
 /** Every webhook event type known to the spec (56). */
 export const webhookEvents = [
-  {"type":"account.blocked","domains":["accounts"],"status":"live","pending":false,"description":"La cuenta, o un workspace con facturación propia, quedó bloqueada por consumo: terminó la gracia de 24 horas tras agotar los contactos activos mensuales sin que se regularizara. El bloqueo de la cuenta llega al workspace por defecto; el de un workspace con facturación propia, a ese workspace."},
-  {"type":"billing.payment_failed","domains":["accounts"],"status":"live","pending":true,"description":"A charge of the subscription could not be processed (Stripe subscriptions only)."},
-  {"type":"billing.upcoming_charge","domains":["accounts"],"status":"live","pending":true,"description":"The next charge of the subscription is coming up (Stripe subscriptions only)."},
+  {"type":"account.blocked","domains":["accounts"],"status":"live","pending":false,"description":"La cuenta quedó bloqueada por consumo: pasaron las 24 horas de gracia. Los envíos se frenan."},
+  {"type":"billing.payment_failed","domains":["accounts"],"status":"live","pending":false,"description":"Falló el cobro de la suscripción (solo Stripe). Llega una vez por factura."},
+  {"type":"billing.upcoming_charge","domains":["accounts"],"status":"live","pending":false,"description":"Se acerca el próximo cobro de la suscripción (solo Stripe)."},
   {"type":"broadcast.finished","domains":["conversations"],"status":"live","pending":false,"description":"Una campaña llegó a su estado final (enviada, fallida o con fallos parciales), con sus conteos.\n\n`status` es `success`, `failed` o `partially_failed`. `reason` dice por qué terminó: `completed` (se enviaron todas las páginas), `cancelled` (se cerró una campaña pausada), `template_rejected` (Meta rechazó la plantilla, o su categoría cambió, mientras la campaña esperaba; también cuando Meta la pausó durante el envío y se detuvo la campaña), `approval_expired` (la plantilla no se aprobó a tiempo), `manual_start_expired` (la plantilla se aprobó tarde, la campaña quedó lista para comenzarla a mano y nadie la comenzó), `mac_lockout` (la cuenta alcanzó su límite de contactos activos), `mac_check_unavailable` (la campaña la inició una API key y el límite de contactos activos no se pudo verificar, así que no se envió nada), `no_recipients` (la audiencia quedó vacía) o `error` (el envío no pudo despacharse). `totals` son los conteos del envío: `processed` (destinatarios procesados), `failed` y `skipped_unreachable` (destinatarios que el canal no puede alcanzar); valen 0 si la campaña terminó antes de enviar. Se emite una sola vez por campaña."},
   {"type":"broadcast.paused","domains":["conversations"],"status":"live","pending":false,"description":"Una campaña se pausó sola, por ejemplo porque bajó la calidad del número.\n\n`reason` es `quality_degraded` (la calidad del número bajó respecto de la del inicio, o llegó a RED), `quality_unreadable` (no se pudo leer la calidad en tres controles seguidos), `template_unavailable` (Meta dejó la plantilla en `PAUSED`, `DISABLED` o `REJECTED` antes de una tanda), `payment_issue` (el 2 % o más de los envíos de la misma campaña, con un mínimo de 20 envíos, fueron rechazados por Meta con el código 131042, un problema de pago o de facturación de la cuenta de WhatsApp Business; el 2 % y el mínimo de 20 envíos son los valores por defecto y se pueden configurar; aplica a cualquier campaña, tenga o no envío inteligente; no frena el número; al reanudar la campaña el conteo, incluidos los envíos que cuentan, vuelve a empezar de cero) o `rejection_rate` (entre los envíos recientes de la propia campaña, por defecto las últimas 24 horas, Meta rechazó una proporción igual o mayor al umbral configurable, por defecto 15 %, con los códigos que indican una restricción de la cuenta o del número; la lista es configurable y por defecto es 131048, 131031 y 368; los códigos 131049 y 131026 no pausan la campaña). Con `rejection_rate` llega además `rejection`: `codes` (los que llegaron a su umbral: hoy `failed`), `rates` (el porcentaje de cada uno; las tasas de `131049` y `131026` se informan como dato aunque no pausen), `attempts` (los envíos medidos) y `window_hours`. `quality` y `quality_baseline` son la calidad de Meta leída en el control y la del inicio del envío (`GREEN`, `YELLOW`, `RED`), o `null` si no se pudo leer, y siempre `null` en una difusión sin envío inteligente. `template` es `{name, status}` con el nombre de la plantilla y su estado en Meta cuando `reason` es `template_unavailable`, y `null` en las demás pausas (por calidad, pago o rechazos). Con `rejection_rate` el número además queda frenado 7 días (configurable): mientras dure no se pueden crear, ejecutar ni reanudar campañas desde ese número, ni mandar plantillas a contactos que no le escribieron en las últimas 24 horas, y solo soporte lo levanta antes. Las pausas por calidad, por plantilla y por rechazos son solo de las campañas con envío inteligente; la pausa por `payment_issue` puede ocurrir en cualquier campaña. Reanudar la campaña y que se pause otra vez emite otro evento."},
   {"type":"campaign.no_groups_available","domains":["communities"],"status":"live","pending":false,"description":"Una campaña no tiene grupos a los que dirigir a las personas que entran por su link."},
@@ -54,9 +54,9 @@ export const webhookEvents = [
   {"type":"group.message_received","domains":["communities"],"status":"live","pending":true,"description":"Someone wrote in a group of one of your numbers. Not emitted for the messages of your own numbers."},
   {"type":"group.reaction_added","domains":["communities"],"status":"live","pending":true,"description":"Someone reacted to a message of a group."},
   {"type":"group.recovered","domains":["communities"],"status":"live","pending":false,"description":"Un grupo de una campaña que estaba bloqueado volvió a operar; un grupo que no es de una campaña no lo genera."},
-  {"type":"mac.expiring","domains":["accounts"],"status":"live","pending":false,"description":"Hay contactos activos mensuales que vencen en los próximos 7 días. Llega un evento por pool: el de la cuenta al workspace por defecto, y el de cada workspace con facturación propia a ese workspace, con sus contactos."},
-  {"type":"mac.usage_100","domains":["accounts"],"status":"live","pending":false,"description":"La cuenta agotó sus contactos activos mensuales del ciclo; se abre una gracia de 24 horas cuyo vencimiento viaja en `grace_expires_at`. `workspace_id` es el workspace al que se rutea el evento, como en todos los eventos: el workspace con facturación propia cuyo pool se agotó, o el workspace por defecto cuando el pool es el de la cuenta."},
-  {"type":"mac.usage_80","domains":["accounts"],"status":"live","pending":false,"description":"La cuenta alcanzó el 80% de sus contactos activos mensuales del ciclo. `workspace_id` es el workspace al que se rutea el evento, como en todos los eventos: el workspace con facturación propia cuyo pool alcanzó el umbral, o el workspace por defecto cuando el pool es el de la cuenta."},
+  {"type":"mac.expiring","domains":["accounts"],"status":"live","pending":false,"description":"Hay contactos activos que vencen en los próximos 7 días."},
+  {"type":"mac.usage_100","domains":["accounts"],"status":"live","pending":false,"description":"Agotaste tus contactos activos del mes. Tienes 24 horas de gracia (`grace_expires_at`) antes del bloqueo."},
+  {"type":"mac.usage_80","domains":["accounts"],"status":"live","pending":false,"description":"Usaste el 80 % de tus contactos activos del mes."},
   {"type":"message.reaction_failed","domains":["conversations"],"status":"live","pending":false,"description":"Una reacción a un mensaje que se aceptó no se pudo aplicar.\n\nSe emite cuando una reacción a un mensaje (ponerla, reemplazarla o quitarla) que se aceptó con `202` termina sin aplicarse, la haya pedido una clave o una persona del equipo desde el chat. Sale una sola vez por pedido: los reintentos internos del mismo pedido no generan otro evento. No se emite cuando la reacción se aplicó, cuando una reacción más nueva al mismo mensaje ya la reemplazó, ni cuando el mensaje ya no existe. `message_id` es el mensaje al que se reaccionaba (el mismo id de la ruta), `contact_id` el del contacto y `device_id` el número de tu cuenta por el que iba a salir (`null` si el mensaje ya no tiene número). `emoji` es el emoji pedido y `null` si el pedido era quitar la reacción. `reason` es uno de `no_provider_uid`, `message_not_reactable`, `message_deleted`, `device_disconnected`, `provider_unsupported`, `window_expired`, `provider_rejected`, `insufficient_balance`, `payment_expired`. `requested_at` es el momento en que se aceptó el pedido, en UTC y con microsegundos: sirve para relacionar el evento con la llamada que respondió `202`. `occurred_at` es el momento en que Funnelchat decidió el fallo, en UTC. Mientras tanto, `reactions` de `GET /contacts/{contact_id}/messages` queda como estaba."},
   {"type":"message.received","domains":["conversations"],"status":"live","pending":true,"description":"A contact wrote to one of the WhatsApp numbers of the account."},
   {"type":"message.status_changed","domains":["conversations"],"status":"live","pending":true,"description":"The delivery status of a message you sent with the API changed. One notice per transition, never one that goes back; `queued` is not reported. It must be asked for explicitly in `events`."},
@@ -65,12 +65,12 @@ export const webhookEvents = [
   {"type":"scheduled_message.finished","domains":["communities"],"status":"live","pending":false,"description":"Un envío programado terminó, con su resultado agregado."},
   {"type":"scheduled_message.group_delivery_failed","domains":["communities"],"status":"live","pending":false,"description":"Un envío programado falló en un grupo concreto, con el motivo desagregado."},
   {"type":"scheduled_message.response_received","domains":["communities"],"status":"live","pending":false,"description":"Alguien respondió a un envío programado votando una encuesta o respondiendo a un evento."},
-  {"type":"subscription.cancellation_confirmed","domains":["accounts"],"status":"live","pending":false,"description":"Quedó confirmada la cancelación de la suscripción (solo suscripciones de Stripe): se conserva el acceso hasta la fecha indicada. Llega al workspace de esa suscripción: el workspace con facturación propia, o el workspace por defecto si es la de la cuenta."},
-  {"type":"subscription.dormant_ending","domains":["accounts"],"status":"live","pending":true,"description":"The dormant-account period is about to end."},
-  {"type":"subscription.reactivated","domains":["accounts"],"status":"live","pending":false,"description":"Se revirtió la cancelación programada de la suscripción (solo suscripciones de Stripe): sigue vigente y se renueva en la fecha indicada. Llega al workspace de esa suscripción: el workspace con facturación propia, o el workspace por defecto si es la de la cuenta."},
-  {"type":"subscription.trial_ending","domains":["accounts"],"status":"live","pending":false,"description":"El período de prueba está por terminar; el evento llega entre 1 y 3 días antes del final, según cómo se contrató (en las suscripciones de Stripe, el evento de Stripe). Llega al workspace de esa suscripción: el workspace con facturación propia, o el workspace por defecto si es la de la cuenta."},
+  {"type":"subscription.cancellation_confirmed","domains":["accounts"],"status":"live","pending":false,"description":"Se confirmó la cancelación de la suscripción (solo Stripe)."},
+  {"type":"subscription.dormant_ending","domains":["accounts"],"status":"live","pending":false,"description":"La cuenta en reposo vuelve a cobrarse en unos 7 días."},
+  {"type":"subscription.reactivated","domains":["accounts"],"status":"live","pending":false,"description":"Se revirtió la cancelación programada de la suscripción (solo Stripe)."},
+  {"type":"subscription.trial_ending","domains":["accounts"],"status":"live","pending":false,"description":"La prueba termina en 1 a 3 días."},
   {"type":"template.status_changed","domains":["conversations"],"status":"live","pending":false,"description":"Una plantilla cambió de estado de aprobación en Meta.\n\n`template` identifica la plantilla igual que `GET /templates` (`id`, `uid`, `name`, `category`). `previous_status` y `status` son los estados tal como los devuelve la API (por ejemplo `PENDING`, `APPROVED`, `REJECTED`, `PAUSED`); `previous_status` es `null` si la plantilla no tenía estado. `reason` trae la observación de rechazo (traducida como en la API y limitada a 500 caracteres) cuando el cambio es un rechazo informado al crear la plantilla, y es `null` en el resto. No se emite si Meta reenvía el estado que la plantilla ya tenía. Si una misma plantilla de Meta figura en varias cuentas, cada cuenta recibe su propio evento."},
-  {"type":"webhook.test","domains":["conversations","communities"],"status":"live","pending":false,"description":"Evento de prueba enviado desde la ruta de prueba de una suscripción."},
+  {"type":"webhook.test","domains":["conversations","communities","accounts"],"status":"live","pending":false,"description":"Evento de prueba enviado desde la ruta de prueba de una suscripción."},
   {"type":"whatsapp_form.completed","domains":["conversations"],"status":"live","pending":true,"description":"A contact completed a form you sent them."},
 ] as const satisfies readonly WebhookEventInfo[];
 
@@ -82,19 +82,18 @@ export type WebhookEventType = (typeof webhookEvents)[number]['type'];
  * keys in the example are required and `null` values are `unknown`.
  */
 export interface WebhookEventDataMap {
-  /** `account.blocked` (live; typed from: example). La cuenta, o un workspace con facturación propia, quedó bloqueada por consumo: terminó la gracia de 24 horas tras agotar los contactos activos mensuales sin que se regularizara. El bloqueo de la cuenta llega al workspace por defecto; el de un workspace con facturación propia, a ese workspace. */
+  /** `account.blocked` (live; typed from: example). La cuenta quedó bloqueada por consumo: pasaron las 24 horas de gracia. Los envíos se frenan. */
   "account.blocked": {
     reason: string;
     grace_started_at: string;
     grace_expired_at: string;
-    workspace_id: number;
   };
-  /** `billing.payment_failed` (live, pending of the spec; typed from: example). A charge of the subscription could not be processed (Stripe subscriptions only). */
+  /** `billing.payment_failed` (live; typed from: example). Falló el cobro de la suscripción (solo Stripe). Llega una vez por factura. */
   "billing.payment_failed": {
     amount_cents: number;
     currency: string;
   };
-  /** `billing.upcoming_charge` (live, pending of the spec; typed from: example). The next charge of the subscription is coming up (Stripe subscriptions only). */
+  /** `billing.upcoming_charge` (live; typed from: example). Se acerca el próximo cobro de la suscripción (solo Stripe). */
   "billing.upcoming_charge": {
     charge_date: string;
     amount_cents: number;
@@ -485,35 +484,31 @@ export interface WebhookEventDataMap {
     participants: number;
     workspace_id: number;
   };
-  /** `group.invite_link_down` (live; typed from: example). El enlace de invitación de un grupo quedó confirmado caído (WhatsApp respondió que no existe y la renovación no consiguió otro); no se publica por errores transitorios ni por grupos prohibidos o suspendidos, y se publica una sola vez por episodio de bloqueo. */
+  /** `group.invite_link_down` (live; typed from: example + schema). El enlace de invitación de un grupo quedó confirmado caído (WhatsApp respondió que no existe y la renovación no consiguió otro); no se publica por errores transitorios ni por grupos prohibidos o suspendidos, y se publica una sola vez por episodio de bloqueo. */
   "group.invite_link_down": {
     group: {
       uid: string;
       name: string;
       type: string;
     };
-    campaign: {
-      uuid: string;
-      name: string;
-    };
     reason: string;
     renewal_attempted: boolean;
+    /** Campaña del grupo, si es de una. */
+    campaign?: Record<string, unknown> | null;
   };
-  /** `group.invite_link_renewed` (live; typed from: example). El enlace de invitación de un grupo cambió por una renovación, automática al detectarse inválido o pedida por el usuario; no se publican los cambios que detecta la sincronización ni el enlace inicial al crear el grupo. */
+  /** `group.invite_link_renewed` (live; typed from: example + schema). El enlace de invitación de un grupo cambió por una renovación, automática al detectarse inválido o pedida por el usuario; no se publican los cambios que detecta la sincronización ni el enlace inicial al crear el grupo. */
   "group.invite_link_renewed": {
     group: {
       uid: string;
       name: string;
       type: string;
     };
-    campaign: {
-      uuid: string;
-      name: string;
-    };
     invite_link: string;
     previous_invite_link: string;
     trigger: string;
     recovered: boolean;
+    /** Campaña del grupo, si es de una. */
+    campaign?: Record<string, unknown> | null;
   };
   /** `group.message_received` (live, pending of the spec; typed from: schema). Someone wrote in a group of one of your numbers. Not emitted for the messages of your own numbers. */
   "group.message_received": {
@@ -565,28 +560,25 @@ export interface WebhookEventDataMap {
     };
     reason: string;
   };
-  /** `mac.expiring` (live; typed from: example). Hay contactos activos mensuales que vencen en los próximos 7 días. Llega un evento por pool: el de la cuenta al workspace por defecto, y el de cada workspace con facturación propia a ese workspace, con sus contactos. */
+  /** `mac.expiring` (live; typed from: example). Hay contactos activos que vencen en los próximos 7 días. */
   "mac.expiring": {
     contacts_expiring: number;
     expires_at: string;
-    workspace_id: number;
   };
-  /** `mac.usage_100` (live; typed from: example). La cuenta agotó sus contactos activos mensuales del ciclo; se abre una gracia de 24 horas cuyo vencimiento viaja en `grace_expires_at`. `workspace_id` es el workspace al que se rutea el evento, como en todos los eventos: el workspace con facturación propia cuyo pool se agotó, o el workspace por defecto cuando el pool es el de la cuenta. */
+  /** `mac.usage_100` (live; typed from: example). Agotaste tus contactos activos del mes. Tienes 24 horas de gracia (`grace_expires_at`) antes del bloqueo. */
   "mac.usage_100": {
     used: number;
     limit: number;
     percentage: number;
     cycle_started_at: string;
     grace_expires_at: string;
-    workspace_id: number;
   };
-  /** `mac.usage_80` (live; typed from: example). La cuenta alcanzó el 80% de sus contactos activos mensuales del ciclo. `workspace_id` es el workspace al que se rutea el evento, como en todos los eventos: el workspace con facturación propia cuyo pool alcanzó el umbral, o el workspace por defecto cuando el pool es el de la cuenta. */
+  /** `mac.usage_80` (live; typed from: example). Usaste el 80 % de tus contactos activos del mes. */
   "mac.usage_80": {
     used: number;
     limit: number;
     percentage: number;
     cycle_started_at: string;
-    workspace_id: number;
   };
   /** `message.reaction_failed` (live; typed from: example). Una reacción a un mensaje que se aceptó no se pudo aplicar. Se emite cuando una reacción a un mensaje (ponerla, reemplazarla o quitarla) que se aceptó con `202` termina sin aplicarse, la haya pedido una clave o una persona del equipo desde el chat. Sale una sola vez por pedido: los reintentos internos del mismo pedido no generan otro evento. No se emite cuando la reacción se aplicó, cuando una reacción más nueva al mismo mensaje ya la reemplazó, ni cuando el mensaje ya no existe. `message_id` es el mensaje al que se reaccionaba (el mismo id de la ruta), `contact_id` el del contacto y `device_id` el número de tu cuenta por el que iba a salir (`null` si el mensaje ya no tiene número). `emoji` es el emoji pedido y `null` si el pedido era quitar la reacción. `reason` es uno de `no_provider_uid`, `message_not_reactable`, `message_deleted`, `device_disconnected`, `provider_unsupported`, `window_expired`, `provider_rejected`, `insufficient_balance`, `payment_expired`. `requested_at` es el momento en que se aceptó el pedido, en UTC y con microsegundos: sirve para relacionar el evento con la llamada que respondió `202`. `occurred_at` es el momento en que Funnelchat decidió el fallo, en UTC. Mientras tanto, `reactions` de `GET /contacts/{contact_id}/messages` queda como estaba. */
   "message.reaction_failed": {
@@ -663,7 +655,7 @@ export interface WebhookEventDataMap {
     };
     idempotency_key: string;
   };
-  /** `poll.voted` (live; typed from: example). Un participante votó en una encuesta enviada a un grupo, o cambió su voto. */
+  /** `poll.voted` (live; typed from: example + schema). Un participante votó en una encuesta enviada a un grupo, o cambió su voto. */
   "poll.voted": {
     poll: {
       uid: string;
@@ -671,15 +663,14 @@ export interface WebhookEventDataMap {
     group: {
       uid: string;
     };
-    scheduled_message: {
-      uuid: string;
-    };
     participant: {
       identity: string;
       identity_type: string;
       name: unknown;
     };
     options: string[];
+    /** Envío programado de la encuesta, si salió de uno. */
+    scheduled_message?: Record<string, unknown> | null;
   };
   /** `scheduled_message.finished` (live; typed from: example). Un envío programado terminó, con su resultado agregado. */
   "scheduled_message.finished": {
@@ -727,26 +718,23 @@ export interface WebhookEventDataMap {
       rsvp: unknown;
     };
   };
-  /** `subscription.cancellation_confirmed` (live; typed from: example). Quedó confirmada la cancelación de la suscripción (solo suscripciones de Stripe): se conserva el acceso hasta la fecha indicada. Llega al workspace de esa suscripción: el workspace con facturación propia, o el workspace por defecto si es la de la cuenta. */
+  /** `subscription.cancellation_confirmed` (live; typed from: example). Se confirmó la cancelación de la suscripción (solo Stripe). */
   "subscription.cancellation_confirmed": {
     access_until: string;
-    workspace_id: number;
   };
-  /** `subscription.dormant_ending` (live, pending of the spec; typed from: example). The dormant-account period is about to end. */
+  /** `subscription.dormant_ending` (live; typed from: example). La cuenta en reposo vuelve a cobrarse en unos 7 días. */
   "subscription.dormant_ending": {
     charge_date: string;
     amount_cents: number;
     currency: string;
   };
-  /** `subscription.reactivated` (live; typed from: example). Se revirtió la cancelación programada de la suscripción (solo suscripciones de Stripe): sigue vigente y se renueva en la fecha indicada. Llega al workspace de esa suscripción: el workspace con facturación propia, o el workspace por defecto si es la de la cuenta. */
+  /** `subscription.reactivated` (live; typed from: example). Se revirtió la cancelación programada de la suscripción (solo Stripe). */
   "subscription.reactivated": {
     renews_at: string;
-    workspace_id: number;
   };
-  /** `subscription.trial_ending` (live; typed from: example). El período de prueba está por terminar; el evento llega entre 1 y 3 días antes del final, según cómo se contrató (en las suscripciones de Stripe, el evento de Stripe). Llega al workspace de esa suscripción: el workspace con facturación propia, o el workspace por defecto si es la de la cuenta. */
+  /** `subscription.trial_ending` (live; typed from: example). La prueba termina en 1 a 3 días. */
   "subscription.trial_ending": {
     trial_ends_at: string;
-    workspace_id: number;
   };
   /** `template.status_changed` (live; typed from: example). Una plantilla cambió de estado de aprobación en Meta. `template` identifica la plantilla igual que `GET /templates` (`id`, `uid`, `name`, `category`). `previous_status` y `status` son los estados tal como los devuelve la API (por ejemplo `PENDING`, `APPROVED`, `REJECTED`, `PAUSED`); `previous_status` es `null` si la plantilla no tenía estado. `reason` trae la observación de rechazo (traducida como en la API y limitada a 500 caracteres) cuando el cambio es un rechazo informado al crear la plantilla, y es `null` en el resto. No se emite si Meta reenvía el estado que la plantilla ya tenía. Si una misma plantilla de Meta figura en varias cuentas, cada cuenta recibe su propio evento. */
   "template.status_changed": {

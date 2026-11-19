@@ -57,6 +57,12 @@ describe.skipIf(!SANDBOX_URL)('numbers against the sandbox', () => {
     return location ? new URL(location) : null;
   }
 
+  /** The `url` of a link just created: it only comes in the answer of the create. */
+  function urlOf(link: { url: string | null }): string {
+    expect(link.url).toEqual(expect.any(String));
+    return link.url as string;
+  }
+
   it('a QR number is created once per idempotency key, shows its QR, connects and is deleted', async () => {
     const body = { connection: 'qr', alias: 'Sales', country: 'br', external_reference: 'customer-81' } as const;
     const { data: device } = await funnelchat.devices.create(body, { idempotencyKey: 'e2e-qr-81' });
@@ -105,13 +111,14 @@ describe.skipIf(!SANDBOX_URL)('numbers against the sandbox', () => {
       { idempotencyKey: 'e2e-link-82' },
     );
     expect(link).toMatchObject({ type: 'qr', status: 'pending', device_id: null, country: 'br', external_reference: 'customer-82' });
-    expect(link.url).toMatch(/\/connect\/[A-Za-z0-9_-]+$/);
+    const url = urlOf(link);
+    expect(url).toMatch(/\/connect\/[A-Za-z0-9_-]+$/);
 
     // Opening the page (a messenger's preview, for example) does not use the link.
-    await fetch(link.url, { redirect: 'manual' });
+    await fetch(url, { redirect: 'manual' });
     expect((await funnelchat.connectLinks.get(link.id)).data.status).toBe('pending');
 
-    const back = await openPage(link.url);
+    const back = await openPage(url);
     expect(back?.origin + (back?.pathname ?? '')).toBe('https://example.com/done');
     expect(back?.searchParams.get('status')).toBe('completed');
     expect(back?.searchParams.get('connect_link_id')).toBe(String(link.id));
@@ -136,11 +143,12 @@ describe.skipIf(!SANDBOX_URL)('numbers against the sandbox', () => {
 
   it('a QR link takes no country when it reconnects, and a Meta link none at all: 422 invalid_request', async () => {
     await enableMeta();
+    // @ts-expect-error the types refuse it too: a QR link that reconnects takes no country
     const reconnect = (await funnelchat.connectLinks.create({ type: 'qr', country: 'br', device_id: SEED.qrDevice }).catch((e: unknown) => e)) as APIError;
     expect(reconnect).toBeInstanceOf(UnprocessableEntityError);
     expect(reconnect.code).toBe('invalid_request');
     const meta = (await funnelchat.connectLinks
-      // country only goes with a QR link: the API refuses it (the spec does not say so)
+      // @ts-expect-error the types refuse it too: country only goes with a QR link
       .create({ type: 'meta', allowed_connection_types: ['dedicated'], country: 'br' })
       .catch((e: unknown) => e)) as APIError;
     expect(meta.code).toBe('invalid_request');
@@ -151,7 +159,7 @@ describe.skipIf(!SANDBOX_URL)('numbers against the sandbox', () => {
   it('a Meta link lets the customer choose coexistence', async () => {
     await enableMeta();
     const { data: link } = await funnelchat.connectLinks.create({ type: 'meta', allowed_connection_types: ['coexistence', 'dedicated'] });
-    await openPage(link.url, '?connection=coexistence', 'complete');
+    await openPage(urlOf(link), '?connection=coexistence', 'complete');
     const connected = (await receiver.waitFor(
       (event) => event.type === 'device.connected' && event.data.connect_link_id === link.id,
     )) as WebhookEventOf<'device.connected'>;
@@ -162,7 +170,7 @@ describe.skipIf(!SANDBOX_URL)('numbers against the sandbox', () => {
     await enableMeta();
     const { data: link } = await funnelchat.connectLinks.create({ type: 'meta', allowed_connection_types: ['coexistence'] });
     for (let attempt = 1; attempt <= 5; attempt++) {
-      await fetch(`${link.url}/complete?outcome=failed&error_code=meta_error`, { method: 'POST', redirect: 'manual', headers: { Accept: 'application/json' } });
+      await fetch(`${urlOf(link)}/complete?outcome=failed&error_code=meta_error`, { method: 'POST', redirect: 'manual', headers: { Accept: 'application/json' } });
       const { data } = await funnelchat.connectLinks.get(link.id);
       if (attempt < 5) expect(data).toMatchObject({ status: 'pending', error_code: null });
       else expect(data).toMatchObject({ status: 'failed', error_code: 'meta_error' });
@@ -200,7 +208,7 @@ describe.skipIf(!SANDBOX_URL)('numbers against the sandbox', () => {
 
   it('a link that fails on its page says why, by return_url and by get', async () => {
     const { data: link } = await funnelchat.connectLinks.create({ type: 'qr', return_url: 'https://example.com/done' });
-    const back = await openPage(link.url, '?outcome=failed&error_code=qr_timeout');
+    const back = await openPage(urlOf(link), '?outcome=failed&error_code=qr_timeout');
     expect(back?.searchParams.get('status')).toBe('failed');
     expect(back?.searchParams.get('error_code')).toBe('qr_timeout');
     const { data: failed } = await funnelchat.connectLinks.get(link.id);

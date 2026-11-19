@@ -33,6 +33,9 @@
  *                                  Here and in step 5, a string whose known values are listed in
  *                                  `x-extensible-enum` (not `enum`) is typed as those values or any
  *                                  other string, because the API can send a value the list lacks.
+ *                                  An `anyOf`/`oneOf` next to `properties` (one of `phone` or
+ *                                  `whatsapp_id`, the variants of a body) narrows the object
+ *                                  (`narrowCombinators`).
  *   4. src/generated/routes.ts   — every operation: method, path, domain, permission, its group and the
  *                                  category of the group as the portal shows them, whether it cannot
  *                                  be undone, pending flag; and the groups, in the portal's order.
@@ -515,6 +518,64 @@ const HEADER = (specHash) =>
  */
 const extensibleEnum = (schema) => (Array.isArray(schema?.['x-extensible-enum']) ? schema['x-extensible-enum'] : null);
 
+const isNotNull = (schema) => JSON.stringify(schema) === JSON.stringify({ not: { type: 'null' } });
+
+/** A property schema without its `null`: `{ type: ['string', 'null'] }` -> `{ type: 'string' }`. */
+function withoutNull(schema) {
+  const copy = structuredClone(schema);
+  if (Array.isArray(copy.type)) {
+    const types = copy.type.filter((t) => t !== 'null');
+    copy.type = types.length === 1 ? types[0] : types;
+  }
+  if (Array.isArray(copy.enum)) copy.enum = copy.enum.filter((v) => v !== null);
+  for (const key of ['anyOf', 'oneOf']) {
+    if (Array.isArray(copy[key])) copy[key] = copy[key].filter((s) => s?.type !== 'null');
+    if (copy[key]?.length === 1) {
+      Object.assign(copy, copy[key][0]);
+      delete copy[key];
+    }
+  }
+  delete copy.nullable;
+  return copy;
+}
+
+/**
+ * openapi-typescript types an `anyOf` next to `properties` as a union with the object (`base | A | B`)
+ * instead of narrowing it, and a member that only says which properties it requires (`{ required:
+ * ['phone'] }`) or that one is not null (`{ properties: { phone: { not: { type: 'null' } } } }`) as
+ * `unknown`. So, before typing, in a copy of the merged spec: such an `anyOf` becomes a `oneOf`
+ * (typed `base & (A | B)`, the same union for TypeScript), and each member of the `oneOf` takes from
+ * the object the schema of every property it requires and lacks, and the schema without `null` of
+ * every property it declares not null. `{ phone?: string; whatsapp_id?: string } & ({ phone: string }
+ * | { whatsapp_id: string })` then asks for one of them, as the API does.
+ */
+function narrowCombinators(node) {
+  if (Array.isArray(node)) {
+    node.forEach(narrowCombinators);
+    return node;
+  }
+  if (!node || typeof node !== 'object') return node;
+  const base = node.properties;
+  if (base && typeof base === 'object' && !Array.isArray(base) && (node.anyOf || node.oneOf) && !(node.anyOf && node.oneOf)) {
+    if (node.anyOf) {
+      node.oneOf = node.anyOf;
+      delete node.anyOf;
+    }
+    for (const member of node.oneOf) {
+      if (!member || typeof member !== 'object' || member.$ref) continue;
+      member.properties ??= {};
+      for (const key of member.required ?? []) {
+        if (!(key in member.properties) && base[key]) member.properties[key] = structuredClone(base[key]);
+      }
+      for (const [key, schema] of Object.entries(member.properties)) {
+        if (isNotNull(schema) && base[key]) member.properties[key] = withoutNull(base[key]);
+      }
+    }
+  }
+  for (const value of Object.values(node)) narrowCombinators(value);
+  return node;
+}
+
 /** Step 3: TypeScript types for the whole merged spec. */
 async function generateOpenapiTypes(merged, specHash) {
   const transform = (schema) => {
@@ -523,7 +584,15 @@ async function generateOpenapiTypes(merged, specHash) {
     const anyString = tsIntersection([STRING, ts.factory.createTypeLiteralNode([])]);
     return tsUnion([...known.map(tsLiteral), anyString]);
   };
-  const ast = await openapiTS(merged, { emptyObjectsUnknown: true, silent: true, transform });
+  // `defaultNonNullable: false`: a property with a `default` is optional unless the schema requires it.
+  // Otherwise a body would demand what the API fills in by itself (`definition.endpoint` of a form,
+  // `join_approval_required` of a group).
+  const ast = await openapiTS(narrowCombinators(structuredClone(merged)), {
+    emptyObjectsUnknown: true,
+    defaultNonNullable: false,
+    silent: true,
+    transform,
+  });
   return `${HEADER(specHash)}/* eslint-disable */\n${astToString(ast)}`;
 }
 
@@ -921,7 +990,7 @@ async function main() {
 }
 
 // The pure steps the tests exercise with specs of their own (test/generated.test.ts).
-export { portalGroups, readmeBlock };
+export { narrowCombinators, portalGroups, readmeBlock };
 
 // Run only as a script, not when a test imports it (real paths, so a symlinked checkout still runs).
 function runAsScript() {
