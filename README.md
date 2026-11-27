@@ -136,7 +136,7 @@ An account with a single workspace, or without workspaces, works as always: its 
 The SDK covers every function the developer portal publishes for an API key, the ones in [More functions](https://developers-portal.funnelchat.app/docs/mas-funciones/) included:
 
 <!-- generated:functions — written by scripts/generate.mjs; do not edit by hand -->
-**253 operations and 56 webhook events**, in the 30 groups of the portal (named as the portal names them):
+**260 operations and 56 webhook events**, in the 30 groups of the portal (named as the portal names them):
 
 - **[Primer uso](https://developers-portal.funnelchat.app/):** Mensajes.
 - **[Funciones de WhatsApp](https://developers-portal.funnelchat.app/docs/mas-funciones/whatsapp/):** Números, Grupos, Contactos, Conversaciones, Atender una conversación, Cola de mensajes de un número, Acciones de grupo, Plantillas, Formularios, Costos y cuentas de Meta, Tu cuenta y tu equipo, Webhooks.
@@ -152,6 +152,28 @@ for await (const broadcast of funnelchat.paginate('/api/v1/broadcasts', { query:
 
 const { data: tickets } = await funnelchat.request('GET', '/api/v1/tickets');
 ```
+
+Campaigns and scheduled messages to groups are written with a key too: create, edit, pause and delete a campaign (**Groups and campaigns → Edit**), and schedule, edit and cancel a message to groups (**Groups and campaigns → Send**):
+
+```ts
+const scheduled = await funnelchat.request('POST', '/api/v1/scheduled-messages', {
+  body: {
+    name: 'Live class reminder',
+    send_at: '2026-12-07 13:00:00', // UTC, as `YYYY-MM-DD HH:MM:SS`: `2026-12-07T13:00:00Z` is a 422
+    group_ids: ['grp_AK2GMGeWAAdd8fZbtOVvE3Z'],
+    messages: [{ type: 1, value: { message: 'The class starts in one hour!' }, shipping_order: 1 }],
+  },
+});
+
+await funnelchat.request('POST', '/api/v1/campaigns/{campaign}/status', {
+  path: { campaign: 'cmp_A6RMvAOjr0mHuLr08RpcwWu' },
+  body: { active: false },
+});
+```
+
+- A key schedules at most 10,000 sends to groups (groups × blocks × occurrences) in 24 hours: `429 send_budget_exceeded`, with `retryAfter`. A recurrence has to end, after 30 occurrences at most. A message with a risky text or frequency answers `422 risk_not_accepted`, with the detail in `risk`: send it again with `accept_risk: true`.
+- Both deletes cannot be undone (`destructive: true` in `routes`). Cancelling a scheduled message stops what was still to go out and ends its recurrence; what was delivered stays in the groups. Deleting a campaign deletes it with its groups in Funnelchat and its statistics; the groups stay in WhatsApp. A campaign with official groups answers `409 campaign_has_official_groups`: delete it from the panel.
+- Editing a campaign with a key changes the groups in WhatsApp only with `update_groups: true`. That, creating the groups at once (`auto_create_groups`) and moderation also need **Groups and campaigns → Manage groups**: without it, `403 operate_permission_required` and nothing changes. `photo`, `input_tag` and `output_tag` are set from the panel (`422` with a key).
 
 `routes` lists every operation with its group as the portal names it (`tag`), the category of the group as the portal shows it (`category`), its permission and its summary; `routeGroups` has the groups in the portal's order. An operation with `destructive: true` cannot be undone, such as deleting a number: a script or an AI agent acting on its own should ask a person to confirm before calling it. `destructive: null` means the spec does not say.
 
@@ -535,7 +557,7 @@ const { data, requestId, response } = await funnelchat.contacts.retrieve('ctc_AB
 
 - Reads and writes that give the same result when repeated (`GET`, `PUT`, `DELETE`) are retried on a `429`, a `5xx` or a network error (also when `timeoutMs` ran out), up to `maxRetries` times (2 by default).
 - Other writes (`POST`, `PATCH`) are retried **only when the API guarantees they were not applied**: `429` and `503`. A `500`, `502` or `504`, a timeout or a dropped connection can come after the write was applied, so the error is thrown right away: read the state before repeating it.
-- **A send is never retried automatically**: the `POST`s that need a **Send** permission (messages, forms, cards, forwards, templates and messages to a group). If a `429 rate_limited` sent nothing and you want the SDK to retry for you, ask for it in that call with `{ retrySend: true }`: it then follows the rule of writes. `mac_lockout_24h`, `mac_limit_reached` and `too_many_pending_actions` are never retried.
+- **A send is never retried automatically**: the `POST`s that need a **Send** permission (messages, forms, cards, forwards, templates, messages to a group and scheduled messages to groups). If a `429 rate_limited` sent nothing and you want the SDK to retry for you, ask for it in that call with `{ retrySend: true }`: it then follows the rule of writes. `mac_lockout_24h`, `mac_limit_reached` and `too_many_pending_actions` are never retried.
 - With `Retry-After`, the wait is exactly what it asks for. If it asks for more than 60 seconds, there is no wait: the error is thrown right away with its `retryAfter` and you decide. Without `Retry-After`, the wait is exponential: 0.5 s, 1 s, 2 s… up to 8 s, with some jitter.
 - Per call you can change `maxRetries`, `timeoutMs` and `signal`:
 
