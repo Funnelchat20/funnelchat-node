@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.0 (2026-11-27)
+
+Types from the portal spec of 27-11-2026 (portal `5c9ed62`, `v0.7.0-54-g5c9ed62`, sha256 `b98c53bd…`): campaigns and scheduled messages to groups are written with an API key. 260 operations (253 before).
+
+### Added
+
+- 7 operations: create, edit, activate or pause and delete a campaign (`POST /api/v1/campaigns`, `PUT` and `DELETE /api/v1/campaigns/{campaign}`, `POST /api/v1/campaigns/{campaign}/status`), and schedule, edit and cancel a message to groups (`POST /api/v1/scheduled-messages`, `PUT` and `DELETE /api/v1/scheduled-messages/{scheduledMessage}`). They are typed calls with `request`; the README shows how. The two deletes are `destructive: true` in `routes`.
+- `POST /api/v1/scheduled-messages` is a send: it is never retried automatically, as the other sends.
+- `send_at` and `recurrence.end_date` are text as the API takes it (`2026-12-07 13:00:00`, in UTC), not an ISO date.
+- The groups of a campaign filter by `fillState` and bring `fillStateCounts`; `GET /api/v1/groups` filters by `adminConnection` and `participantMode`; the detail of a scheduled message brings `delivery_summary` and `tracked_links`.
+
 ## 0.8.0 (2026-11-18)
 
 Types from the portal spec of 18-11-2026 (portal `fe4df8d`, sha256 `4a8fbaee…`), which matches what production takes. See [Upgrading from 0.7](README.md#upgrading-from-07).

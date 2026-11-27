@@ -89,6 +89,26 @@ function typeChecks(client: Funnelchat) {
     // @ts-expect-error the body must match the spec
     void (() => client.request('POST', '/api/v1/tags/delete', { body: { tagIds: 'x' } }));
 
+    // Campaigns and scheduled messages, written with a key (the README's «Every function of the portal»).
+    void (async () => {
+      await client.request('POST', '/api/v1/scheduled-messages', {
+        body: {
+          name: 'Live class reminder',
+          send_at: '2026-12-07 13:00:00',
+          group_ids: ['grp_AK2GMGeWAAdd8fZbtOVvE3Z'],
+          messages: [{ type: 1, value: { message: 'The class starts in one hour!' }, shipping_order: 1 }],
+        },
+      });
+      await client.request('POST', '/api/v1/campaigns/{campaign}/status', {
+        path: { campaign: 'cmp_A6RMvAOjr0mHuLr08RpcwWu' },
+        body: { active: false },
+      });
+    });
+    // @ts-expect-error a scheduled message needs `send_at`
+    void (() => client.request('POST', '/api/v1/scheduled-messages', { body: { name: 'x', messages: [] } }));
+    // @ts-expect-error a block type is 1 to 10
+    void (() => client.request('POST', '/api/v1/scheduled-messages', { body: { name: 'x', send_at: '2026-12-07 13:00:00', messages: [{ type: 11, value: {}, shipping_order: 1 }] } }));
+
     // Any other path is accepted untyped.
     expectTypeOf(client.request<{ ok: boolean }>('GET', '/api/v1/not-in-the-spec')).resolves.toEqualTypeOf<{ ok: boolean }>();
   }
